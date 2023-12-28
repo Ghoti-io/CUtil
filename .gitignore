@@ -1,0 +1,8 @@
+build
+*.session
+*.swp
+submodule
+docs/latex
+docs/html/*.md5
+docs/html/*.map
+
