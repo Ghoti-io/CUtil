@@ -1,7 +1,7 @@
 /**
  * @file
  *
- * Test the behavior of Ghoti.io CUtil Types library.
+ * Test the behavior of Ghoti.io CUtil type library.
  */
 
 #include <sstream>

@@ -19,6 +19,9 @@ extern "C" {
 #define gcu_type_ui32 GHOTIIO_CUTIL(gcu_type_ui32)
 /// @endcond
 
+/**
+ * A union of all basic types to be used by generic containers.
+ */
 typedef union {
   void * p;
   uint64_t ui64;
@@ -32,6 +35,12 @@ typedef union {
   char c;
 } GCU_Type_Union;
 
+/**
+ * Create a union variable with the type uint32_t.
+ *
+ * @param val The value to put into the union.
+ * @return The union variable.
+ */
 GCU_Type_Union gcu_type_ui32(uint32_t val);
 
 #ifdef __cplusplus

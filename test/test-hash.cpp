@@ -1,7 +1,7 @@
 /**
  * @file
  *
- * Test the behavior of Ghoti.io Util HasParameters class..
+ * Test the behavior of Ghoti.io CUtil hash table library.
  */
 
 #include <sstream>

@@ -7,17 +7,17 @@
 
 #define GROWTH_FACTOR 1.25
 
-GCU_Hash_Table * gcu_hash_create(size_t capacity) {
+GCU_Hash_Table * gcu_hash_create(size_t count) {
   // Malloc Zeroed-out memory.
   GCU_Hash_Table * hashTable = calloc(1, sizeof(GCU_Hash_Table));
 
   // Reserve room for the data, if requested..
-  if (capacity) {
+  if (count) {
     // We always want the capacity to be an odd number.
-    size_t newCapacity = (capacity * 2) + 1;
-    hashTable->data = calloc(newCapacity, sizeof(GCU_Hash_Cell));
+    size_t capacity = (count * 2) + 1;
+    hashTable->data = calloc(capacity, sizeof(GCU_Hash_Cell));
     if (hashTable->data) {
-      hashTable->capacity = newCapacity;
+      hashTable->capacity = capacity;
     }
   }
 

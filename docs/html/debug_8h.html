@@ -84,7 +84,6 @@ $(document).ready(function(){initNavTree('debug_8h.html',''); initResizable(); }
 
 <div class="header">
   <div class="summary">
-<a href="#define-members">Macros</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">debug.h File Reference</div>  </div>
@@ -114,27 +113,12 @@ This graph shows which files directly or indirectly include this file:</div>
 <map name="ainclude_2cutil_2debug_8hdep" id="ainclude_2cutil_2debug_8hdep">
 <area shape="rect" title="Header file for debugging&#45;related functions." alt="" coords="48,5,205,32"/>
 <area shape="rect" href="debug_8c.html" title=" " alt="" coords="5,80,101,107"/>
-<area shape="rect" href="test-debug_8cpp.html" title="Test the behavior of Ghoti.io Util HasParameters class." alt="" coords="126,80,274,107"/>
+<area shape="rect" href="test-debug_8cpp.html" title="Test the behavior of Ghoti.io CUtil debug library and tools." alt="" coords="126,80,274,107"/>
 </map>
 </div>
 </div>
 <p><a href="debug_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
-Macros</h2></td></tr>
-<tr class="memitem:a2eb0b03d1a9de9615a291b1205969069"><td class="memItemLeft" align="right" valign="top"><a id="a2eb0b03d1a9de9615a291b1205969069"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>malloc</b>(size)&#160;&#160;&#160;<a class="el" href="debug_8c.html#af1ce7e85c9f3e8ec3df88df39b7183a2">gcu_malloc</a>(size, __FILE__, __LINE__)</td></tr>
-<tr class="separator:a2eb0b03d1a9de9615a291b1205969069"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4fef775146d19db183f030ce098f00bb"><td class="memItemLeft" align="right" valign="top"><a id="a4fef775146d19db183f030ce098f00bb"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>calloc</b>(nitems,  size)&#160;&#160;&#160;<a class="el" href="debug_8c.html#a1289a767d707ae64ec74caba09820295">gcu_calloc</a>(nitems, size, __FILE__, __LINE__)</td></tr>
-<tr class="separator:a4fef775146d19db183f030ce098f00bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad38cff17272c2bb771b623d13ce4324c"><td class="memItemLeft" align="right" valign="top"><a id="ad38cff17272c2bb771b623d13ce4324c"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>realloc</b>(pointer,  size)&#160;&#160;&#160;<a class="el" href="debug_8c.html#ac744445dab32b1d2a2cf70cb3d9a8000">gcu_realloc</a>(pointer, size, __FILE__, __LINE__)</td></tr>
-<tr class="separator:ad38cff17272c2bb771b623d13ce4324c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4a0f1c82e0aa5b644e56b1f50f4b1d2a"><td class="memItemLeft" align="right" valign="top"><a id="a4a0f1c82e0aa5b644e56b1f50f4b1d2a"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>free</b>(pointer)&#160;&#160;&#160;<a class="el" href="debug_8c.html#ae344a1fc7264f2961fee63d76f991408">gcu_free</a>(pointer, __FILE__, __LINE__)</td></tr>
-<tr class="separator:a4a0f1c82e0aa5b644e56b1f50f4b1d2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:af1ce7e85c9f3e8ec3df88df39b7183a2"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="debug_8h.html#af1ce7e85c9f3e8ec3df88df39b7183a2">gcu_malloc</a> (size_t size, const char *file, size_t line)</td></tr>
@@ -160,6 +144,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="debu
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Header file for debugging-related functions. </p>
+<p>Use <code>#include &lt;<a class="el" href="debug_8h.html" title="Header file for debugging-related functions.">cutil/debug.h</a>&gt;</code> when compiling a file and all calls to <code>malloc()</code>, <code>calloc()</code>, <code>realloc()</code>, and <code>free()</code> will be logged to <code>stderr</code>. It will only affect code that is compiled with this header.</p>
+<p>Logging to <code>stderr</code> is enabled by default. It may be disabled by calling <a class="el" href="debug_8h.html#aefcd23dd186e2d75f9878e626f467b20" title="Signal that intercepted memory management calls should no longer be logged to stderr.">gcu_mem_stop()</a>, and re-enabled by calling <a class="el" href="debug_8h.html#a8edbd4ff7a49d6cbc3b3a62e5b43821c" title="Signal that intercepted memory management calls should be logged to stderr.">gcu_mem_start()</a>.</p>
+<p>You may need to control the logging, but also need to control when the logging starts and stops externally. Obviously, if this header is included, then memory management will also be logged, but this feature can be modified by the use of a <code>#define</code> <em>before</em> including the header.</p>
+<p>By defining <code>GHOTIIO_CUTIL_DEBUG_DO_NOT_REDECLARE_MEMORY_FUNCTIONS</code>, the standard <code>malloc()</code>, <code>realloc()</code>, and <code>free()</code> will <em>not</em> be redefined, but all other declarations will be intact. In fact, proper compilation of <code><a class="el" href="debug_8c.html">debug.c</a></code> depends on this behavior. </p>
 </div><h2 class="groupheader">Function Documentation</h2>
 <a id="a1289a767d707ae64ec74caba09820295"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1289a767d707ae64ec74caba09820295">&#9670;&nbsp;</a></span>gcu_calloc()</h2>
