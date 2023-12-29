@@ -18,7 +18,8 @@ TARGET := $(SO_NAME).$(MINOR_VERSION)
 INCLUDE := -I include/
 LIBOBJECTS := $(OBJ_DIR)/debug.o \
 							$(OBJ_DIR)/hash.o \
-							$(OBJ_DIR)/type.o
+							$(OBJ_DIR)/type.o \
+							$(OBJ_DIR)/vector.o
 
 TESTFLAGS := `pkg-config --libs --cflags gtest`
 
@@ -36,13 +37,33 @@ DEP_LIBVER = \
 DEP_DEBUG = \
 	$(DEP_LIBVER) \
 	include/cutil/debug.h
-DEP_TYPE = \
+DEP_FLOAT = \
 	$(DEP_LIBVER) \
+	include/cutil/float.h
+DEP_TYPE = \
+	$(DEP_FLOAT) \
 	include/cutil/type.h
 DEP_HASH= \
 	$(DEP_TYPE) \
 	include/cutil/hash.h
+DEP_VECTOR= \
+	$(DEP_TYPE) \
+	include/cutil/vector.h
 
+
+####################################################################
+# Floating Point Type Identification
+####################################################################
+$(APP_DIR)/float_identifier: \
+				src/float_identifier.c \
+				src/float.h.template
+	$(CC) $(CFLAGS) $< -o $@
+
+include/cutil/float.h: \
+				src/float.h.template \
+				$(APP_DIR)/float_identifier
+	$(APP_DIR)/float_identifier 16
+	cat src/float.h.template | sed "s/FLOAT32/$(shell $(APP_DIR)/float_identifier 32)/; s/FLOAT64/$(shell $(APP_DIR)/float_identifier 64)/" > include/cutil/float.h
 
 ####################################################################
 # Object Files
@@ -63,6 +84,10 @@ $(OBJ_DIR)/hash.o: \
 
 $(OBJ_DIR)/type.o: \
 				src/type.c \
+				$(DEP_TYPE)
+
+$(OBJ_DIR)/vector.o: \
+				src/vector.c \
 				$(DEP_TYPE)
 
 ####################################################################
@@ -102,6 +127,13 @@ $(APP_DIR)/test-hash: \
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
+$(APP_DIR)/test-vector: \
+				test/test-vector.cpp \
+				$(APP_DIR)/$(TARGET)
+	@echo "\n### Compiling Vector Test ###"
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+
 ####################################################################
 # Commands
 ####################################################################
@@ -135,6 +167,7 @@ test: \
 				$(APP_DIR)/test-debug \
 				$(APP_DIR)/test-type \
 				$(APP_DIR)/test-hash \
+				$(APP_DIR)/test-vector \
 				$(APP_DIR/$(TARGET)
 	@echo "\033[0;32m"
 	@echo "############################"
@@ -142,13 +175,15 @@ test: \
 	@echo "############################"
 	@echo "\033[0m"
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-debug --gtest_brief=1
-	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-hash --gtest_brief=1
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-type --gtest_brief=1
+	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-hash --gtest_brief=1
+	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-vector --gtest_brief=1
 
 clean: ## Remove all contents of the build directories.
 	-@rm -rvf $(OBJ_DIR)/*
 	-@rm -rvf $(APP_DIR)/*
 	-@rm -rvf $(GEN_DIR)/*
+	-@rm include/cutil/float.h
 
 install: ## Install the library globally, requires sudo
 install: all

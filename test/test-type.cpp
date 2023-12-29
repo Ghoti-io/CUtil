@@ -22,6 +22,8 @@ TEST(Type, Union) {
   ASSERT_EQ(gcu_type_i32(-1000000000).i32, -1000000000);
   ASSERT_EQ(gcu_type_i16(-20000).i16, -20000);
   ASSERT_EQ(gcu_type_i8(-100).i8, -100);
+  ASSERT_EQ(gcu_type_f64(10000000.5).f64, 10000000.5);
+  ASSERT_EQ(gcu_type_f32(1000000.5).f32, 1000000.5);
   ASSERT_EQ(gcu_type_c('A').c, 'A');
 }
 

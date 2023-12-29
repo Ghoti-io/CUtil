@@ -59,6 +59,18 @@ GCU_Type_Union gcu_type_i8(int8_t val) {
   };
 }
 
+GCU_Type_Union gcu_type_f64(GCU_float64_t val) {
+  return (GCU_Type_Union) {
+    .f64 = val,
+  };
+}
+
+GCU_Type_Union gcu_type_f32(GCU_float32_t val) {
+  return (GCU_Type_Union) {
+    .f32 = val,
+  };
+}
+
 GCU_Type_Union gcu_type_c(char val) {
   return (GCU_Type_Union) {
     .c = val,

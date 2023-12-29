@@ -1,0 +1,25 @@
+/**
+ * @file
+ * Type definitions for float types.
+ */
+
+#ifndef GHOTIIO_CUTIL_FLOAT_H
+#define GHOTIIO_CUTIL_FLOAT_H
+
+#include "cutil/libver.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/// @cond HIDDEN_SYMBOLS
+#define GCU_float64_t FLOAT64
+#define GCU_float32_t FLOAT32
+/// @endcond
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif //GHOTIIO_CUTIL_FLOAT_H
+

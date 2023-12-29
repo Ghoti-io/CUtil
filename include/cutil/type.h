@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "cutil/libver.h"
+#include "cutil/float.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -16,7 +17,7 @@ extern "C" {
 
 /// @cond HIDDEN_SYMBOLS
 #define GCU_Type_Union GHOTIIO_CUTIL(GCU_Type_Union)
-#define gcu_type_pointer GHOTIIO_CUTIL(gcu_type_pointer)
+#define gcu_type_p GHOTIIO_CUTIL(gcu_type_p)
 #define gcu_type_ui64 GHOTIIO_CUTIL(gcu_type_ui64)
 #define gcu_type_ui32 GHOTIIO_CUTIL(gcu_type_ui32)
 #define gcu_type_ui16 GHOTIIO_CUTIL(gcu_type_ui16)
@@ -25,7 +26,7 @@ extern "C" {
 #define gcu_type_i32 GHOTIIO_CUTIL(gcu_type_i32)
 #define gcu_type_i16 GHOTIIO_CUTIL(gcu_type_i16)
 #define gcu_type_i8 GHOTIIO_CUTIL(gcu_type_i8)
-#define gcu_type_char GHOTIIO_CUTIL(gcu_type_char)
+#define gcu_type_c GHOTIIO_CUTIL(gcu_type_c)
 /// @endcond
 
 /**
@@ -41,6 +42,8 @@ typedef union {
   int32_t i32;
   int16_t i16;
   int8_t i8;
+  GCU_float64_t f64;
+  GCU_float32_t f32;
   char c;
 } GCU_Type_Union;
 
@@ -115,6 +118,22 @@ GCU_Type_Union gcu_type_i16(int16_t val);
  * @return The union variable.
  */
 GCU_Type_Union gcu_type_i8(int8_t val);
+
+/**
+ * Create a union variable with the type float with 64 bits.
+ *
+ * @param val The value to put into the union.
+ * @return The union variable.
+ */
+GCU_Type_Union gcu_type_f64(GCU_float64_t val);
+
+/**
+ * Create a union variable with the type float with 32 bits.
+ *
+ * @param val The value to put into the union.
+ * @return The union variable.
+ */
+GCU_Type_Union gcu_type_f32(GCU_float32_t val);
 
 /**
  * Create a union variable with the type `char`.
