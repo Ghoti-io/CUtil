@@ -94,74 +94,182 @@ $(document).ready(function(){initNavTree('type_8h_source.html',''); initResizabl
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;stdbool.h&gt;</span></div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;stdint.h&gt;</span></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="libver_8h.html">cutil/libver.h</a>&quot;</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160; </div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#define GCU_Type_Union GHOTIIO_CUTIL(GCU_Type_Union)</span></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#define gcu_type_pointer GHOTIIO_CUTIL(gcu_type_pointer)</span></div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#define gcu_type_ui64 GHOTIIO_CUTIL(gcu_type_ui64)</span></div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#define gcu_type_ui32 GHOTIIO_CUTIL(gcu_type_ui32)</span></div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#define gcu_type_ui16 GHOTIIO_CUTIL(gcu_type_ui16)</span></div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#define gcu_type_ui8 GHOTIIO_CUTIL(gcu_type_ui8)</span></div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="preprocessor">#define gcu_type_i64 GHOTIIO_CUTIL(gcu_type_i64)</span></div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="preprocessor">#define gcu_type_i32 GHOTIIO_CUTIL(gcu_type_i32)</span></div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="preprocessor">#define gcu_type_i16 GHOTIIO_CUTIL(gcu_type_i16)</span></div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor">#define gcu_type_i8 GHOTIIO_CUTIL(gcu_type_i8)</span></div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="preprocessor">#define gcu_type_char GHOTIIO_CUTIL(gcu_type_char)</span></div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
-<div class="line"><a name="l00034"></a><span class="lineno"><a class="line" href="unionGCU__Type__Union.html">   34</a></span>&#160;<span class="keyword">typedef</span> <span class="keyword">union </span>{</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  <span class="keywordtype">void</span> * p;</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  uint64_t ui64;</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  uint32_t ui32;</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  uint16_t ui16;</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  uint8_t ui8;</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  int64_t i64;</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;  int32_t i32;</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;  int16_t i16;</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;  int8_t i8;</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  <span class="keywordtype">char</span> c;</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;} <a class="code" href="unionGCU__Type__Union.html">GCU_Type_Union</a>;</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<a class="code" href="unionGCU__Type__Union.html">GCU_Type_Union</a> <a class="code" href="type_8h.html#af8bf4f8998668ccde605d7a1e197e7c2">gcu_type_p</a>(<span class="keywordtype">void</span> * val);</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160; </div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<a class="code" href="unionGCU__Type__Union.html">GCU_Type_Union</a> <a class="code" href="type_8h.html#ae1694239ab502cd049e5cc13803400db">gcu_type_ui64</a>(uint64_t val);</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160; </div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<a class="code" href="unionGCU__Type__Union.html">GCU_Type_Union</a> <a class="code" href="type_8h.html#a0fda9bbce634f76da5612054a6892e67">gcu_type_ui32</a>(uint32_t val);</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160; </div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<a class="code" href="unionGCU__Type__Union.html">GCU_Type_Union</a> <a class="code" href="type_8h.html#ad3e852b38b0c51a681bee05e4a17183d">gcu_type_ui16</a>(uint16_t val);</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160; </div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<a class="code" href="unionGCU__Type__Union.html">GCU_Type_Union</a> <a class="code" href="type_8h.html#a02cc2efe9b1809524ce30b7b86adf9e9">gcu_type_ui8</a>(uint8_t val);</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160; </div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<a class="code" href="unionGCU__Type__Union.html">GCU_Type_Union</a> <a class="code" href="type_8h.html#a2ca24f41a77cb3f47947b92185382608">gcu_type_i64</a>(int64_t val);</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160; </div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;<a class="code" href="unionGCU__Type__Union.html">GCU_Type_Union</a> <a class="code" href="type_8h.html#ac4d8ba201a63e7a7a4d97e6f191ab90e">gcu_type_i32</a>(int32_t val);</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160; </div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;<a class="code" href="unionGCU__Type__Union.html">GCU_Type_Union</a> <a class="code" href="type_8h.html#a9947f9e11a674d6c06577398d2a6747e">gcu_type_i16</a>(int16_t val);</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160; </div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;<a class="code" href="unionGCU__Type__Union.html">GCU_Type_Union</a> <a class="code" href="type_8h.html#aad6430c72ca615df28efbedcc99b2a68">gcu_type_i8</a>(int8_t val);</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160; </div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;<a class="code" href="unionGCU__Type__Union.html">GCU_Type_Union</a> <a class="code" href="type_8h.html#ad0a0a2c4da90e106329594062312e51c">gcu_type_c</a>(<span class="keywordtype">char</span> val);</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160; </div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;}</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160; </div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;<span class="preprocessor">#endif </span><span class="comment">//GHOTIIO_CUTIL_TYPE_H</span></div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160; </div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="float_8h.html">cutil/float.h</a>&quot;</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160; </div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160; </div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#define GCU_Type64_Union GHOTIIO_CUTIL(GCU_Type64_Union)</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#define GCU_Type32_Union GHOTIIO_CUTIL(GCU_Type32_Union)</span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#define GCU_Type16_Union GHOTIIO_CUTIL(GCU_Type16_Union)</span></div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#define GCU_Type8_Union GHOTIIO_CUTIL(GCU_Type8_Union)</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#define gcu_type64_p GHOTIIO_CUTIL(gcu_type64_p)</span></div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="preprocessor">#define gcu_type64_ui64 GHOTIIO_CUTIL(gcu_type64_ui64)</span></div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="preprocessor">#define gcu_type64_ui32 GHOTIIO_CUTIL(gcu_type64_ui32)</span></div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="preprocessor">#define gcu_type64_ui16 GHOTIIO_CUTIL(gcu_type64_ui16)</span></div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor">#define gcu_type64_ui8 GHOTIIO_CUTIL(gcu_type64_ui8)</span></div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="preprocessor">#define gcu_type64_i64 GHOTIIO_CUTIL(gcu_type64_i64)</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="preprocessor">#define gcu_type64_i32 GHOTIIO_CUTIL(gcu_type64_i32)</span></div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">#define gcu_type64_i16 GHOTIIO_CUTIL(gcu_type64_i16)</span></div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">#define gcu_type64_i8 GHOTIIO_CUTIL(gcu_type64_i8)</span></div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">#define gcu_type64_c GHOTIIO_CUTIL(gcu_type64_c)</span></div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor">#define gcu_type32_ui32 GHOTIIO_CUTIL(gcu_type32_ui32)</span></div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="preprocessor">#define gcu_type32_ui16 GHOTIIO_CUTIL(gcu_type32_ui16)</span></div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor">#define gcu_type32_ui8 GHOTIIO_CUTIL(gcu_type32_ui8)</span></div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor">#define gcu_type32_i32 GHOTIIO_CUTIL(gcu_type32_i32)</span></div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor">#define gcu_type32_i16 GHOTIIO_CUTIL(gcu_type32_i16)</span></div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="preprocessor">#define gcu_type32_i8 GHOTIIO_CUTIL(gcu_type32_i8)</span></div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="preprocessor">#define gcu_type32_c GHOTIIO_CUTIL(gcu_type32_c)</span></div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="preprocessor">#define gcu_type16_ui16 GHOTIIO_CUTIL(gcu_type16_ui16)</span></div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="preprocessor">#define gcu_type16_ui8 GHOTIIO_CUTIL(gcu_type16_ui8)</span></div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="preprocessor">#define gcu_type16_i16 GHOTIIO_CUTIL(gcu_type16_i16)</span></div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="preprocessor">#define gcu_type16_i8 GHOTIIO_CUTIL(gcu_type16_i8)</span></div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="preprocessor">#define gcu_type16_c GHOTIIO_CUTIL(gcu_type16_c)</span></div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="preprocessor">#define gcu_type8_ui8 GHOTIIO_CUTIL(gcu_type8_ui8)</span></div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="preprocessor">#define gcu_type8_i8 GHOTIIO_CUTIL(gcu_type8_i8)</span></div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="preprocessor">#define gcu_type8_c GHOTIIO_CUTIL(gcu_type8_c)</span></div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160; </div>
+<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="unionGCU__Type64__Union.html">   53</a></span>&#160;<span class="keyword">typedef</span> <span class="keyword">union </span>{</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;  <span class="keywordtype">void</span> * p;</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;  uint64_t ui64;</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  uint32_t ui32;</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;  uint16_t ui16;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;  uint8_t ui8;</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  int64_t i64;</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;  int32_t i32;</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  int16_t i16;</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  int8_t i8;</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  GCU_float64_t f64;</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  GCU_float32_t f32;</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  <span class="keywordtype">char</span> c;</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;} <a class="code" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>;</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160; </div>
+<div class="line"><a name="l00071"></a><span class="lineno"><a class="line" href="unionGCU__Type32__Union.html">   71</a></span>&#160;<span class="keyword">typedef</span> <span class="keyword">union </span>{</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  uint32_t ui32;</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  uint16_t ui16;</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  uint8_t ui8;</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  int32_t i32;</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  int16_t i16;</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  int8_t i8;</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  GCU_float32_t f32;</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  <span class="keywordtype">char</span> c;</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;} <a class="code" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a>;</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160; </div>
+<div class="line"><a name="l00085"></a><span class="lineno"><a class="line" href="unionGCU__Type16__Union.html">   85</a></span>&#160;<span class="keyword">typedef</span> <span class="keyword">union </span>{</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  uint16_t ui16;</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  uint8_t ui8;</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  int16_t i16;</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  int8_t i8;</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  <span class="keywordtype">char</span> c;</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;} <a class="code" href="unionGCU__Type16__Union.html">GCU_Type16_Union</a>;</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160; </div>
+<div class="line"><a name="l00096"></a><span class="lineno"><a class="line" href="unionGCU__Type8__Union.html">   96</a></span>&#160;<span class="keyword">typedef</span> <span class="keyword">union </span>{</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  uint8_t ui8;</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  int8_t i8;</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  <span class="keywordtype">char</span> c;</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;} <a class="code" href="unionGCU__Type8__Union.html">GCU_Type8_Union</a>;</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160; </div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;<a class="code" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a> <a class="code" href="type_8h.html#a471ada5c8d8f2043d27ab7591cf48fc1">gcu_type64_p</a>(<span class="keywordtype">void</span> * val);</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160; </div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;<a class="code" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a> <a class="code" href="type_8h.html#ae99aba337c8310a160569ff9471b28d8">gcu_type64_ui64</a>(uint64_t val);</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160; </div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;<a class="code" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a> <a class="code" href="type_8h.html#a641a76a19823e9a3d62fab415c1bfa95">gcu_type64_ui32</a>(uint32_t val);</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160; </div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;<a class="code" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a> <a class="code" href="type_8h.html#ac3d7f70ea9304a4a63060f7c7328e94a">gcu_type64_ui16</a>(uint16_t val);</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160; </div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;<a class="code" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a> <a class="code" href="type_8h.html#ae6b9278639fc21c5849dfd45f2b8af45">gcu_type64_ui8</a>(uint8_t val);</div>
+<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160; </div>
+<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;<a class="code" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a> <a class="code" href="type_8h.html#aa39c7c3a498869a2d16c17c2f43f7927">gcu_type64_i64</a>(int64_t val);</div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160; </div>
+<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;<a class="code" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a> <a class="code" href="type_8h.html#acfc78764c9086d918596a6ec47d1be93">gcu_type64_i32</a>(int32_t val);</div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160; </div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;<a class="code" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a> <a class="code" href="type_8h.html#af833ea51f6ed494eda66b3339b5953d8">gcu_type64_i16</a>(int16_t val);</div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160; </div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;<a class="code" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a> <a class="code" href="type_8h.html#af9b242b765bda96d0ec38cdecb6a9340">gcu_type64_i8</a>(int8_t val);</div>
+<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160; </div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;<a class="code" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a> <a class="code" href="type_8h.html#a76fdf57be25221bfe9d1d2fbbdd35b25">gcu_type64_f64</a>(GCU_float64_t val);</div>
+<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160; </div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;<a class="code" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a> <a class="code" href="type_8h.html#a7a414c66d3667f1a0d333647cfd97e92">gcu_type64_f32</a>(GCU_float32_t val);</div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160; </div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;<a class="code" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a> <a class="code" href="type_8h.html#a44c6ccab2bdb9feeb53fa531829da649">gcu_type64_c</a>(<span class="keywordtype">char</span> val);</div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160; </div>
+<div class="line"><a name="l00204"></a><span class="lineno"><a class="line" href="type_8h.html#af1ed1721c08100f6e05d7108b85fa280">  204</a></span>&#160;<a class="code" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a> <a class="code" href="type_8h.html#af1ed1721c08100f6e05d7108b85fa280">gcu_type32_ui64</a>(uint64_t val);</div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160; </div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;<a class="code" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a> <a class="code" href="type_8h.html#abcb375c6e124ad1ab4845393cc672c33">gcu_type32_ui32</a>(uint32_t val);</div>
+<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160; </div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;<a class="code" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a> <a class="code" href="type_8h.html#ab5383bcc69acacbb13c6e1b087f6c6a9">gcu_type32_ui16</a>(uint16_t val);</div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160; </div>
+<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;<a class="code" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a> <a class="code" href="type_8h.html#a7d4d8258b0910b354636af2f05f0d102">gcu_type32_ui8</a>(uint8_t val);</div>
+<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160; </div>
+<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;<a class="code" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a> <a class="code" href="type_8h.html#a6917c294f38050f2593b28a8e4d60fd7">gcu_type32_i32</a>(int32_t val);</div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160; </div>
+<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;<a class="code" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a> <a class="code" href="type_8h.html#a595f72ba84ddbeacf32f23ec2c86ac3f">gcu_type32_i16</a>(int16_t val);</div>
+<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160; </div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;<a class="code" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a> <a class="code" href="type_8h.html#a408719140c008f84127988c847e37b01">gcu_type32_i8</a>(int8_t val);</div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160; </div>
+<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;<a class="code" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a> <a class="code" href="type_8h.html#a8ea42dc91851865306785311d8a1b6f4">gcu_type32_f32</a>(GCU_float32_t val);</div>
+<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160; </div>
+<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;<a class="code" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a> <a class="code" href="type_8h.html#ad1233e400a33f91224fb015e937ff6a9">gcu_type32_c</a>(<span class="keywordtype">char</span> val);</div>
+<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160; </div>
+<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;<a class="code" href="unionGCU__Type16__Union.html">GCU_Type16_Union</a> <a class="code" href="type_8h.html#aab5324fc2ab32ce6d27ac5db1e17a2f4">gcu_type16_ui16</a>(uint16_t val);</div>
+<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160; </div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;<a class="code" href="unionGCU__Type16__Union.html">GCU_Type16_Union</a> <a class="code" href="type_8h.html#a9f9cd9def58f37ab74b484b9473ced14">gcu_type16_ui8</a>(uint8_t val);</div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160; </div>
+<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;<a class="code" href="unionGCU__Type16__Union.html">GCU_Type16_Union</a> <a class="code" href="type_8h.html#a41c9d4917fb2caa3c306e7e871c7552e">gcu_type16_i16</a>(int16_t val);</div>
+<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160; </div>
+<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;<a class="code" href="unionGCU__Type16__Union.html">GCU_Type16_Union</a> <a class="code" href="type_8h.html#a2596ab80d9ce8a7f504ec6453be41755">gcu_type16_i8</a>(int8_t val);</div>
+<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160; </div>
+<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;<a class="code" href="unionGCU__Type16__Union.html">GCU_Type16_Union</a> <a class="code" href="type_8h.html#ab2e3229f5a82a3095529f2ea90bd5c92">gcu_type16_c</a>(<span class="keywordtype">char</span> val);</div>
+<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160; </div>
+<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160; </div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;<a class="code" href="unionGCU__Type8__Union.html">GCU_Type8_Union</a> <a class="code" href="type_8h.html#a5c306994b4a4349096860e5c41e57a66">gcu_type8_ui8</a>(uint8_t val);</div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160; </div>
+<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;<a class="code" href="unionGCU__Type8__Union.html">GCU_Type8_Union</a> <a class="code" href="type_8h.html#af870ce1909b3cc57c92806cfb36f7e86">gcu_type8_i8</a>(int8_t val);</div>
+<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160; </div>
+<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;<a class="code" href="unionGCU__Type8__Union.html">GCU_Type8_Union</a> <a class="code" href="type_8h.html#a2dcb71d41f40e8a2e6a0e46b0fb812c6">gcu_type8_c</a>(<span class="keywordtype">char</span> val);</div>
+<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160; </div>
+<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;}</div>
+<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160; </div>
+<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;<span class="preprocessor">#endif </span><span class="comment">//GHOTIIO_CUTIL_TYPE_H</span></div>
+<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160; </div>
+<div class="ttc" id="afloat_8h_html"><div class="ttname"><a href="float_8h.html">float.h</a></div><div class="ttdoc">Type definitions for float types.</div></div>
 <div class="ttc" id="alibver_8h_html"><div class="ttname"><a href="libver_8h.html">libver.h</a></div><div class="ttdoc">Header file used to control the version numbering and function namespace for all of the library.</div></div>
-<div class="ttc" id="atype_8h_html_a02cc2efe9b1809524ce30b7b86adf9e9"><div class="ttname"><a href="type_8h.html#a02cc2efe9b1809524ce30b7b86adf9e9">gcu_type_ui8</a></div><div class="ttdeci">GCU_Type_Union gcu_type_ui8(uint8_t val)</div><div class="ttdoc">Create a union variable with the type uint8_t.</div><div class="ttdef"><b>Definition:</b> type.c:32</div></div>
-<div class="ttc" id="atype_8h_html_a0fda9bbce634f76da5612054a6892e67"><div class="ttname"><a href="type_8h.html#a0fda9bbce634f76da5612054a6892e67">gcu_type_ui32</a></div><div class="ttdeci">GCU_Type_Union gcu_type_ui32(uint32_t val)</div><div class="ttdoc">Create a union variable with the type uint32_t.</div><div class="ttdef"><b>Definition:</b> type.c:20</div></div>
-<div class="ttc" id="atype_8h_html_a2ca24f41a77cb3f47947b92185382608"><div class="ttname"><a href="type_8h.html#a2ca24f41a77cb3f47947b92185382608">gcu_type_i64</a></div><div class="ttdeci">GCU_Type_Union gcu_type_i64(int64_t val)</div><div class="ttdoc">Create a union variable with the type int64_t.</div><div class="ttdef"><b>Definition:</b> type.c:38</div></div>
-<div class="ttc" id="atype_8h_html_a9947f9e11a674d6c06577398d2a6747e"><div class="ttname"><a href="type_8h.html#a9947f9e11a674d6c06577398d2a6747e">gcu_type_i16</a></div><div class="ttdeci">GCU_Type_Union gcu_type_i16(int16_t val)</div><div class="ttdoc">Create a union variable with the type int16_t.</div><div class="ttdef"><b>Definition:</b> type.c:50</div></div>
-<div class="ttc" id="atype_8h_html_aad6430c72ca615df28efbedcc99b2a68"><div class="ttname"><a href="type_8h.html#aad6430c72ca615df28efbedcc99b2a68">gcu_type_i8</a></div><div class="ttdeci">GCU_Type_Union gcu_type_i8(int8_t val)</div><div class="ttdoc">Create a union variable with the type int8_t.</div><div class="ttdef"><b>Definition:</b> type.c:56</div></div>
-<div class="ttc" id="atype_8h_html_ac4d8ba201a63e7a7a4d97e6f191ab90e"><div class="ttname"><a href="type_8h.html#ac4d8ba201a63e7a7a4d97e6f191ab90e">gcu_type_i32</a></div><div class="ttdeci">GCU_Type_Union gcu_type_i32(int32_t val)</div><div class="ttdoc">Create a union variable with the type int32_t.</div><div class="ttdef"><b>Definition:</b> type.c:44</div></div>
-<div class="ttc" id="atype_8h_html_ad0a0a2c4da90e106329594062312e51c"><div class="ttname"><a href="type_8h.html#ad0a0a2c4da90e106329594062312e51c">gcu_type_c</a></div><div class="ttdeci">GCU_Type_Union gcu_type_c(char val)</div><div class="ttdoc">Create a union variable with the type char.</div><div class="ttdef"><b>Definition:</b> type.c:62</div></div>
-<div class="ttc" id="atype_8h_html_ad3e852b38b0c51a681bee05e4a17183d"><div class="ttname"><a href="type_8h.html#ad3e852b38b0c51a681bee05e4a17183d">gcu_type_ui16</a></div><div class="ttdeci">GCU_Type_Union gcu_type_ui16(uint16_t val)</div><div class="ttdoc">Create a union variable with the type uint16_t.</div><div class="ttdef"><b>Definition:</b> type.c:26</div></div>
-<div class="ttc" id="atype_8h_html_ae1694239ab502cd049e5cc13803400db"><div class="ttname"><a href="type_8h.html#ae1694239ab502cd049e5cc13803400db">gcu_type_ui64</a></div><div class="ttdeci">GCU_Type_Union gcu_type_ui64(uint64_t val)</div><div class="ttdoc">Create a union variable with the type uint64_t.</div><div class="ttdef"><b>Definition:</b> type.c:14</div></div>
-<div class="ttc" id="atype_8h_html_af8bf4f8998668ccde605d7a1e197e7c2"><div class="ttname"><a href="type_8h.html#af8bf4f8998668ccde605d7a1e197e7c2">gcu_type_p</a></div><div class="ttdeci">GCU_Type_Union gcu_type_p(void *val)</div><div class="ttdoc">Create a union variable with the type void *.</div><div class="ttdef"><b>Definition:</b> type.c:8</div></div>
-<div class="ttc" id="aunionGCU__Type__Union_html"><div class="ttname"><a href="unionGCU__Type__Union.html">GCU_Type_Union</a></div><div class="ttdoc">A union of all basic types to be used by generic containers.</div><div class="ttdef"><b>Definition:</b> type.h:34</div></div>
+<div class="ttc" id="atype_8h_html_a2596ab80d9ce8a7f504ec6453be41755"><div class="ttname"><a href="type_8h.html#a2596ab80d9ce8a7f504ec6453be41755">gcu_type16_i8</a></div><div class="ttdeci">GCU_Type16_Union gcu_type16_i8(int8_t val)</div><div class="ttdoc">Create a 16-bit union variable with the type int8_t.</div><div class="ttdef"><b>Definition:</b> type.c:146</div></div>
+<div class="ttc" id="atype_8h_html_a2dcb71d41f40e8a2e6a0e46b0fb812c6"><div class="ttname"><a href="type_8h.html#a2dcb71d41f40e8a2e6a0e46b0fb812c6">gcu_type8_c</a></div><div class="ttdeci">GCU_Type8_Union gcu_type8_c(char val)</div><div class="ttdoc">Create a 8-bit union variable with the type char.</div><div class="ttdef"><b>Definition:</b> type.c:170</div></div>
+<div class="ttc" id="atype_8h_html_a408719140c008f84127988c847e37b01"><div class="ttname"><a href="type_8h.html#a408719140c008f84127988c847e37b01">gcu_type32_i8</a></div><div class="ttdeci">GCU_Type32_Union gcu_type32_i8(int8_t val)</div><div class="ttdoc">Create a 32-bit union variable with the type int8_t.</div><div class="ttdef"><b>Definition:</b> type.c:110</div></div>
+<div class="ttc" id="atype_8h_html_a41c9d4917fb2caa3c306e7e871c7552e"><div class="ttname"><a href="type_8h.html#a41c9d4917fb2caa3c306e7e871c7552e">gcu_type16_i16</a></div><div class="ttdeci">GCU_Type16_Union gcu_type16_i16(int16_t val)</div><div class="ttdoc">Create a 16-bit union variable with the type int16_t.</div><div class="ttdef"><b>Definition:</b> type.c:140</div></div>
+<div class="ttc" id="atype_8h_html_a44c6ccab2bdb9feeb53fa531829da649"><div class="ttname"><a href="type_8h.html#a44c6ccab2bdb9feeb53fa531829da649">gcu_type64_c</a></div><div class="ttdeci">GCU_Type64_Union gcu_type64_c(char val)</div><div class="ttdoc">Create a 64-bit union variable with the type char.</div><div class="ttdef"><b>Definition:</b> type.c:74</div></div>
+<div class="ttc" id="atype_8h_html_a471ada5c8d8f2043d27ab7591cf48fc1"><div class="ttname"><a href="type_8h.html#a471ada5c8d8f2043d27ab7591cf48fc1">gcu_type64_p</a></div><div class="ttdeci">GCU_Type64_Union gcu_type64_p(void *val)</div><div class="ttdoc">Create a 64-bit union variable with the type void *.</div><div class="ttdef"><b>Definition:</b> type.c:8</div></div>
+<div class="ttc" id="atype_8h_html_a595f72ba84ddbeacf32f23ec2c86ac3f"><div class="ttname"><a href="type_8h.html#a595f72ba84ddbeacf32f23ec2c86ac3f">gcu_type32_i16</a></div><div class="ttdeci">GCU_Type32_Union gcu_type32_i16(int16_t val)</div><div class="ttdoc">Create a 32-bit union variable with the type int16_t.</div><div class="ttdef"><b>Definition:</b> type.c:104</div></div>
+<div class="ttc" id="atype_8h_html_a5c306994b4a4349096860e5c41e57a66"><div class="ttname"><a href="type_8h.html#a5c306994b4a4349096860e5c41e57a66">gcu_type8_ui8</a></div><div class="ttdeci">GCU_Type8_Union gcu_type8_ui8(uint8_t val)</div><div class="ttdoc">Create a 8-bit union variable with the type uint8_t.</div><div class="ttdef"><b>Definition:</b> type.c:158</div></div>
+<div class="ttc" id="atype_8h_html_a641a76a19823e9a3d62fab415c1bfa95"><div class="ttname"><a href="type_8h.html#a641a76a19823e9a3d62fab415c1bfa95">gcu_type64_ui32</a></div><div class="ttdeci">GCU_Type64_Union gcu_type64_ui32(uint32_t val)</div><div class="ttdoc">Create a 64-bit union variable with the type uint32_t.</div><div class="ttdef"><b>Definition:</b> type.c:20</div></div>
+<div class="ttc" id="atype_8h_html_a6917c294f38050f2593b28a8e4d60fd7"><div class="ttname"><a href="type_8h.html#a6917c294f38050f2593b28a8e4d60fd7">gcu_type32_i32</a></div><div class="ttdeci">GCU_Type32_Union gcu_type32_i32(int32_t val)</div><div class="ttdoc">Create a 32-bit union variable with the type int32_t.</div><div class="ttdef"><b>Definition:</b> type.c:98</div></div>
+<div class="ttc" id="atype_8h_html_a76fdf57be25221bfe9d1d2fbbdd35b25"><div class="ttname"><a href="type_8h.html#a76fdf57be25221bfe9d1d2fbbdd35b25">gcu_type64_f64</a></div><div class="ttdeci">GCU_Type64_Union gcu_type64_f64(GCU_float64_t val)</div><div class="ttdoc">Create a 64-bit union variable with the type float with 64 bits.</div><div class="ttdef"><b>Definition:</b> type.c:62</div></div>
+<div class="ttc" id="atype_8h_html_a7a414c66d3667f1a0d333647cfd97e92"><div class="ttname"><a href="type_8h.html#a7a414c66d3667f1a0d333647cfd97e92">gcu_type64_f32</a></div><div class="ttdeci">GCU_Type64_Union gcu_type64_f32(GCU_float32_t val)</div><div class="ttdoc">Create a 64-bit union variable with the type float with 32 bits.</div><div class="ttdef"><b>Definition:</b> type.c:68</div></div>
+<div class="ttc" id="atype_8h_html_a7d4d8258b0910b354636af2f05f0d102"><div class="ttname"><a href="type_8h.html#a7d4d8258b0910b354636af2f05f0d102">gcu_type32_ui8</a></div><div class="ttdeci">GCU_Type32_Union gcu_type32_ui8(uint8_t val)</div><div class="ttdoc">Create a 32-bit union variable with the type uint8_t.</div><div class="ttdef"><b>Definition:</b> type.c:92</div></div>
+<div class="ttc" id="atype_8h_html_a8ea42dc91851865306785311d8a1b6f4"><div class="ttname"><a href="type_8h.html#a8ea42dc91851865306785311d8a1b6f4">gcu_type32_f32</a></div><div class="ttdeci">GCU_Type32_Union gcu_type32_f32(GCU_float32_t val)</div><div class="ttdoc">Create a 32-bit union variable with the type float with 32 bits.</div><div class="ttdef"><b>Definition:</b> type.c:116</div></div>
+<div class="ttc" id="atype_8h_html_a9f9cd9def58f37ab74b484b9473ced14"><div class="ttname"><a href="type_8h.html#a9f9cd9def58f37ab74b484b9473ced14">gcu_type16_ui8</a></div><div class="ttdeci">GCU_Type16_Union gcu_type16_ui8(uint8_t val)</div><div class="ttdoc">Create a 16-bit union variable with the type uint8_t.</div><div class="ttdef"><b>Definition:</b> type.c:134</div></div>
+<div class="ttc" id="atype_8h_html_aa39c7c3a498869a2d16c17c2f43f7927"><div class="ttname"><a href="type_8h.html#aa39c7c3a498869a2d16c17c2f43f7927">gcu_type64_i64</a></div><div class="ttdeci">GCU_Type64_Union gcu_type64_i64(int64_t val)</div><div class="ttdoc">Create a 64-bit union variable with the type int64_t.</div><div class="ttdef"><b>Definition:</b> type.c:38</div></div>
+<div class="ttc" id="atype_8h_html_aab5324fc2ab32ce6d27ac5db1e17a2f4"><div class="ttname"><a href="type_8h.html#aab5324fc2ab32ce6d27ac5db1e17a2f4">gcu_type16_ui16</a></div><div class="ttdeci">GCU_Type16_Union gcu_type16_ui16(uint16_t val)</div><div class="ttdoc">Create a 16-bit union variable with the type uint16_t.</div><div class="ttdef"><b>Definition:</b> type.c:128</div></div>
+<div class="ttc" id="atype_8h_html_ab2e3229f5a82a3095529f2ea90bd5c92"><div class="ttname"><a href="type_8h.html#ab2e3229f5a82a3095529f2ea90bd5c92">gcu_type16_c</a></div><div class="ttdeci">GCU_Type16_Union gcu_type16_c(char val)</div><div class="ttdoc">Create a 16-bit union variable with the type char.</div><div class="ttdef"><b>Definition:</b> type.c:152</div></div>
+<div class="ttc" id="atype_8h_html_ab5383bcc69acacbb13c6e1b087f6c6a9"><div class="ttname"><a href="type_8h.html#ab5383bcc69acacbb13c6e1b087f6c6a9">gcu_type32_ui16</a></div><div class="ttdeci">GCU_Type32_Union gcu_type32_ui16(uint16_t val)</div><div class="ttdoc">Create a 32-bit union variable with the type uint16_t.</div><div class="ttdef"><b>Definition:</b> type.c:86</div></div>
+<div class="ttc" id="atype_8h_html_abcb375c6e124ad1ab4845393cc672c33"><div class="ttname"><a href="type_8h.html#abcb375c6e124ad1ab4845393cc672c33">gcu_type32_ui32</a></div><div class="ttdeci">GCU_Type32_Union gcu_type32_ui32(uint32_t val)</div><div class="ttdoc">Create a 32-bit union variable with the type uint32_t.</div><div class="ttdef"><b>Definition:</b> type.c:80</div></div>
+<div class="ttc" id="atype_8h_html_ac3d7f70ea9304a4a63060f7c7328e94a"><div class="ttname"><a href="type_8h.html#ac3d7f70ea9304a4a63060f7c7328e94a">gcu_type64_ui16</a></div><div class="ttdeci">GCU_Type64_Union gcu_type64_ui16(uint16_t val)</div><div class="ttdoc">Create a 64-bit union variable with the type uint16_t.</div><div class="ttdef"><b>Definition:</b> type.c:26</div></div>
+<div class="ttc" id="atype_8h_html_acfc78764c9086d918596a6ec47d1be93"><div class="ttname"><a href="type_8h.html#acfc78764c9086d918596a6ec47d1be93">gcu_type64_i32</a></div><div class="ttdeci">GCU_Type64_Union gcu_type64_i32(int32_t val)</div><div class="ttdoc">Create a 64-bit union variable with the type int32_t.</div><div class="ttdef"><b>Definition:</b> type.c:44</div></div>
+<div class="ttc" id="atype_8h_html_ad1233e400a33f91224fb015e937ff6a9"><div class="ttname"><a href="type_8h.html#ad1233e400a33f91224fb015e937ff6a9">gcu_type32_c</a></div><div class="ttdeci">GCU_Type32_Union gcu_type32_c(char val)</div><div class="ttdoc">Create a 32-bit union variable with the type char.</div><div class="ttdef"><b>Definition:</b> type.c:122</div></div>
+<div class="ttc" id="atype_8h_html_ae6b9278639fc21c5849dfd45f2b8af45"><div class="ttname"><a href="type_8h.html#ae6b9278639fc21c5849dfd45f2b8af45">gcu_type64_ui8</a></div><div class="ttdeci">GCU_Type64_Union gcu_type64_ui8(uint8_t val)</div><div class="ttdoc">Create a 64-bit union variable with the type uint8_t.</div><div class="ttdef"><b>Definition:</b> type.c:32</div></div>
+<div class="ttc" id="atype_8h_html_ae99aba337c8310a160569ff9471b28d8"><div class="ttname"><a href="type_8h.html#ae99aba337c8310a160569ff9471b28d8">gcu_type64_ui64</a></div><div class="ttdeci">GCU_Type64_Union gcu_type64_ui64(uint64_t val)</div><div class="ttdoc">Create a 64-bit union variable with the type uint64_t.</div><div class="ttdef"><b>Definition:</b> type.c:14</div></div>
+<div class="ttc" id="atype_8h_html_af1ed1721c08100f6e05d7108b85fa280"><div class="ttname"><a href="type_8h.html#af1ed1721c08100f6e05d7108b85fa280">gcu_type32_ui64</a></div><div class="ttdeci">GCU_Type32_Union gcu_type32_ui64(uint64_t val)</div><div class="ttdoc">Create a 32-bit union variable with the type uint64_t.</div></div>
+<div class="ttc" id="atype_8h_html_af833ea51f6ed494eda66b3339b5953d8"><div class="ttname"><a href="type_8h.html#af833ea51f6ed494eda66b3339b5953d8">gcu_type64_i16</a></div><div class="ttdeci">GCU_Type64_Union gcu_type64_i16(int16_t val)</div><div class="ttdoc">Create a 64-bit union variable with the type int16_t.</div><div class="ttdef"><b>Definition:</b> type.c:50</div></div>
+<div class="ttc" id="atype_8h_html_af870ce1909b3cc57c92806cfb36f7e86"><div class="ttname"><a href="type_8h.html#af870ce1909b3cc57c92806cfb36f7e86">gcu_type8_i8</a></div><div class="ttdeci">GCU_Type8_Union gcu_type8_i8(int8_t val)</div><div class="ttdoc">Create a 8-bit union variable with the type int8_t.</div><div class="ttdef"><b>Definition:</b> type.c:164</div></div>
+<div class="ttc" id="atype_8h_html_af9b242b765bda96d0ec38cdecb6a9340"><div class="ttname"><a href="type_8h.html#af9b242b765bda96d0ec38cdecb6a9340">gcu_type64_i8</a></div><div class="ttdeci">GCU_Type64_Union gcu_type64_i8(int8_t val)</div><div class="ttdoc">Create a 64-bit union variable with the type int8_t.</div><div class="ttdef"><b>Definition:</b> type.c:56</div></div>
+<div class="ttc" id="aunionGCU__Type16__Union_html"><div class="ttname"><a href="unionGCU__Type16__Union.html">GCU_Type16_Union</a></div><div class="ttdoc">A union of all basic, 16-bit types to be used by generic, 16-bit containers.</div><div class="ttdef"><b>Definition:</b> type.h:85</div></div>
+<div class="ttc" id="aunionGCU__Type32__Union_html"><div class="ttname"><a href="unionGCU__Type32__Union.html">GCU_Type32_Union</a></div><div class="ttdoc">A union of all basic, 32-bit types to be used by generic, 32-bit containers.</div><div class="ttdef"><b>Definition:</b> type.h:71</div></div>
+<div class="ttc" id="aunionGCU__Type64__Union_html"><div class="ttname"><a href="unionGCU__Type64__Union.html">GCU_Type64_Union</a></div><div class="ttdoc">A union of all basic, 64-bit types to be used by generic, 64-bit containers.</div><div class="ttdef"><b>Definition:</b> type.h:53</div></div>
+<div class="ttc" id="aunionGCU__Type8__Union_html"><div class="ttname"><a href="unionGCU__Type8__Union.html">GCU_Type8_Union</a></div><div class="ttdoc">A union of all basic, 8-bit types to be used by generic, 8-bit containers.</div><div class="ttdef"><b>Definition:</b> type.h:96</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
