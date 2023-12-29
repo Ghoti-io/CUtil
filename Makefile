@@ -80,6 +80,7 @@ $(OBJ_DIR)/debug.o: \
 
 $(OBJ_DIR)/hash.o: \
 				src/hash.c \
+				src/hash.template.c \
 				$(DEP_HASH)
 
 $(OBJ_DIR)/type.o: \
@@ -88,6 +89,7 @@ $(OBJ_DIR)/type.o: \
 
 $(OBJ_DIR)/vector.o: \
 				src/vector.c \
+				src/vector.template.c \
 				$(DEP_TYPE)
 
 ####################################################################
