@@ -18,6 +18,7 @@ extern "C" {
 #define GCU_Hash64_Cell GHOTIIO_CUTIL(GCU_Hash64_Cell)
 #define GCU_Hash64_Table GHOTIIO_CUTIL(GCU_Hash64_Table)
 #define GCU_Hash64_Iterator GHOTIIO_CUTIL(GCU_Hash64_Iterator)
+
 #define gcu_hash64_create GHOTIIO_CUTIL(gcu_hash64_create)
 #define gcu_hash64_destroy GHOTIIO_CUTIL(gcu_hash64_destroy)
 #define gcu_hash64_set GHOTIIO_CUTIL(gcu_hash64_set)
@@ -27,6 +28,7 @@ extern "C" {
 #define gcu_hash64_count GHOTIIO_CUTIL(gcu_hash64_count)
 #define gcu_hash64_iterator_get GHOTIIO_CUTIL(gcu_hash64_iterator_get)
 #define gcu_hash64_iterator_next GHOTIIO_CUTIL(gcu_hash64_iterator_next)
+
 #define GCU_Hash32_Value GHOTIIO_CUTIL(GCU_Hash32_Value)
 #define GCU_Hash32_Cell GHOTIIO_CUTIL(GCU_Hash32_Cell)
 #define GCU_Hash32_Table GHOTIIO_CUTIL(GCU_Hash32_Table)
@@ -40,6 +42,7 @@ extern "C" {
 #define gcu_hash32_count GHOTIIO_CUTIL(gcu_hash32_count)
 #define gcu_hash32_iterator_get GHOTIIO_CUTIL(gcu_hash32_iterator_get)
 #define gcu_hash32_iterator_next GHOTIIO_CUTIL(gcu_hash32_iterator_next)
+
 #define GCU_Hash16_Value GHOTIIO_CUTIL(GCU_Hash16_Value)
 #define GCU_Hash16_Cell GHOTIIO_CUTIL(GCU_Hash16_Cell)
 #define GCU_Hash16_Table GHOTIIO_CUTIL(GCU_Hash16_Table)
@@ -53,6 +56,7 @@ extern "C" {
 #define gcu_hash16_count GHOTIIO_CUTIL(gcu_hash16_count)
 #define gcu_hash16_iterator_get GHOTIIO_CUTIL(gcu_hash16_iterator_get)
 #define gcu_hash16_iterator_next GHOTIIO_CUTIL(gcu_hash16_iterator_next)
+
 #define GCU_Hash8_Value GHOTIIO_CUTIL(GCU_Hash8_Value)
 #define GCU_Hash8_Cell GHOTIIO_CUTIL(GCU_Hash8_Cell)
 #define GCU_Hash8_Table GHOTIIO_CUTIL(GCU_Hash8_Table)

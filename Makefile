@@ -18,6 +18,7 @@ TARGET := $(SO_NAME).$(MINOR_VERSION)
 INCLUDE := -I include/
 LIBOBJECTS := $(OBJ_DIR)/debug.o \
 							$(OBJ_DIR)/hash.o \
+							$(OBJ_DIR)/string.o \
 							$(OBJ_DIR)/type.o \
 							$(OBJ_DIR)/vector.o
 
@@ -49,7 +50,9 @@ DEP_HASH= \
 DEP_VECTOR= \
 	$(DEP_TYPE) \
 	include/cutil/vector.h
-
+DEP_STRING = \
+	$(DEP_LIBVER) \
+	include/cutil/string.h
 
 ####################################################################
 # Floating Point Type Identification
@@ -82,6 +85,10 @@ $(OBJ_DIR)/hash.o: \
 				src/hash.c \
 				src/hash.template.c \
 				$(DEP_HASH)
+
+$(OBJ_DIR)/string.o: \
+				src/string.c \
+				$(DEP_STRING)
 
 $(OBJ_DIR)/type.o: \
 				src/type.c \
@@ -129,6 +136,13 @@ $(APP_DIR)/test-hash: \
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
+$(APP_DIR)/test-string: \
+				test/test-string.cpp \
+				$(APP_DIR)/$(TARGET)
+	@echo "\n### Compiling String Test ###"
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+
 $(APP_DIR)/test-vector: \
 				test/test-vector.cpp \
 				$(APP_DIR)/$(TARGET)
@@ -168,6 +182,7 @@ test: ## Make and run the Unit tests
 test: \
 				$(APP_DIR)/test-debug \
 				$(APP_DIR)/test-type \
+				$(APP_DIR)/test-string \
 				$(APP_DIR)/test-hash \
 				$(APP_DIR)/test-vector \
 				$(APP_DIR/$(TARGET)
@@ -178,6 +193,7 @@ test: \
 	@echo "\033[0m"
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-debug --gtest_brief=1
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-type --gtest_brief=1
+	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-string --gtest_brief=1
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-hash --gtest_brief=1
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-vector --gtest_brief=1
 
