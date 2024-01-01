@@ -51,4 +51,5 @@ var menudata={children:[
 {text:"g",url:"globals.html#index_g"}]},
 {text:"Functions",url:"globals_func.html",children:[
 {text:"g",url:"globals_func.html#index_g"}]},
-{text:"Macros",url:"globals_defs.html"}]}]}]}
+{text:"Macros",url:"globals_defs.html",children:[
+{text:"g",url:"globals_defs.html#index_g"}]}]}]}]}

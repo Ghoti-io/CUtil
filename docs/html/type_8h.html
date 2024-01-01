@@ -85,6 +85,7 @@ $(document).ready(function(){initNavTree('type_8h.html',''); initResizable(); })
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
+<a href="#define-members">Macros</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">type.h File Reference</div>  </div>
@@ -114,15 +115,18 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="type_8h__dep__incl.png" border="0" usemap="#ainclude_2cutil_2type_8hdep" alt=""/></div>
 <map name="ainclude_2cutil_2type_8hdep" id="ainclude_2cutil_2type_8hdep">
-<area shape="rect" title="Type definitions and utilities for use by the Ghoti.io projects." alt="" coords="353,5,499,32"/>
-<area shape="rect" href="hash_8h.html" title="A simple hash table implementation." alt="" coords="103,80,251,107"/>
-<area shape="rect" href="vector_8h.html" title="A simple vector implementation." alt="" coords="275,80,433,107"/>
-<area shape="rect" href="type_8c.html" title=" " alt="" coords="457,80,542,107"/>
-<area shape="rect" href="test-type_8cpp.html" title="Test the behavior of Ghoti.io CUtil type library." alt="" coords="567,80,704,107"/>
+<area shape="rect" title="Type definitions and utilities for use by the Ghoti.io projects." alt="" coords="559,5,706,32"/>
+<area shape="rect" href="hash_8h.html" title="A simple hash table implementation." alt="" coords="112,80,260,107"/>
+<area shape="rect" href="string_8h.html" title="A collection of string&#45;related functions." alt="" coords="375,80,530,107"/>
+<area shape="rect" href="vector_8h.html" title="A simple vector implementation." alt="" coords="554,80,711,107"/>
+<area shape="rect" href="type_8c.html" title=" " alt="" coords="735,80,821,107"/>
+<area shape="rect" href="test-type_8cpp.html" title="Test the behavior of Ghoti.io CUtil type library." alt="" coords="845,80,983,107"/>
 <area shape="rect" href="hash_8c.html" title=" " alt="" coords="5,155,92,181"/>
 <area shape="rect" href="test-hash_8cpp.html" title="Test the behavior of Ghoti.io CUtil hash table library." alt="" coords="117,155,255,181"/>
-<area shape="rect" href="vector_8c.html" title=" " alt="" coords="297,155,393,181"/>
-<area shape="rect" href="test-vector_8cpp.html" title="Test the behavior of Ghoti.io CUtil hash table library." alt="" coords="417,155,563,181"/>
+<area shape="rect" href="string_8c.html" title=" " alt="" coords="279,155,373,181"/>
+<area shape="rect" href="vector_8c.html" title=" " alt="" coords="567,155,663,181"/>
+<area shape="rect" href="test-string_8cpp.html" title="Test the behavior of Ghoti.io CUtil string library." alt="" coords="397,155,543,181"/>
+<area shape="rect" href="test-vector_8cpp.html" title="Test the behavior of Ghoti.io CUtil hash table library." alt="" coords="687,155,834,181"/>
 </map>
 </div>
 </div>
@@ -142,6 +146,93 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">union &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="unionGCU__Type8__Union.html">GCU_Type8_Union</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A union of all basic, 8-bit types to be used by generic, 8-bit containers.  <a href="unionGCU__Type8__Union.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:afbc755af96a74233e83e793e0f97e95a"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#afbc755af96a74233e83e793e0f97e95a">GCU_TYPE64_P</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.p = val})</td></tr>
+<tr class="memdesc:afbc755af96a74233e83e793e0f97e95a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 64-bit union variable with the type <code>void *</code>.  <a href="type_8h.html#afbc755af96a74233e83e793e0f97e95a">More...</a><br /></td></tr>
+<tr class="separator:afbc755af96a74233e83e793e0f97e95a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acb9f9e422343188032139b607220fd3b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#acb9f9e422343188032139b607220fd3b">GCU_TYPE64_UI64</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.ui64 = val})</td></tr>
+<tr class="memdesc:acb9f9e422343188032139b607220fd3b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 64-bit union variable with the type <code>uint64_t</code>.  <a href="type_8h.html#acb9f9e422343188032139b607220fd3b">More...</a><br /></td></tr>
+<tr class="separator:acb9f9e422343188032139b607220fd3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4bc55536be5a157ddd1e3e82af5b38e9"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a4bc55536be5a157ddd1e3e82af5b38e9">GCU_TYPE64_UI32</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.ui32 = val})</td></tr>
+<tr class="memdesc:a4bc55536be5a157ddd1e3e82af5b38e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 64-bit union variable with the type <code>uint32_t</code>.  <a href="type_8h.html#a4bc55536be5a157ddd1e3e82af5b38e9">More...</a><br /></td></tr>
+<tr class="separator:a4bc55536be5a157ddd1e3e82af5b38e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa42c21fafcd6c8f1d9179351bdb8d5d2"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#aa42c21fafcd6c8f1d9179351bdb8d5d2">GCU_TYPE64_UI16</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.ui16 = val})</td></tr>
+<tr class="memdesc:aa42c21fafcd6c8f1d9179351bdb8d5d2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 64-bit union variable with the type <code>uint16_t</code>.  <a href="type_8h.html#aa42c21fafcd6c8f1d9179351bdb8d5d2">More...</a><br /></td></tr>
+<tr class="separator:aa42c21fafcd6c8f1d9179351bdb8d5d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8a691d7d1d0afdf370d2bb8052a8457c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a8a691d7d1d0afdf370d2bb8052a8457c">GCU_TYPE64_UI8</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.ui8 = val})</td></tr>
+<tr class="memdesc:a8a691d7d1d0afdf370d2bb8052a8457c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 64-bit union variable with the type <code>uint8_t</code>.  <a href="type_8h.html#a8a691d7d1d0afdf370d2bb8052a8457c">More...</a><br /></td></tr>
+<tr class="separator:a8a691d7d1d0afdf370d2bb8052a8457c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a116a3649d1537a4e77a707cb2549c210"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a116a3649d1537a4e77a707cb2549c210">GCU_TYPE64_I64</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.i64 = val})</td></tr>
+<tr class="memdesc:a116a3649d1537a4e77a707cb2549c210"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 64-bit union variable with the type <code>int64_t</code>.  <a href="type_8h.html#a116a3649d1537a4e77a707cb2549c210">More...</a><br /></td></tr>
+<tr class="separator:a116a3649d1537a4e77a707cb2549c210"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a94d01b8e0c2bf0cf0d375b6a344c7e7b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a94d01b8e0c2bf0cf0d375b6a344c7e7b">GCU_TYPE64_I32</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.i32 = val})</td></tr>
+<tr class="memdesc:a94d01b8e0c2bf0cf0d375b6a344c7e7b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 64-bit union variable with the type <code>int32_t</code>.  <a href="type_8h.html#a94d01b8e0c2bf0cf0d375b6a344c7e7b">More...</a><br /></td></tr>
+<tr class="separator:a94d01b8e0c2bf0cf0d375b6a344c7e7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acfe131a7bfdb0507d23814583c320cd5"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#acfe131a7bfdb0507d23814583c320cd5">GCU_TYPE64_I16</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.i16 = val})</td></tr>
+<tr class="memdesc:acfe131a7bfdb0507d23814583c320cd5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 64-bit union variable with the type <code>int16_t</code>.  <a href="type_8h.html#acfe131a7bfdb0507d23814583c320cd5">More...</a><br /></td></tr>
+<tr class="separator:acfe131a7bfdb0507d23814583c320cd5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a56647f324e14748d0dafc7371c83260f"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a56647f324e14748d0dafc7371c83260f">GCU_TYPE64_I8</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.i8 = val})</td></tr>
+<tr class="memdesc:a56647f324e14748d0dafc7371c83260f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 64-bit union variable with the type <code>int8_t</code>.  <a href="type_8h.html#a56647f324e14748d0dafc7371c83260f">More...</a><br /></td></tr>
+<tr class="separator:a56647f324e14748d0dafc7371c83260f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a87ac7590c3015c59973590fd6a8f555e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a87ac7590c3015c59973590fd6a8f555e">GCU_TYPE64_F64</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.f64 = val})</td></tr>
+<tr class="memdesc:a87ac7590c3015c59973590fd6a8f555e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 64-bit union variable with the type float with 64 bits.  <a href="type_8h.html#a87ac7590c3015c59973590fd6a8f555e">More...</a><br /></td></tr>
+<tr class="separator:a87ac7590c3015c59973590fd6a8f555e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a27e7a063610575d0fb88bec28c7a1f15"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a27e7a063610575d0fb88bec28c7a1f15">GCU_TYPE64_F32</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.f32 = val})</td></tr>
+<tr class="memdesc:a27e7a063610575d0fb88bec28c7a1f15"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 64-bit union variable with the type float with 32 bits.  <a href="type_8h.html#a27e7a063610575d0fb88bec28c7a1f15">More...</a><br /></td></tr>
+<tr class="separator:a27e7a063610575d0fb88bec28c7a1f15"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a96c77733b3b00722f828ee10377cd2"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a7a96c77733b3b00722f828ee10377cd2">GCU_TYPE64_C</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.c = val})</td></tr>
+<tr class="memdesc:a7a96c77733b3b00722f828ee10377cd2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 64-bit union variable with the type <code>char</code>.  <a href="type_8h.html#a7a96c77733b3b00722f828ee10377cd2">More...</a><br /></td></tr>
+<tr class="separator:a7a96c77733b3b00722f828ee10377cd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a280fcfb7ea7143043303bf4ac66098be"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a280fcfb7ea7143043303bf4ac66098be">GCU_TYPE32_UI32</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a>) {.ui32 = val})</td></tr>
+<tr class="memdesc:a280fcfb7ea7143043303bf4ac66098be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 32-bit union variable with the type <code>uint32_t</code>.  <a href="type_8h.html#a280fcfb7ea7143043303bf4ac66098be">More...</a><br /></td></tr>
+<tr class="separator:a280fcfb7ea7143043303bf4ac66098be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a039dc1af707c795893be996f3d8b0eab"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a039dc1af707c795893be996f3d8b0eab">GCU_TYPE32_UI16</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a>) {.ui16 = val})</td></tr>
+<tr class="memdesc:a039dc1af707c795893be996f3d8b0eab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 32-bit union variable with the type <code>uint16_t</code>.  <a href="type_8h.html#a039dc1af707c795893be996f3d8b0eab">More...</a><br /></td></tr>
+<tr class="separator:a039dc1af707c795893be996f3d8b0eab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0fa6cc08d1121224cf5ef420e1843cdb"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a0fa6cc08d1121224cf5ef420e1843cdb">GCU_TYPE32_UI8</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a>) {.ui8 = val})</td></tr>
+<tr class="memdesc:a0fa6cc08d1121224cf5ef420e1843cdb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 32-bit union variable with the type <code>uint8_t</code>.  <a href="type_8h.html#a0fa6cc08d1121224cf5ef420e1843cdb">More...</a><br /></td></tr>
+<tr class="separator:a0fa6cc08d1121224cf5ef420e1843cdb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6c10520193432314611b411e34198a56"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a6c10520193432314611b411e34198a56">GCU_TYPE32_I32</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a>) {.i32 = val})</td></tr>
+<tr class="memdesc:a6c10520193432314611b411e34198a56"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 32-bit union variable with the type <code>int32_t</code>.  <a href="type_8h.html#a6c10520193432314611b411e34198a56">More...</a><br /></td></tr>
+<tr class="separator:a6c10520193432314611b411e34198a56"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acb03ea48dc6ed4eb58986c143fcd8394"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#acb03ea48dc6ed4eb58986c143fcd8394">GCU_TYPE32_I16</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a>) {.i16 = val})</td></tr>
+<tr class="memdesc:acb03ea48dc6ed4eb58986c143fcd8394"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 32-bit union variable with the type <code>int16_t</code>.  <a href="type_8h.html#acb03ea48dc6ed4eb58986c143fcd8394">More...</a><br /></td></tr>
+<tr class="separator:acb03ea48dc6ed4eb58986c143fcd8394"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a22121a75d1646c47d6877fe7828d4db0"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a22121a75d1646c47d6877fe7828d4db0">GCU_TYPE32_I8</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a>) {.i8 = val})</td></tr>
+<tr class="memdesc:a22121a75d1646c47d6877fe7828d4db0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 32-bit union variable with the type <code>int8_t</code>.  <a href="type_8h.html#a22121a75d1646c47d6877fe7828d4db0">More...</a><br /></td></tr>
+<tr class="separator:a22121a75d1646c47d6877fe7828d4db0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a409a822ce7dccc5c098f938baec5d1b9"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a409a822ce7dccc5c098f938baec5d1b9">GCU_TYPE32_F32</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a>) {.f32 = val})</td></tr>
+<tr class="memdesc:a409a822ce7dccc5c098f938baec5d1b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 32-bit union variable with the type float with 32 bits.  <a href="type_8h.html#a409a822ce7dccc5c098f938baec5d1b9">More...</a><br /></td></tr>
+<tr class="separator:a409a822ce7dccc5c098f938baec5d1b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abadafdc615de89d044ad8a121f523de2"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#abadafdc615de89d044ad8a121f523de2">GCU_TYPE32_C</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a>) {.c = val})</td></tr>
+<tr class="memdesc:abadafdc615de89d044ad8a121f523de2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 32-bit union variable with the type <code>char</code>.  <a href="type_8h.html#abadafdc615de89d044ad8a121f523de2">More...</a><br /></td></tr>
+<tr class="separator:abadafdc615de89d044ad8a121f523de2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5a463932d2af203ed58a22519cf45bf0"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a5a463932d2af203ed58a22519cf45bf0">GCU_TYPE16_UI16</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type16__Union.html">GCU_Type16_Union</a>) {.ui16 = val})</td></tr>
+<tr class="memdesc:a5a463932d2af203ed58a22519cf45bf0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 16-bit union variable with the type <code>uint16_t</code>.  <a href="type_8h.html#a5a463932d2af203ed58a22519cf45bf0">More...</a><br /></td></tr>
+<tr class="separator:a5a463932d2af203ed58a22519cf45bf0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9692538c8cc8caa93d9f065978102167"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a9692538c8cc8caa93d9f065978102167">GCU_TYPE16_UI8</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type16__Union.html">GCU_Type16_Union</a>) {.ui8 = val})</td></tr>
+<tr class="memdesc:a9692538c8cc8caa93d9f065978102167"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 16-bit union variable with the type <code>uint8_t</code>.  <a href="type_8h.html#a9692538c8cc8caa93d9f065978102167">More...</a><br /></td></tr>
+<tr class="separator:a9692538c8cc8caa93d9f065978102167"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af35403ba21465fd02b1dc7eb513ffbff"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#af35403ba21465fd02b1dc7eb513ffbff">GCU_TYPE16_I16</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type16__Union.html">GCU_Type16_Union</a>) {.i16 = val})</td></tr>
+<tr class="memdesc:af35403ba21465fd02b1dc7eb513ffbff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 16-bit union variable with the type <code>int16_t</code>.  <a href="type_8h.html#af35403ba21465fd02b1dc7eb513ffbff">More...</a><br /></td></tr>
+<tr class="separator:af35403ba21465fd02b1dc7eb513ffbff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5dfae727fbb3e4eda00d78ba1916cca5"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a5dfae727fbb3e4eda00d78ba1916cca5">GCU_TYPE16_I8</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type16__Union.html">GCU_Type16_Union</a>) {.i8 = val})</td></tr>
+<tr class="memdesc:a5dfae727fbb3e4eda00d78ba1916cca5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 16-bit union variable with the type <code>int8_t</code>.  <a href="type_8h.html#a5dfae727fbb3e4eda00d78ba1916cca5">More...</a><br /></td></tr>
+<tr class="separator:a5dfae727fbb3e4eda00d78ba1916cca5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff0c32e49bdbe4fd729c41c6a16f17eb"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#aff0c32e49bdbe4fd729c41c6a16f17eb">GCU_TYPE16_C</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type16__Union.html">GCU_Type16_Union</a>) {.c = val})</td></tr>
+<tr class="memdesc:aff0c32e49bdbe4fd729c41c6a16f17eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 16-bit union variable with the type <code>char</code>.  <a href="type_8h.html#aff0c32e49bdbe4fd729c41c6a16f17eb">More...</a><br /></td></tr>
+<tr class="separator:aff0c32e49bdbe4fd729c41c6a16f17eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a920c2bb7e742849d4b2b0d9fe923d31b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a920c2bb7e742849d4b2b0d9fe923d31b">GCU_TYPE8_UI8</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type8__Union.html">GCU_Type8_Union</a>) {.ui8 = val})</td></tr>
+<tr class="memdesc:a920c2bb7e742849d4b2b0d9fe923d31b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 8-bit union variable with the type <code>uint8_t</code>.  <a href="type_8h.html#a920c2bb7e742849d4b2b0d9fe923d31b">More...</a><br /></td></tr>
+<tr class="separator:a920c2bb7e742849d4b2b0d9fe923d31b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a515f10b1b6a61c564c16da8f935ab01e"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a515f10b1b6a61c564c16da8f935ab01e">GCU_TYPE8_I8</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type8__Union.html">GCU_Type8_Union</a>) {.i8 = val})</td></tr>
+<tr class="memdesc:a515f10b1b6a61c564c16da8f935ab01e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 8-bit union variable with the type <code>int8_t</code>.  <a href="type_8h.html#a515f10b1b6a61c564c16da8f935ab01e">More...</a><br /></td></tr>
+<tr class="separator:a515f10b1b6a61c564c16da8f935ab01e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a48a68f380a056f4e326cff1d74999adb"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a48a68f380a056f4e326cff1d74999adb">GCU_TYPE8_C</a>(val)&#160;&#160;&#160;((<a class="el" href="unionGCU__Type8__Union.html">GCU_Type8_Union</a>) {.c = val})</td></tr>
+<tr class="memdesc:a48a68f380a056f4e326cff1d74999adb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 8-bit union variable with the type <code>char</code>.  <a href="type_8h.html#a48a68f380a056f4e326cff1d74999adb">More...</a><br /></td></tr>
+<tr class="separator:a48a68f380a056f4e326cff1d74999adb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -181,9 +272,6 @@ Functions</h2></td></tr>
 <tr class="memitem:a44c6ccab2bdb9feeb53fa531829da649"><td class="memItemLeft" align="right" valign="top"><a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#a44c6ccab2bdb9feeb53fa531829da649">gcu_type64_c</a> (char val)</td></tr>
 <tr class="memdesc:a44c6ccab2bdb9feeb53fa531829da649"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 64-bit union variable with the type <code>char</code>.  <a href="type_8h.html#a44c6ccab2bdb9feeb53fa531829da649">More...</a><br /></td></tr>
 <tr class="separator:a44c6ccab2bdb9feeb53fa531829da649"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af1ed1721c08100f6e05d7108b85fa280"><td class="memItemLeft" align="right" valign="top"><a class="el" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#af1ed1721c08100f6e05d7108b85fa280">gcu_type32_ui64</a> (uint64_t val)</td></tr>
-<tr class="memdesc:af1ed1721c08100f6e05d7108b85fa280"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 32-bit union variable with the type <code>uint64_t</code>.  <a href="type_8h.html#af1ed1721c08100f6e05d7108b85fa280">More...</a><br /></td></tr>
-<tr class="separator:af1ed1721c08100f6e05d7108b85fa280"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abcb375c6e124ad1ab4845393cc672c33"><td class="memItemLeft" align="right" valign="top"><a class="el" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="type_8h.html#abcb375c6e124ad1ab4845393cc672c33">gcu_type32_ui32</a> (uint32_t val)</td></tr>
 <tr class="memdesc:abcb375c6e124ad1ab4845393cc672c33"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a 32-bit union variable with the type <code>uint32_t</code>.  <a href="type_8h.html#abcb375c6e124ad1ab4845393cc672c33">More...</a><br /></td></tr>
 <tr class="separator:abcb375c6e124ad1ab4845393cc672c33"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -235,7 +323,820 @@ Functions</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Type definitions and utilities for use by the Ghoti.io projects. </p>
-</div><h2 class="groupheader">Function Documentation</h2>
+</div><h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="aff0c32e49bdbe4fd729c41c6a16f17eb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff0c32e49bdbe4fd729c41c6a16f17eb">&#9670;&nbsp;</a></span>GCU_TYPE16_C</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE16_C</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type16__Union.html">GCU_Type16_Union</a>) {.c = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 16-bit union variable with the type <code>char</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#ab2e3229f5a82a3095529f2ea90bd5c92" title="Create a 16-bit union variable with the type char.">gcu_type16_c()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="af35403ba21465fd02b1dc7eb513ffbff"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af35403ba21465fd02b1dc7eb513ffbff">&#9670;&nbsp;</a></span>GCU_TYPE16_I16</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE16_I16</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type16__Union.html">GCU_Type16_Union</a>) {.i16 = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 16-bit union variable with the type <code>int16_t</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a41c9d4917fb2caa3c306e7e871c7552e" title="Create a 16-bit union variable with the type int16_t.">gcu_type16_i16()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="a5dfae727fbb3e4eda00d78ba1916cca5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5dfae727fbb3e4eda00d78ba1916cca5">&#9670;&nbsp;</a></span>GCU_TYPE16_I8</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE16_I8</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type16__Union.html">GCU_Type16_Union</a>) {.i8 = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 16-bit union variable with the type <code>int8_t</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a2596ab80d9ce8a7f504ec6453be41755" title="Create a 16-bit union variable with the type int8_t.">gcu_type16_i8()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="a5a463932d2af203ed58a22519cf45bf0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5a463932d2af203ed58a22519cf45bf0">&#9670;&nbsp;</a></span>GCU_TYPE16_UI16</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE16_UI16</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type16__Union.html">GCU_Type16_Union</a>) {.ui16 = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 16-bit union variable with the type <code>uint16_t</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#aab5324fc2ab32ce6d27ac5db1e17a2f4" title="Create a 16-bit union variable with the type uint16_t.">gcu_type16_ui16()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="a9692538c8cc8caa93d9f065978102167"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9692538c8cc8caa93d9f065978102167">&#9670;&nbsp;</a></span>GCU_TYPE16_UI8</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE16_UI8</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type16__Union.html">GCU_Type16_Union</a>) {.ui8 = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 16-bit union variable with the type <code>uint8_t</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a9f9cd9def58f37ab74b484b9473ced14" title="Create a 16-bit union variable with the type uint8_t.">gcu_type16_ui8()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="abadafdc615de89d044ad8a121f523de2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abadafdc615de89d044ad8a121f523de2">&#9670;&nbsp;</a></span>GCU_TYPE32_C</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE32_C</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a>) {.c = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 32-bit union variable with the type <code>char</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#ad1233e400a33f91224fb015e937ff6a9" title="Create a 32-bit union variable with the type char.">gcu_type32_c()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="a409a822ce7dccc5c098f938baec5d1b9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a409a822ce7dccc5c098f938baec5d1b9">&#9670;&nbsp;</a></span>GCU_TYPE32_F32</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE32_F32</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a>) {.f32 = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 32-bit union variable with the type float with 32 bits. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a8ea42dc91851865306785311d8a1b6f4" title="Create a 32-bit union variable with the type float with 32 bits.">gcu_type32_f32()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="acb03ea48dc6ed4eb58986c143fcd8394"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acb03ea48dc6ed4eb58986c143fcd8394">&#9670;&nbsp;</a></span>GCU_TYPE32_I16</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE32_I16</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a>) {.i16 = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 32-bit union variable with the type <code>int16_t</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a595f72ba84ddbeacf32f23ec2c86ac3f" title="Create a 32-bit union variable with the type int16_t.">gcu_type32_i16()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="a6c10520193432314611b411e34198a56"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6c10520193432314611b411e34198a56">&#9670;&nbsp;</a></span>GCU_TYPE32_I32</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE32_I32</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a>) {.i32 = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 32-bit union variable with the type <code>int32_t</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a6917c294f38050f2593b28a8e4d60fd7" title="Create a 32-bit union variable with the type int32_t.">gcu_type32_i32()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="a22121a75d1646c47d6877fe7828d4db0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a22121a75d1646c47d6877fe7828d4db0">&#9670;&nbsp;</a></span>GCU_TYPE32_I8</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE32_I8</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a>) {.i8 = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 32-bit union variable with the type <code>int8_t</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a408719140c008f84127988c847e37b01" title="Create a 32-bit union variable with the type int8_t.">gcu_type32_i8()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="a039dc1af707c795893be996f3d8b0eab"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a039dc1af707c795893be996f3d8b0eab">&#9670;&nbsp;</a></span>GCU_TYPE32_UI16</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE32_UI16</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a>) {.ui16 = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 32-bit union variable with the type <code>uint16_t</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#ab5383bcc69acacbb13c6e1b087f6c6a9" title="Create a 32-bit union variable with the type uint16_t.">gcu_type32_ui16()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="a280fcfb7ea7143043303bf4ac66098be"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a280fcfb7ea7143043303bf4ac66098be">&#9670;&nbsp;</a></span>GCU_TYPE32_UI32</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE32_UI32</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a>) {.ui32 = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 32-bit union variable with the type <code>uint32_t</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#abcb375c6e124ad1ab4845393cc672c33" title="Create a 32-bit union variable with the type uint32_t.">gcu_type32_ui32()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="a0fa6cc08d1121224cf5ef420e1843cdb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0fa6cc08d1121224cf5ef420e1843cdb">&#9670;&nbsp;</a></span>GCU_TYPE32_UI8</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE32_UI8</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a>) {.ui8 = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 32-bit union variable with the type <code>uint8_t</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a7d4d8258b0910b354636af2f05f0d102" title="Create a 32-bit union variable with the type uint8_t.">gcu_type32_ui8()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="a7a96c77733b3b00722f828ee10377cd2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7a96c77733b3b00722f828ee10377cd2">&#9670;&nbsp;</a></span>GCU_TYPE64_C</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE64_C</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.c = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 64-bit union variable with the type <code>char</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a44c6ccab2bdb9feeb53fa531829da649" title="Create a 64-bit union variable with the type char.">gcu_type64_c()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="a27e7a063610575d0fb88bec28c7a1f15"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a27e7a063610575d0fb88bec28c7a1f15">&#9670;&nbsp;</a></span>GCU_TYPE64_F32</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE64_F32</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.f32 = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 64-bit union variable with the type float with 32 bits. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a7a414c66d3667f1a0d333647cfd97e92" title="Create a 64-bit union variable with the type float with 32 bits.">gcu_type64_f32()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="a87ac7590c3015c59973590fd6a8f555e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a87ac7590c3015c59973590fd6a8f555e">&#9670;&nbsp;</a></span>GCU_TYPE64_F64</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE64_F64</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.f64 = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 64-bit union variable with the type float with 64 bits. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a76fdf57be25221bfe9d1d2fbbdd35b25" title="Create a 64-bit union variable with the type float with 64 bits.">gcu_type64_f64()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="acfe131a7bfdb0507d23814583c320cd5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acfe131a7bfdb0507d23814583c320cd5">&#9670;&nbsp;</a></span>GCU_TYPE64_I16</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE64_I16</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.i16 = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 64-bit union variable with the type <code>int16_t</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#af833ea51f6ed494eda66b3339b5953d8" title="Create a 64-bit union variable with the type int16_t.">gcu_type64_i16()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="a94d01b8e0c2bf0cf0d375b6a344c7e7b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a94d01b8e0c2bf0cf0d375b6a344c7e7b">&#9670;&nbsp;</a></span>GCU_TYPE64_I32</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE64_I32</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.i32 = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 64-bit union variable with the type <code>int32_t</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#acfc78764c9086d918596a6ec47d1be93" title="Create a 64-bit union variable with the type int32_t.">gcu_type64_i32()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="a116a3649d1537a4e77a707cb2549c210"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a116a3649d1537a4e77a707cb2549c210">&#9670;&nbsp;</a></span>GCU_TYPE64_I64</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE64_I64</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.i64 = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 64-bit union variable with the type <code>int64_t</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#aa39c7c3a498869a2d16c17c2f43f7927" title="Create a 64-bit union variable with the type int64_t.">gcu_type64_i64()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="a56647f324e14748d0dafc7371c83260f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a56647f324e14748d0dafc7371c83260f">&#9670;&nbsp;</a></span>GCU_TYPE64_I8</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE64_I8</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.i8 = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 64-bit union variable with the type <code>int8_t</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#af9b242b765bda96d0ec38cdecb6a9340" title="Create a 64-bit union variable with the type int8_t.">gcu_type64_i8()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="afbc755af96a74233e83e793e0f97e95a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afbc755af96a74233e83e793e0f97e95a">&#9670;&nbsp;</a></span>GCU_TYPE64_P</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE64_P</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.p = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 64-bit union variable with the type <code>void *</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a471ada5c8d8f2043d27ab7591cf48fc1" title="Create a 64-bit union variable with the type void *.">gcu_type64_p()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="aa42c21fafcd6c8f1d9179351bdb8d5d2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa42c21fafcd6c8f1d9179351bdb8d5d2">&#9670;&nbsp;</a></span>GCU_TYPE64_UI16</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE64_UI16</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.ui16 = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 64-bit union variable with the type <code>uint16_t</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#ac3d7f70ea9304a4a63060f7c7328e94a" title="Create a 64-bit union variable with the type uint16_t.">gcu_type64_ui16()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="a4bc55536be5a157ddd1e3e82af5b38e9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4bc55536be5a157ddd1e3e82af5b38e9">&#9670;&nbsp;</a></span>GCU_TYPE64_UI32</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE64_UI32</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.ui32 = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 64-bit union variable with the type <code>uint32_t</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a641a76a19823e9a3d62fab415c1bfa95" title="Create a 64-bit union variable with the type uint32_t.">gcu_type64_ui32()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="acb9f9e422343188032139b607220fd3b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acb9f9e422343188032139b607220fd3b">&#9670;&nbsp;</a></span>GCU_TYPE64_UI64</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE64_UI64</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.ui64 = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 64-bit union variable with the type <code>uint64_t</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#ae99aba337c8310a160569ff9471b28d8" title="Create a 64-bit union variable with the type uint64_t.">gcu_type64_ui64()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="a8a691d7d1d0afdf370d2bb8052a8457c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8a691d7d1d0afdf370d2bb8052a8457c">&#9670;&nbsp;</a></span>GCU_TYPE64_UI8</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE64_UI8</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type64__Union.html">GCU_Type64_Union</a>) {.ui8 = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 64-bit union variable with the type <code>uint8_t</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#ae6b9278639fc21c5849dfd45f2b8af45" title="Create a 64-bit union variable with the type uint8_t.">gcu_type64_ui8()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="a48a68f380a056f4e326cff1d74999adb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a48a68f380a056f4e326cff1d74999adb">&#9670;&nbsp;</a></span>GCU_TYPE8_C</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE8_C</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type8__Union.html">GCU_Type8_Union</a>) {.c = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 8-bit union variable with the type <code>char</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a2dcb71d41f40e8a2e6a0e46b0fb812c6" title="Create a 8-bit union variable with the type char.">gcu_type8_c()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="a515f10b1b6a61c564c16da8f935ab01e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a515f10b1b6a61c564c16da8f935ab01e">&#9670;&nbsp;</a></span>GCU_TYPE8_I8</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE8_I8</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type8__Union.html">GCU_Type8_Union</a>) {.i8 = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 8-bit union variable with the type <code>int8_t</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#af870ce1909b3cc57c92806cfb36f7e86" title="Create a 8-bit union variable with the type int8_t.">gcu_type8_i8()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<a id="a920c2bb7e742849d4b2b0d9fe923d31b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a920c2bb7e742849d4b2b0d9fe923d31b">&#9670;&nbsp;</a></span>GCU_TYPE8_UI8</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GCU_TYPE8_UI8</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">val</td><td>)</td>
+          <td>&#160;&#160;&#160;((<a class="el" href="unionGCU__Type8__Union.html">GCU_Type8_Union</a>) {.ui8 = val})</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create a 8-bit union variable with the type <code>uint8_t</code>. </p>
+<p>This #define is a compound literal. It is allowed in C but not C++. There is a corresponding function for use in C++.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a5c306994b4a4349096860e5c41e57a66" title="Create a 8-bit union variable with the type uint8_t.">gcu_type8_ui8()</a></dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
 <a id="ab2e3229f5a82a3095529f2ea90bd5c92"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab2e3229f5a82a3095529f2ea90bd5c92">&#9670;&nbsp;</a></span>gcu_type16_c()</h2>
 
@@ -253,6 +1154,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 16-bit union variable with the type <code>char</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#aff0c32e49bdbe4fd729c41c6a16f17eb" title="Create a 16-bit union variable with the type char.">GCU_TYPE16_C()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -280,6 +1183,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 16-bit union variable with the type <code>int16_t</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#af35403ba21465fd02b1dc7eb513ffbff" title="Create a 16-bit union variable with the type int16_t.">GCU_TYPE16_I16()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -307,6 +1212,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 16-bit union variable with the type <code>int8_t</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a5dfae727fbb3e4eda00d78ba1916cca5" title="Create a 16-bit union variable with the type int8_t.">GCU_TYPE16_I8()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -334,6 +1241,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 16-bit union variable with the type <code>uint16_t</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a5a463932d2af203ed58a22519cf45bf0" title="Create a 16-bit union variable with the type uint16_t.">GCU_TYPE16_UI16()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -361,6 +1270,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 16-bit union variable with the type <code>uint8_t</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a9692538c8cc8caa93d9f065978102167" title="Create a 16-bit union variable with the type uint8_t.">GCU_TYPE16_UI8()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -388,6 +1299,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 32-bit union variable with the type <code>char</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#abadafdc615de89d044ad8a121f523de2" title="Create a 32-bit union variable with the type char.">GCU_TYPE32_C()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -415,6 +1328,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 32-bit union variable with the type float with 32 bits. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a409a822ce7dccc5c098f938baec5d1b9" title="Create a 32-bit union variable with the type float with 32 bits.">GCU_TYPE32_F32()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -442,6 +1357,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 32-bit union variable with the type <code>int16_t</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#acb03ea48dc6ed4eb58986c143fcd8394" title="Create a 32-bit union variable with the type int16_t.">GCU_TYPE32_I16()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -469,6 +1386,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 32-bit union variable with the type <code>int32_t</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a6c10520193432314611b411e34198a56" title="Create a 32-bit union variable with the type int32_t.">GCU_TYPE32_I32()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -496,6 +1415,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 32-bit union variable with the type <code>int8_t</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a22121a75d1646c47d6877fe7828d4db0" title="Create a 32-bit union variable with the type int8_t.">GCU_TYPE32_I8()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -523,6 +1444,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 32-bit union variable with the type <code>uint16_t</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a039dc1af707c795893be996f3d8b0eab" title="Create a 32-bit union variable with the type uint16_t.">GCU_TYPE32_UI16()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -550,33 +1473,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 32-bit union variable with the type <code>uint32_t</code>. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The union variable. </dd></dl>
-
-</div>
-</div>
-<a id="af1ed1721c08100f6e05d7108b85fa280"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af1ed1721c08100f6e05d7108b85fa280">&#9670;&nbsp;</a></span>gcu_type32_ui64()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="unionGCU__Type32__Union.html">GCU_Type32_Union</a> gcu_type32_ui64 </td>
-          <td>(</td>
-          <td class="paramtype">uint64_t&#160;</td>
-          <td class="paramname"><em>val</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Create a 32-bit union variable with the type <code>uint64_t</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a280fcfb7ea7143043303bf4ac66098be" title="Create a 32-bit union variable with the type uint32_t.">GCU_TYPE32_UI32()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -604,6 +1502,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 32-bit union variable with the type <code>uint8_t</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a0fa6cc08d1121224cf5ef420e1843cdb" title="Create a 32-bit union variable with the type uint8_t.">GCU_TYPE32_UI8()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -631,6 +1531,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 64-bit union variable with the type <code>char</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a7a96c77733b3b00722f828ee10377cd2" title="Create a 64-bit union variable with the type char.">GCU_TYPE64_C()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -658,6 +1560,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 64-bit union variable with the type float with 32 bits. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a27e7a063610575d0fb88bec28c7a1f15" title="Create a 64-bit union variable with the type float with 32 bits.">GCU_TYPE64_F32()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -685,6 +1589,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 64-bit union variable with the type float with 64 bits. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a87ac7590c3015c59973590fd6a8f555e" title="Create a 64-bit union variable with the type float with 64 bits.">GCU_TYPE64_F64()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -712,6 +1618,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 64-bit union variable with the type <code>int16_t</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#acfe131a7bfdb0507d23814583c320cd5" title="Create a 64-bit union variable with the type int16_t.">GCU_TYPE64_I16()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -739,6 +1647,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 64-bit union variable with the type <code>int32_t</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a94d01b8e0c2bf0cf0d375b6a344c7e7b" title="Create a 64-bit union variable with the type int32_t.">GCU_TYPE64_I32()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -766,6 +1676,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 64-bit union variable with the type <code>int64_t</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a116a3649d1537a4e77a707cb2549c210" title="Create a 64-bit union variable with the type int64_t.">GCU_TYPE64_I64()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -793,6 +1705,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 64-bit union variable with the type <code>int8_t</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a56647f324e14748d0dafc7371c83260f" title="Create a 64-bit union variable with the type int8_t.">GCU_TYPE64_I8()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -820,6 +1734,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 64-bit union variable with the type <code>void *</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#afbc755af96a74233e83e793e0f97e95a" title="Create a 64-bit union variable with the type void *.">GCU_TYPE64_P()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -847,6 +1763,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 64-bit union variable with the type <code>uint16_t</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#aa42c21fafcd6c8f1d9179351bdb8d5d2" title="Create a 64-bit union variable with the type uint16_t.">GCU_TYPE64_UI16()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -874,6 +1792,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 64-bit union variable with the type <code>uint32_t</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a4bc55536be5a157ddd1e3e82af5b38e9" title="Create a 64-bit union variable with the type uint32_t.">GCU_TYPE64_UI32()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -901,6 +1821,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 64-bit union variable with the type <code>uint64_t</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#acb9f9e422343188032139b607220fd3b" title="Create a 64-bit union variable with the type uint64_t.">GCU_TYPE64_UI64()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -928,6 +1850,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 64-bit union variable with the type <code>uint8_t</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a8a691d7d1d0afdf370d2bb8052a8457c" title="Create a 64-bit union variable with the type uint8_t.">GCU_TYPE64_UI8()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -955,6 +1879,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 8-bit union variable with the type <code>char</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a48a68f380a056f4e326cff1d74999adb" title="Create a 8-bit union variable with the type char.">GCU_TYPE8_C()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -982,6 +1908,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 8-bit union variable with the type <code>int8_t</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a515f10b1b6a61c564c16da8f935ab01e" title="Create a 8-bit union variable with the type int8_t.">GCU_TYPE8_I8()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>
@@ -1009,6 +1937,8 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Create a 8-bit union variable with the type <code>uint8_t</code>. </p>
+<p>This function is provided as a helper in C++ because C++ does not allow the use of compound literals. If in C, use the <code>#define</code>.</p>
+<dl class="section see"><dt>See also</dt><dd><a class="el" href="type_8h.html#a920c2bb7e742849d4b2b0d9fe923d31b" title="Create a 8-bit union variable with the type uint8_t.">GCU_TYPE8_UI8()</a></dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">val</td><td>The value to put into the union. </td></tr>

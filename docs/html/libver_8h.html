@@ -97,20 +97,23 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="libver_8h__dep__incl.png" border="0" usemap="#ainclude_2cutil_2libver_8hdep" alt=""/></div>
 <map name="ainclude_2cutil_2libver_8hdep" id="ainclude_2cutil_2libver_8hdep">
-<area shape="rect" title="Header file used to control the version numbering and function namespace for all of the library." alt="" coords="270,5,423,32"/>
-<area shape="rect" href="debug_8h.html" title="Header file for debugging&#45;related functions." alt="" coords="92,80,249,107"/>
-<area shape="rect" href="float_8h.html" title="Type definitions for float types." alt="" coords="273,80,420,107"/>
-<area shape="rect" href="type_8h.html" title="Type definitions and utilities for use by the Ghoti.io projects." alt="" coords="356,155,503,181"/>
-<area shape="rect" href="debug_8c.html" title=" " alt="" coords="5,155,101,181"/>
-<area shape="rect" href="test-debug_8cpp.html" title="Test the behavior of Ghoti.io CUtil debug library and tools." alt="" coords="126,155,274,181"/>
-<area shape="rect" href="hash_8h.html" title="A simple hash table implementation." alt="" coords="106,229,254,256"/>
-<area shape="rect" href="vector_8h.html" title="A simple vector implementation." alt="" coords="279,229,436,256"/>
-<area shape="rect" href="type_8c.html" title=" " alt="" coords="460,229,545,256"/>
-<area shape="rect" href="test-type_8cpp.html" title="Test the behavior of Ghoti.io CUtil type library." alt="" coords="570,229,707,256"/>
-<area shape="rect" href="hash_8c.html" title=" " alt="" coords="9,304,95,331"/>
-<area shape="rect" href="test-hash_8cpp.html" title="Test the behavior of Ghoti.io CUtil hash table library." alt="" coords="120,304,259,331"/>
-<area shape="rect" href="vector_8c.html" title=" " alt="" coords="300,304,396,331"/>
-<area shape="rect" href="test-vector_8cpp.html" title="Test the behavior of Ghoti.io CUtil hash table library." alt="" coords="420,304,567,331"/>
+<area shape="rect" title="Header file used to control the version numbering and function namespace for all of the library." alt="" coords="473,5,627,32"/>
+<area shape="rect" href="debug_8h.html" title="Header file for debugging&#45;related functions." alt="" coords="295,80,453,107"/>
+<area shape="rect" href="float_8h.html" title="Type definitions for float types." alt="" coords="477,80,623,107"/>
+<area shape="rect" href="type_8h.html" title="Type definitions and utilities for use by the Ghoti.io projects." alt="" coords="559,155,706,181"/>
+<area shape="rect" href="debug_8c.html" title=" " alt="" coords="209,155,305,181"/>
+<area shape="rect" href="test-debug_8cpp.html" title="Test the behavior of Ghoti.io CUtil debug library and tools." alt="" coords="329,155,477,181"/>
+<area shape="rect" href="hash_8h.html" title="A simple hash table implementation." alt="" coords="112,229,260,256"/>
+<area shape="rect" href="string_8h.html" title="A collection of string&#45;related functions." alt="" coords="375,229,530,256"/>
+<area shape="rect" href="vector_8h.html" title="A simple vector implementation." alt="" coords="554,229,711,256"/>
+<area shape="rect" href="type_8c.html" title=" " alt="" coords="735,229,821,256"/>
+<area shape="rect" href="test-type_8cpp.html" title="Test the behavior of Ghoti.io CUtil type library." alt="" coords="845,229,983,256"/>
+<area shape="rect" href="hash_8c.html" title=" " alt="" coords="5,304,92,331"/>
+<area shape="rect" href="test-hash_8cpp.html" title="Test the behavior of Ghoti.io CUtil hash table library." alt="" coords="117,304,255,331"/>
+<area shape="rect" href="string_8c.html" title=" " alt="" coords="279,304,373,331"/>
+<area shape="rect" href="vector_8c.html" title=" " alt="" coords="567,304,663,331"/>
+<area shape="rect" href="test-string_8cpp.html" title="Test the behavior of Ghoti.io CUtil string library." alt="" coords="397,304,543,331"/>
+<area shape="rect" href="test-vector_8cpp.html" title="Test the behavior of Ghoti.io CUtil hash table library." alt="" coords="687,304,834,331"/>
 </map>
 </div>
 </div>
@@ -125,15 +128,27 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="libver_8h.html#a1b93a4d1006eb6c6d667d630d0a758af">GHOTIIO_CUTIL_VERSION</a>&#160;&#160;&#160;&quot;dev&quot;</td></tr>
 <tr class="memdesc:a1b93a4d1006eb6c6d667d630d0a758af"><td class="mdescLeft">&#160;</td><td class="mdescRight">String representation of the version, provided as a convenience to the programmer. <br /></td></tr>
 <tr class="separator:a1b93a4d1006eb6c6d667d630d0a758af"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afabc8bce6a807a7d8f13650326453f18"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="libver_8h.html#afabc8bce6a807a7d8f13650326453f18">GHOTIIO_CUTIL</a>(NAME)&#160;&#160;&#160;<a class="el" href="libver_8h.html#ad6e7d8bf9282e0c7d9ce9b0ec82ae854">GHOTIIO_CUTIL_CONCAT</a>(<a class="el" href="libver_8h.html#a513ec2be01ce0da868063d2de40e2747">GHOTIIO_CUTIL_NAME</a>, _ ## NAME)</td></tr>
+<tr class="memitem:afabc8bce6a807a7d8f13650326453f18"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="libver_8h.html#afabc8bce6a807a7d8f13650326453f18">GHOTIIO_CUTIL</a>(NAME)&#160;&#160;&#160;<a class="el" href="libver_8h.html#a19212bbca793191d593bcbe86ca70d04">GHOTIIO_CUTIL_RENAME</a>(<a class="el" href="libver_8h.html#a513ec2be01ce0da868063d2de40e2747">GHOTIIO_CUTIL_NAME</a>, _ ## NAME)</td></tr>
 <tr class="memdesc:afabc8bce6a807a7d8f13650326453f18"><td class="mdescLeft">&#160;</td><td class="mdescRight">Macro to generate a "namespaced" version of an identifier.  <a href="libver_8h.html#afabc8bce6a807a7d8f13650326453f18">More...</a><br /></td></tr>
 <tr class="separator:afabc8bce6a807a7d8f13650326453f18"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad01de3ad61b5808547fce04b70134fec"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="libver_8h.html#ad01de3ad61b5808547fce04b70134fec">GHOTIIO_CUTIL_CONCAT_INNER</a>(a,  b)&#160;&#160;&#160;a ## b</td></tr>
-<tr class="memdesc:ad01de3ad61b5808547fce04b70134fec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper macro to concatenate the <code>#define</code>s properly.  <a href="libver_8h.html#ad01de3ad61b5808547fce04b70134fec">More...</a><br /></td></tr>
-<tr class="separator:ad01de3ad61b5808547fce04b70134fec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad6e7d8bf9282e0c7d9ce9b0ec82ae854"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="libver_8h.html#ad6e7d8bf9282e0c7d9ce9b0ec82ae854">GHOTIIO_CUTIL_CONCAT</a>(a,  b)&#160;&#160;&#160;<a class="el" href="libver_8h.html#ad01de3ad61b5808547fce04b70134fec">GHOTIIO_CUTIL_CONCAT_INNER</a>(a,b)</td></tr>
-<tr class="memdesc:ad6e7d8bf9282e0c7d9ce9b0ec82ae854"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper macro to concatenate the <code>#define</code>s properly.  <a href="libver_8h.html#ad6e7d8bf9282e0c7d9ce9b0ec82ae854">More...</a><br /></td></tr>
-<tr class="separator:ad6e7d8bf9282e0c7d9ce9b0ec82ae854"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a489eddcf682a895377af3233f30709e7"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="libver_8h.html#a489eddcf682a895377af3233f30709e7">GHOTIIO_CUTIL_RENAME_INNER</a>(a,  b)&#160;&#160;&#160;a ## b</td></tr>
+<tr class="memdesc:a489eddcf682a895377af3233f30709e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper macro to concatenate the <code>#define</code>s properly.  <a href="libver_8h.html#a489eddcf682a895377af3233f30709e7">More...</a><br /></td></tr>
+<tr class="separator:a489eddcf682a895377af3233f30709e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a19212bbca793191d593bcbe86ca70d04"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="libver_8h.html#a19212bbca793191d593bcbe86ca70d04">GHOTIIO_CUTIL_RENAME</a>(a,  b)&#160;&#160;&#160;<a class="el" href="libver_8h.html#a489eddcf682a895377af3233f30709e7">GHOTIIO_CUTIL_RENAME_INNER</a>(a,b)</td></tr>
+<tr class="memdesc:a19212bbca793191d593bcbe86ca70d04"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper macro to concatenate the <code>#define</code>s properly.  <a href="libver_8h.html#a19212bbca793191d593bcbe86ca70d04">More...</a><br /></td></tr>
+<tr class="separator:a19212bbca793191d593bcbe86ca70d04"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0cabbbd75793721fe0b48e51d5f99c5c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="libver_8h.html#a0cabbbd75793721fe0b48e51d5f99c5c">GHOTIIO_CUTIL_CONCAT2_INNER</a>(a,  b)&#160;&#160;&#160;a ## b</td></tr>
+<tr class="memdesc:a0cabbbd75793721fe0b48e51d5f99c5c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper macro to concatenate the identifiers.  <a href="libver_8h.html#a0cabbbd75793721fe0b48e51d5f99c5c">More...</a><br /></td></tr>
+<tr class="separator:a0cabbbd75793721fe0b48e51d5f99c5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a59b6d2e56025c5cd0730dc253f79515f"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="libver_8h.html#a59b6d2e56025c5cd0730dc253f79515f">GHOTIIO_CUTIL_CONCAT2</a>(a,  b)&#160;&#160;&#160;<a class="el" href="libver_8h.html#a0cabbbd75793721fe0b48e51d5f99c5c">GHOTIIO_CUTIL_CONCAT2_INNER</a>(a,b)</td></tr>
+<tr class="memdesc:a59b6d2e56025c5cd0730dc253f79515f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper macro to concatenate the identifiers.  <a href="libver_8h.html#a59b6d2e56025c5cd0730dc253f79515f">More...</a><br /></td></tr>
+<tr class="separator:a59b6d2e56025c5cd0730dc253f79515f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a682b5fdbe63befb36ebea6f3f32b9263"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="libver_8h.html#a682b5fdbe63befb36ebea6f3f32b9263">GHOTIIO_CUTIL_CONCAT3_INNER</a>(a,  b,  c)&#160;&#160;&#160;a ## b ## c</td></tr>
+<tr class="memdesc:a682b5fdbe63befb36ebea6f3f32b9263"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper macro to concatenate the identifiers.  <a href="libver_8h.html#a682b5fdbe63befb36ebea6f3f32b9263">More...</a><br /></td></tr>
+<tr class="separator:a682b5fdbe63befb36ebea6f3f32b9263"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae5c2b8efc3f738616cd454d21c8c46de"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="libver_8h.html#ae5c2b8efc3f738616cd454d21c8c46de">GHOTIIO_CUTIL_CONCAT3</a>(a,  b,  c)&#160;&#160;&#160;<a class="el" href="libver_8h.html#a682b5fdbe63befb36ebea6f3f32b9263">GHOTIIO_CUTIL_CONCAT3_INNER</a>(a,b,c)</td></tr>
+<tr class="memdesc:ae5c2b8efc3f738616cd454d21c8c46de"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper macro to concatenate the identifiers.  <a href="libver_8h.html#ae5c2b8efc3f738616cd454d21c8c46de">More...</a><br /></td></tr>
+<tr class="separator:ae5c2b8efc3f738616cd454d21c8c46de"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Header file used to control the version numbering and function namespace for all of the library. </p>
@@ -149,12 +164,13 @@ Macros</h2></td></tr>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">NAME</td><td>)</td>
-          <td>&#160;&#160;&#160;<a class="el" href="libver_8h.html#ad6e7d8bf9282e0c7d9ce9b0ec82ae854">GHOTIIO_CUTIL_CONCAT</a>(<a class="el" href="libver_8h.html#a513ec2be01ce0da868063d2de40e2747">GHOTIIO_CUTIL_NAME</a>, _ ## NAME)</td>
+          <td>&#160;&#160;&#160;<a class="el" href="libver_8h.html#a19212bbca793191d593bcbe86ca70d04">GHOTIIO_CUTIL_RENAME</a>(<a class="el" href="libver_8h.html#a513ec2be01ce0da868063d2de40e2747">GHOTIIO_CUTIL_NAME</a>, _ ## NAME)</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Macro to generate a "namespaced" version of an identifier. </p>
+<p>Notice, we cannot use <a class="el" href="libver_8h.html#a59b6d2e56025c5cd0730dc253f79515f" title="Helper macro to concatenate the identifiers.">GHOTIIO_CUTIL_CONCAT2()</a>, because the preprocessor dies in some cases with nested use (see vector.template.c).</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">NAME</td><td>The name which will be prepended with the <code>GHOTIIO_CUTIL_NAME</code>. </td></tr>
@@ -164,14 +180,14 @@ Macros</h2></td></tr>
 
 </div>
 </div>
-<a id="ad6e7d8bf9282e0c7d9ce9b0ec82ae854"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad6e7d8bf9282e0c7d9ce9b0ec82ae854">&#9670;&nbsp;</a></span>GHOTIIO_CUTIL_CONCAT</h2>
+<a id="a59b6d2e56025c5cd0730dc253f79515f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a59b6d2e56025c5cd0730dc253f79515f">&#9670;&nbsp;</a></span>GHOTIIO_CUTIL_CONCAT2</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define GHOTIIO_CUTIL_CONCAT</td>
+          <td class="memname">#define GHOTIIO_CUTIL_CONCAT2</td>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">a, </td>
@@ -185,7 +201,198 @@ Macros</h2></td></tr>
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td>&#160;&#160;&#160;<a class="el" href="libver_8h.html#ad01de3ad61b5808547fce04b70134fec">GHOTIIO_CUTIL_CONCAT_INNER</a>(a,b)</td>
+          <td></td><td>&#160;&#160;&#160;<a class="el" href="libver_8h.html#a0cabbbd75793721fe0b48e51d5f99c5c">GHOTIIO_CUTIL_CONCAT2_INNER</a>(a,b)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Helper macro to concatenate the identifiers. </p>
+<p>It requires two levels of processing.</p>
+<p>This macro may be called directly.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">a</td><td>The first part of the identifier. </td></tr>
+    <tr><td class="paramname">b</td><td>The second part of the identifier. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A call to the <code><a class="el" href="libver_8h.html#a0cabbbd75793721fe0b48e51d5f99c5c" title="Helper macro to concatenate the identifiers.">GHOTIIO_CUTIL_CONCAT2_INNER()</a></code> macro. </dd></dl>
+
+</div>
+</div>
+<a id="a0cabbbd75793721fe0b48e51d5f99c5c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0cabbbd75793721fe0b48e51d5f99c5c">&#9670;&nbsp;</a></span>GHOTIIO_CUTIL_CONCAT2_INNER</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GHOTIIO_CUTIL_CONCAT2_INNER</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">a, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">b&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td>&#160;&#160;&#160;a ## b</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Helper macro to concatenate the identifiers. </p>
+<p>It reuires two levels of processing.</p>
+<p>This macro should not be called directly. It should only be called by <a class="el" href="libver_8h.html#a59b6d2e56025c5cd0730dc253f79515f" title="Helper macro to concatenate the identifiers.">GHOTIIO_CUTIL_CONCAT2()</a>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">a</td><td>The first part of the identifier. </td></tr>
+    <tr><td class="paramname">b</td><td>The second part of the identifier. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The concatenation of <code>a</code> to <code>b</code>. </dd></dl>
+
+</div>
+</div>
+<a id="ae5c2b8efc3f738616cd454d21c8c46de"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae5c2b8efc3f738616cd454d21c8c46de">&#9670;&nbsp;</a></span>GHOTIIO_CUTIL_CONCAT3</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GHOTIIO_CUTIL_CONCAT3</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">a, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">b, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">c&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td>&#160;&#160;&#160;<a class="el" href="libver_8h.html#a682b5fdbe63befb36ebea6f3f32b9263">GHOTIIO_CUTIL_CONCAT3_INNER</a>(a,b,c)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Helper macro to concatenate the identifiers. </p>
+<p>It requires two levels of processing.</p>
+<p>This macro may be called directly.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">a</td><td>The first part of the identifier. </td></tr>
+    <tr><td class="paramname">b</td><td>The second part of the identifier. </td></tr>
+    <tr><td class="paramname">c</td><td>The third part of the identifier. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>A call to the <code><a class="el" href="libver_8h.html#a682b5fdbe63befb36ebea6f3f32b9263" title="Helper macro to concatenate the identifiers.">GHOTIIO_CUTIL_CONCAT3_INNER()</a></code> macro. </dd></dl>
+
+</div>
+</div>
+<a id="a682b5fdbe63befb36ebea6f3f32b9263"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a682b5fdbe63befb36ebea6f3f32b9263">&#9670;&nbsp;</a></span>GHOTIIO_CUTIL_CONCAT3_INNER</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GHOTIIO_CUTIL_CONCAT3_INNER</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">a, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">b, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">c&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td>&#160;&#160;&#160;a ## b ## c</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Helper macro to concatenate the identifiers. </p>
+<p>It reuires two levels of processing.</p>
+<p>This macro should not be called directly. It should only be called by <a class="el" href="libver_8h.html#a59b6d2e56025c5cd0730dc253f79515f" title="Helper macro to concatenate the identifiers.">GHOTIIO_CUTIL_CONCAT2()</a>.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">a</td><td>The first part of the identifier. </td></tr>
+    <tr><td class="paramname">b</td><td>The second part of the identifier. </td></tr>
+    <tr><td class="paramname">c</td><td>The third part of the identifier. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>The concatenation of <code>a</code> to <code>b</code> to <code>c</code>.. </dd></dl>
+
+</div>
+</div>
+<a id="a513ec2be01ce0da868063d2de40e2747"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a513ec2be01ce0da868063d2de40e2747">&#9670;&nbsp;</a></span>GHOTIIO_CUTIL_NAME</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GHOTIIO_CUTIL_NAME&#160;&#160;&#160;ghotiio_cutil_dev</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Used in conjunction with the GHOTIIO_CUTIL... </p>
+<p>macros to produce a namespaced function name for use by all exported functions in this library. </p>
+
+</div>
+</div>
+<a id="a19212bbca793191d593bcbe86ca70d04"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a19212bbca793191d593bcbe86ca70d04">&#9670;&nbsp;</a></span>GHOTIIO_CUTIL_RENAME</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define GHOTIIO_CUTIL_RENAME</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">a, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">b&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td>&#160;&#160;&#160;<a class="el" href="libver_8h.html#a489eddcf682a895377af3233f30709e7">GHOTIIO_CUTIL_RENAME_INNER</a>(a,b)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -199,18 +406,18 @@ Macros</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>A call to the <code><a class="el" href="libver_8h.html#ad01de3ad61b5808547fce04b70134fec" title="Helper macro to concatenate the #defines properly.">GHOTIIO_CUTIL_CONCAT_INNER()</a></code> macro. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>A call to the <code><a class="el" href="libver_8h.html#a489eddcf682a895377af3233f30709e7" title="Helper macro to concatenate the #defines properly.">GHOTIIO_CUTIL_RENAME_INNER()</a></code> macro. </dd></dl>
 
 </div>
 </div>
-<a id="ad01de3ad61b5808547fce04b70134fec"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad01de3ad61b5808547fce04b70134fec">&#9670;&nbsp;</a></span>GHOTIIO_CUTIL_CONCAT_INNER</h2>
+<a id="a489eddcf682a895377af3233f30709e7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a489eddcf682a895377af3233f30709e7">&#9670;&nbsp;</a></span>GHOTIIO_CUTIL_RENAME_INNER</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define GHOTIIO_CUTIL_CONCAT_INNER</td>
+          <td class="memname">#define GHOTIIO_CUTIL_RENAME_INNER</td>
           <td>(</td>
           <td class="paramtype">&#160;</td>
           <td class="paramname">a, </td>
@@ -231,7 +438,7 @@ Macros</h2></td></tr>
 
 <p>Helper macro to concatenate the <code>#define</code>s properly. </p>
 <p>It requires two levels of processing.</p>
-<p>This macro should only be called by the <code><a class="el" href="libver_8h.html#ad6e7d8bf9282e0c7d9ce9b0ec82ae854" title="Helper macro to concatenate the #defines properly.">GHOTIIO_CUTIL_CONCAT()</a></code> macro.</p>
+<p>This macro should only be called by the <code>GHOTIIO_CUTIL_CONCAT()</code> macro.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">a</td><td>The first part of the identifier. </td></tr>
@@ -240,23 +447,6 @@ Macros</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>The concatenation of <code>a</code> to <code>b</code>. </dd></dl>
-
-</div>
-</div>
-<a id="a513ec2be01ce0da868063d2de40e2747"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a513ec2be01ce0da868063d2de40e2747">&#9670;&nbsp;</a></span>GHOTIIO_CUTIL_NAME</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define GHOTIIO_CUTIL_NAME&#160;&#160;&#160;ghotiio_cutil_dev</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Used in conjunction with the GHOTIIO_CUTIL... </p>
-<p>macros to produce a namespaced function name for use by all exported functions in this library. </p>
 
 </div>
 </div>

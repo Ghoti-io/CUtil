@@ -95,14 +95,22 @@ $(document).ready(function(){initNavTree('libver_8h_source.html',''); initResiza
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160; </div>
 <div class="line"><a name="l00020"></a><span class="lineno"><a class="line" href="libver_8h.html#a1b93a4d1006eb6c6d667d630d0a758af">   20</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_VERSION &quot;dev&quot;</span></div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160; </div>
-<div class="line"><a name="l00027"></a><span class="lineno"><a class="line" href="libver_8h.html#afabc8bce6a807a7d8f13650326453f18">   27</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL(NAME) GHOTIIO_CUTIL_CONCAT(GHOTIIO_CUTIL_NAME, _ ## NAME)</span></div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
-<div class="line"><a name="l00039"></a><span class="lineno"><a class="line" href="libver_8h.html#ad01de3ad61b5808547fce04b70134fec">   39</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_CONCAT_INNER(a,b) a ## b</span></div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
-<div class="line"><a name="l00049"></a><span class="lineno"><a class="line" href="libver_8h.html#ad6e7d8bf9282e0c7d9ce9b0ec82ae854">   49</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_CONCAT(a,b) GHOTIIO_CUTIL_CONCAT_INNER(a,b)</span></div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160; </div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// GHOTIIO_CUTIL_LIBVER_H</span></div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160; </div>
+<div class="line"><a name="l00030"></a><span class="lineno"><a class="line" href="libver_8h.html#afabc8bce6a807a7d8f13650326453f18">   30</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL(NAME) GHOTIIO_CUTIL_RENAME(GHOTIIO_CUTIL_NAME, _ ## NAME)</span></div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
+<div class="line"><a name="l00042"></a><span class="lineno"><a class="line" href="libver_8h.html#a489eddcf682a895377af3233f30709e7">   42</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_RENAME_INNER(a,b) a ## b</span></div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160; </div>
+<div class="line"><a name="l00052"></a><span class="lineno"><a class="line" href="libver_8h.html#a19212bbca793191d593bcbe86ca70d04">   52</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_RENAME(a,b) GHOTIIO_CUTIL_RENAME_INNER(a,b)</span></div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160; </div>
+<div class="line"><a name="l00065"></a><span class="lineno"><a class="line" href="libver_8h.html#a0cabbbd75793721fe0b48e51d5f99c5c">   65</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_CONCAT2_INNER(a,b) a ## b</span></div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160; </div>
+<div class="line"><a name="l00077"></a><span class="lineno"><a class="line" href="libver_8h.html#a59b6d2e56025c5cd0730dc253f79515f">   77</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_CONCAT2(a,b) GHOTIIO_CUTIL_CONCAT2_INNER(a,b)</span></div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160; </div>
+<div class="line"><a name="l00091"></a><span class="lineno"><a class="line" href="libver_8h.html#a682b5fdbe63befb36ebea6f3f32b9263">   91</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_CONCAT3_INNER(a,b,c) a ## b ## c</span></div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160; </div>
+<div class="line"><a name="l00104"></a><span class="lineno"><a class="line" href="libver_8h.html#ae5c2b8efc3f738616cd454d21c8c46de">  104</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_CONCAT3(a,b,c) GHOTIIO_CUTIL_CONCAT3_INNER(a,b,c)</span></div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160; </div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// GHOTIIO_CUTIL_LIBVER_H</span></div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160; </div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
