@@ -203,21 +203,32 @@ clean: ## Remove all contents of the build directories.
 	-@rm -rvf $(GEN_DIR)/*
 	-@rm include/cutil/float.h
 
+# Files will be as follows:
+# /usr/local/lib/ghoti.io/
+#   libghoti.io-cutil(BRANCH).so.(MAJOR).(MINOR)
+#   libghoti.io-cutil(BRANCH).so.(MAJOR) link to previous
+#   libghoti.io-cutil(BRANCH).so link to previous
+# /etc/ld.so.conf.d/ghoti.io-cutil(BRANCH).conf will point to /usr/local/lib/ghoti.io
+# /usr/local/include/ghoti.io/cutil(BRANCH)
+#   *.h copied from ./include/cutil
+# /usr/local/share/pkgconfig
+#   ghoti.io-cutil(BRANCH).pc created
+
 install: ## Install the library globally, requires sudo
 install: all
-	# Install the Shared Library
+	# Installing the Shared Library
 	@mkdir -p /usr/local/lib/ghoti.io
 	@cp $(APP_DIR)/$(TARGET) /usr/local/lib/ghoti.io/
 	@ln -f -s $(TARGET) /usr/local/lib/ghoti.io/$(SO_NAME)
 	@ln -f -s $(SO_NAME) /usr/local/lib/ghoti.io/$(BASE_NAME)
-	@echo "/usr/local/lib/ghoti.io" > /etc/ld.so.conf.d/ghoti.io-cutil$(BASE).conf
-	# Install the headers
-	@mkdir -p /usr/local/include/ghoti.io/util$(BASE)
-	@cp include/util/*.hpp /usr/local/include/ghoti.io/util$(BASE)
-	# Install the pkgconfig files
+	@echo "/usr/local/lib/ghoti.io" > /etc/ld.so.conf.d/ghoti.io-cutil$(BRANCH).conf
+	# Installing the headers
+	@mkdir -p /usr/local/include/ghoti.io/cutil$(BRANCH)
+	@cp include/cutil/*.h /usr/local/include/ghoti.io/cutil$(BRANCH)
+	# Installing the pkgconfig files
 	@mkdir -p /usr/local/share/pkgconfig
-	@ cat pkgconfig/ghoti.io-cutil.pc | sed 's/(BRANCH)/$(BRANCH)/g' | sed 's/(VERSION)/$(VERSION)/g' > /usr/local/share/pkgconfig/
-	# Run ldconfig
+	@ cat pkgconfig/ghoti.io-cutil.pc | sed 's/(BRANCH)/$(BRANCH)/g' | sed 's/(VERSION)/$(VERSION)/g' > /usr/local/share/pkgconfig/ghoti.io-cutil$(BRANCH).pc
+	# Running ldconfig
 	@ldconfig >> /dev/null 2>&1
 	@echo "Ghoti.io CUtil$(BRANCH) installed"
 
