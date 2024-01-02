@@ -18,6 +18,7 @@ TARGET := $(SO_NAME).$(MINOR_VERSION)
 INCLUDE := -I include/
 LIBOBJECTS := $(OBJ_DIR)/debug.o \
 							$(OBJ_DIR)/hash.o \
+							$(OBJ_DIR)/memory.o \
 							$(OBJ_DIR)/string.o \
 							$(OBJ_DIR)/type.o \
 							$(OBJ_DIR)/vector.o
@@ -38,6 +39,9 @@ DEP_LIBVER = \
 DEP_DEBUG = \
 	$(DEP_LIBVER) \
 	include/cutil/debug.h
+DEP_MEMORY = \
+	$(DEP_LIBVER) \
+	include/cutil/memory.h
 DEP_FLOAT = \
 	$(DEP_LIBVER) \
 	include/cutil/float.h
@@ -46,9 +50,11 @@ DEP_TYPE = \
 	include/cutil/type.h
 DEP_HASH= \
 	$(DEP_TYPE) \
+	$(DEP_MEMORY) \
 	include/cutil/hash.h
 DEP_VECTOR= \
 	$(DEP_TYPE) \
+	$(DEP_MEMORY) \
 	include/cutil/vector.h
 DEP_STRING = \
 	$(DEP_LIBVER) \
@@ -85,6 +91,10 @@ $(OBJ_DIR)/hash.o: \
 				src/hash.c \
 				src/hash.template.c \
 				$(DEP_HASH)
+
+$(OBJ_DIR)/memory.o: \
+				src/memory.c \
+				$(DEP_MEMORY)
 
 $(OBJ_DIR)/string.o: \
 				src/string.c \
@@ -126,6 +136,13 @@ $(APP_DIR)/test-type: \
 				test/test-type.cpp \
 				$(APP_DIR)/$(TARGET)
 	@echo "\n### Compiling Types Test ###"
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+
+$(APP_DIR)/test-memory: \
+				test/test-memory.cpp \
+				$(APP_DIR)/$(TARGET)
+	@echo "\n### Compiling Memory Test ###"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
@@ -181,6 +198,7 @@ test-watch: ## Watch the file directory for changes and run the unit tests
 test: ## Make and run the Unit tests
 test: \
 				$(APP_DIR)/test-debug \
+				$(APP_DIR)/test-memory \
 				$(APP_DIR)/test-type \
 				$(APP_DIR)/test-string \
 				$(APP_DIR)/test-hash \
@@ -192,6 +210,7 @@ test: \
 	@echo "############################"
 	@echo "\033[0m"
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-debug --gtest_brief=1
+	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-memory --gtest_brief=1
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-type --gtest_brief=1
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-string --gtest_brief=1
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-hash --gtest_brief=1
@@ -237,7 +256,7 @@ docs: ## Generate the documentation in the ./docs subdirectory
 
 docs-pdf: docs ## Generate the documentation as a pdf, in ./docs/shared_string_view-docs.pdf
 	cd ./docs/latex/ && make
-	mv -f ./docs/latex/refman.pdf ./docs/cutil-docs.pdf
+	mv -f ./docs/latex/refman.pdf ./docs/cutil$(BRANCH)-docs.pdf
 
 cloc: ## Count the lines of code used in the project
 	cloc src include test Makefile
