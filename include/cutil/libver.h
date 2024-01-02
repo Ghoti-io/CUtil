@@ -7,6 +7,8 @@
 #ifndef GHOTIIO_CUTIL_LIBVER_H
 #define GHOTIIO_CUTIL_LIBVER_H
 
+#include <wchar.h>
+
 /**
  * Used in conjunction with the GHOTIIO_CUTIL... macros to produce a namespaced
  * function name for use by all exported functions in this library.
@@ -102,6 +104,32 @@
  * @returns A call to the `GHOTIIO_CUTIL_CONCAT3_INNER()` macro.
  */
 #define GHOTIIO_CUTIL_CONCAT3(a,b,c) GHOTIIO_CUTIL_CONCAT3_INNER(a,b,c)
+
+//-----------------------------------------------------------------------------
+// Compiler Definitions
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+// Type-Related Definitions
+//-----------------------------------------------------------------------------
+
+/**
+ * Indicate the size of the `wchar` type.
+ *
+ * @def GCU_WCHAR_WIDTH
+ */
+#if WCHAR_MAX == 0x7FFFFFFFFFFFFFFF
+// 64-bit signed
+#define GCU_WCHAR_WIDTH 8
+#elif WCHAR_MAX == 0x7FFFFFFF
+// 32-bit signed
+#define GCU_WCHAR_WIDTH 4
+#elif WCHAR_MAX == 0x7FFF
+// 16-bit signed
+#define GCU_WCHAR_WIDTH 2
+#else
+#error "Could not determine GCU_WCHAR_WIDTH"
+#endif // GCU_WCHAR_WIDTH
 
 #endif // GHOTIIO_CUTIL_LIBVER_H
  

@@ -49,6 +49,10 @@ GCU_Type64_Union gcu_type64_f32(GCU_float32_t val) {
   return GCU_TYPE64_F32(val);
 }
 
+GCU_Type64_Union gcu_type64_wc(wchar_t val) {
+  return GCU_TYPE64_WC(val);
+}
+
 GCU_Type64_Union gcu_type64_c(char val) {
   return GCU_TYPE64_C(val);
 }
@@ -80,6 +84,12 @@ GCU_Type32_Union gcu_type32_i8(int8_t val) {
 GCU_Type32_Union gcu_type32_f32(GCU_float32_t val) {
   return GCU_TYPE32_F32(val);
 }
+
+#if GCU_WCHAR_WIDTH <= 4
+GCU_Type32_Union gcu_type32_wc(wchar_t val) {
+  return GCU_TYPE32_WC(val);
+}
+#endif
 
 GCU_Type32_Union gcu_type32_c(char val) {
   return GCU_TYPE32_C(val);

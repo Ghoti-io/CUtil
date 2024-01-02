@@ -24,6 +24,7 @@ TEST(Type, Union) {
   ASSERT_EQ(gcu_type64_i8(-100).i8, -100);
   ASSERT_EQ(gcu_type64_f64(10000000.5).f64, 10000000.5);
   ASSERT_EQ(gcu_type64_f32(1000000.5).f32, 1000000.5);
+  ASSERT_EQ(gcu_type64_wc('A').wc, (wchar_t)'A');
   ASSERT_EQ(gcu_type64_c('A').c, 'A');
 
   ASSERT_EQ(gcu_type32_ui32(3000000000).ui32, 3000000000);
@@ -33,6 +34,9 @@ TEST(Type, Union) {
   ASSERT_EQ(gcu_type32_i16(-20000).i16, -20000);
   ASSERT_EQ(gcu_type32_i8(-100).i8, -100);
   ASSERT_EQ(gcu_type32_f32(1000000.5).f32, 1000000.5);
+#if GCU_WCHAR_WIDTH <= 4
+  ASSERT_EQ(gcu_type32_wc('A').wc, (wchar_t)'A');
+#endif
   ASSERT_EQ(gcu_type32_c('A').c, 'A');
 
   ASSERT_EQ(gcu_type16_ui16(50000).ui16, 50000);
