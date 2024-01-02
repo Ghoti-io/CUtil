@@ -11,5 +11,6 @@ var unionGCU__Type64__Union =
     [ "ui16", "unionGCU__Type64__Union.html#adc9506ac02270b751532bc0ddcc91660", null ],
     [ "ui32", "unionGCU__Type64__Union.html#aac4d3eb150a39d53b6850113ff2eb019", null ],
     [ "ui64", "unionGCU__Type64__Union.html#a71f8e3fdd1f1d774dbe23c64eb8a1396", null ],
-    [ "ui8", "unionGCU__Type64__Union.html#a128c387239782a2e8da78a6a5d4c6ad6", null ]
+    [ "ui8", "unionGCU__Type64__Union.html#a128c387239782a2e8da78a6a5d4c6ad6", null ],
+    [ "wc", "unionGCU__Type64__Union.html#a6672ea4f698346a04ccde90b83c95551", null ]
 ];

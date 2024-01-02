@@ -1,9 +1,3 @@
-/**
- * @file
- *
- * Test the behavior of Ghoti.io CUtil type library.
- */
-
 #include <sstream>
 #include <gtest/gtest.h>
 #include "cutil/type.h"

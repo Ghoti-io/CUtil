@@ -88,61 +88,22 @@ $(document).ready(function(){initNavTree('debug_8h_source.html',''); initResizab
 </div><!--header-->
 <div class="contents">
 <a href="debug_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160; </div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="preprocessor">#ifndef GHOTIIO_CUTIL_DEBUG_H</span></div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_DEBUG_H</span></div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160; </div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="preprocessor">#include &lt;stdbool.h&gt;</span></div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="preprocessor">#include &lt;stdlib.h&gt;</span></div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="libver_8h.html">cutil/libver.h</a>&quot;</span></div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor">#define gcu_malloc GHOTIIO_CUTIL(gcu_malloc)</span></div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor">#define gcu_calloc GHOTIIO_CUTIL(gcu_calloc)</span></div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="preprocessor">#define gcu_realloc GHOTIIO_CUTIL(gcu_realloc)</span></div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="preprocessor">#define gcu_free GHOTIIO_CUTIL(gcu_free)</span></div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="preprocessor">#define gcu_mem_start GHOTIIO_CUTIL(gcu_mem_start)</span></div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="preprocessor">#define gcu_mem_stop GHOTIIO_CUTIL(gcu_mem_stop)</span></div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160; </div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="keywordtype">void</span> * <a class="code" href="debug_8h.html#af1ce7e85c9f3e8ec3df88df39b7183a2">gcu_malloc</a>(<span class="keywordtype">size_t</span> size, <span class="keyword">const</span> <span class="keywordtype">char</span> * file, <span class="keywordtype">size_t</span> line);</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160; </div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="keywordtype">void</span> * <a class="code" href="debug_8h.html#a1289a767d707ae64ec74caba09820295">gcu_calloc</a>(<span class="keywordtype">size_t</span> nitems, <span class="keywordtype">size_t</span> size, <span class="keyword">const</span> <span class="keywordtype">char</span> * file, <span class="keywordtype">size_t</span> line);</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160; </div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="keywordtype">void</span> * <a class="code" href="debug_8h.html#ac744445dab32b1d2a2cf70cb3d9a8000">gcu_realloc</a>(<span class="keywordtype">void</span> * pointer, <span class="keywordtype">size_t</span> size, <span class="keyword">const</span> <span class="keywordtype">char</span> * file, <span class="keywordtype">size_t</span> line);</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160; </div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="keywordtype">void</span> <a class="code" href="debug_8h.html#ae344a1fc7264f2961fee63d76f991408">gcu_free</a>(<span class="keywordtype">void</span> * pointer, <span class="keyword">const</span> <span class="keywordtype">char</span> * file, <span class="keywordtype">size_t</span> line);</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160; </div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;<span class="keywordtype">void</span> <a class="code" href="debug_8h.html#a8edbd4ff7a49d6cbc3b3a62e5b43821c">gcu_mem_start</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160; </div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="keywordtype">void</span> <a class="code" href="debug_8h.html#aefcd23dd186e2d75f9878e626f467b20">gcu_mem_stop</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160; </div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<span class="comment">/*</span></div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="comment"> * Replacing memory allocation/deallocation functions.</span></div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;<span class="comment"> */</span></div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;<span class="preprocessor">#ifndef GHOTIIO_CUTIL_DEBUG_DO_NOT_REDECLARE_MEMORY_FUNCTIONS</span></div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160; </div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;<span class="preprocessor">#define malloc(size) gcu_malloc(size, __FILE__, __LINE__)</span></div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;<span class="preprocessor">#define calloc(nitems, size) gcu_calloc(nitems, size, __FILE__, __LINE__)</span></div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;<span class="preprocessor">#define realloc(pointer, size) gcu_realloc(pointer, size, __FILE__, __LINE__)</span></div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;<span class="preprocessor">#define free(pointer) gcu_free(pointer, __FILE__, __LINE__)</span></div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160; </div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// GHOTIIO_CUTIL_DEBUG_DO_NOT_REDECLARE_MEMORY_FUNCTIONS</span></div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160; </div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;}</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160; </div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// GHOTIIO_CUTIL_DEBUG_H</span></div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160; </div>
-<div class="ttc" id="adebug_8h_html_a1289a767d707ae64ec74caba09820295"><div class="ttname"><a href="debug_8h.html#a1289a767d707ae64ec74caba09820295">gcu_calloc</a></div><div class="ttdeci">void * gcu_calloc(size_t nitems, size_t size, const char *file, size_t line)</div><div class="ttdoc">Wrapper for the standard calloc() function.</div><div class="ttdef"><b>Definition:</b> debug.c:22</div></div>
-<div class="ttc" id="adebug_8h_html_a8edbd4ff7a49d6cbc3b3a62e5b43821c"><div class="ttname"><a href="debug_8h.html#a8edbd4ff7a49d6cbc3b3a62e5b43821c">gcu_mem_start</a></div><div class="ttdeci">void gcu_mem_start(void)</div><div class="ttdoc">Signal that intercepted memory management calls should be logged to stderr.</div><div class="ttdef"><b>Definition:</b> debug.c:45</div></div>
-<div class="ttc" id="adebug_8h_html_ac744445dab32b1d2a2cf70cb3d9a8000"><div class="ttname"><a href="debug_8h.html#ac744445dab32b1d2a2cf70cb3d9a8000">gcu_realloc</a></div><div class="ttdeci">void * gcu_realloc(void *pointer, size_t size, const char *file, size_t line)</div><div class="ttdoc">Wrapper for the standard realloc() function.</div><div class="ttdef"><b>Definition:</b> debug.c:30</div></div>
-<div class="ttc" id="adebug_8h_html_ae344a1fc7264f2961fee63d76f991408"><div class="ttname"><a href="debug_8h.html#ae344a1fc7264f2961fee63d76f991408">gcu_free</a></div><div class="ttdeci">void gcu_free(void *pointer, const char *file, size_t line)</div><div class="ttdoc">Wrapper for the standard free() function.</div><div class="ttdef"><b>Definition:</b> debug.c:38</div></div>
-<div class="ttc" id="adebug_8h_html_aefcd23dd186e2d75f9878e626f467b20"><div class="ttname"><a href="debug_8h.html#aefcd23dd186e2d75f9878e626f467b20">gcu_mem_stop</a></div><div class="ttdeci">void gcu_mem_stop(void)</div><div class="ttdoc">Signal that intercepted memory management calls should no longer be logged to stderr.</div><div class="ttdef"><b>Definition:</b> debug.c:49</div></div>
-<div class="ttc" id="adebug_8h_html_af1ce7e85c9f3e8ec3df88df39b7183a2"><div class="ttname"><a href="debug_8h.html#af1ce7e85c9f3e8ec3df88df39b7183a2">gcu_malloc</a></div><div class="ttdeci">void * gcu_malloc(size_t size, const char *file, size_t line)</div><div class="ttdoc">Wrapper for the standard malloc() function.</div><div class="ttdef"><b>Definition:</b> debug.c:14</div></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#ifndef GHOTIIO_CUTIL_DEBUG_H</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_DEBUG_H</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160; </div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="libver_8h.html">cutil/libver.h</a>&quot;</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160; </div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160; </div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160; </div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;}</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160; </div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// GHOTIIO_CUTIL_DEBUG_H</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160; </div>
 <div class="ttc" id="alibver_8h_html"><div class="ttname"><a href="libver_8h.html">libver.h</a></div><div class="ttdoc">Header file used to control the version numbering and function namespace for all of the library.</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->

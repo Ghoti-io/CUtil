@@ -83,8 +83,6 @@ $(document).ready(function(){initNavTree('debug_8h.html',''); initResizable(); }
 </div>
 
 <div class="header">
-  <div class="summary">
-<a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">debug.h File Reference</div>  </div>
 </div><!--header-->
@@ -92,257 +90,22 @@ $(document).ready(function(){initNavTree('debug_8h.html',''); initResizable(); }
 
 <p>Header file for debugging-related functions.  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &lt;stdbool.h&gt;</code><br />
-<code>#include &lt;stdlib.h&gt;</code><br />
-<code>#include &quot;<a class="el" href="libver_8h_source.html">cutil/libver.h</a>&quot;</code><br />
+<div class="textblock"><code>#include &quot;<a class="el" href="libver_8h_source.html">cutil/libver.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for debug.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="debug_8h__incl.png" border="0" usemap="#ainclude_2cutil_2debug_8h" alt=""/></div>
 <map name="ainclude_2cutil_2debug_8h" id="ainclude_2cutil_2debug_8h">
-<area shape="rect" title="Header file for debugging&#45;related functions." alt="" coords="69,5,227,32"/>
-<area shape="rect" title=" " alt="" coords="5,80,88,107"/>
-<area shape="rect" title=" " alt="" coords="113,80,183,107"/>
-<area shape="rect" href="libver_8h.html" title="Header file used to control the version numbering and function namespace for all of the library." alt="" coords="207,80,310,107"/>
-</map>
-</div>
-</div><div class="textblock"><div class="dynheader">
-This graph shows which files directly or indirectly include this file:</div>
-<div class="dyncontent">
-<div class="center"><img src="debug_8h__dep__incl.png" border="0" usemap="#ainclude_2cutil_2debug_8hdep" alt=""/></div>
-<map name="ainclude_2cutil_2debug_8hdep" id="ainclude_2cutil_2debug_8hdep">
-<area shape="rect" title="Header file for debugging&#45;related functions." alt="" coords="48,5,205,32"/>
-<area shape="rect" href="debug_8c.html" title=" " alt="" coords="5,80,101,107"/>
-<area shape="rect" href="test-debug_8cpp.html" title="Test the behavior of Ghoti.io CUtil debug library and tools." alt="" coords="126,80,274,107"/>
+<area shape="rect" title="Header file for debugging&#45;related functions." alt="" coords="5,5,163,32"/>
+<area shape="rect" href="libver_8h.html" title="Header file used to control the version numbering and function namespace for all of the library." alt="" coords="33,80,135,107"/>
+<area shape="rect" title=" " alt="" coords="48,155,120,181"/>
 </map>
 </div>
 </div>
 <p><a href="debug_8h_source.html">Go to the source code of this file.</a></p>
-<table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
-Functions</h2></td></tr>
-<tr class="memitem:af1ce7e85c9f3e8ec3df88df39b7183a2"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="debug_8h.html#af1ce7e85c9f3e8ec3df88df39b7183a2">gcu_malloc</a> (size_t size, const char *file, size_t line)</td></tr>
-<tr class="memdesc:af1ce7e85c9f3e8ec3df88df39b7183a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wrapper for the standard malloc() function.  <a href="debug_8h.html#af1ce7e85c9f3e8ec3df88df39b7183a2">More...</a><br /></td></tr>
-<tr class="separator:af1ce7e85c9f3e8ec3df88df39b7183a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1289a767d707ae64ec74caba09820295"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="debug_8h.html#a1289a767d707ae64ec74caba09820295">gcu_calloc</a> (size_t nitems, size_t size, const char *file, size_t line)</td></tr>
-<tr class="memdesc:a1289a767d707ae64ec74caba09820295"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wrapper for the standard calloc() function.  <a href="debug_8h.html#a1289a767d707ae64ec74caba09820295">More...</a><br /></td></tr>
-<tr class="separator:a1289a767d707ae64ec74caba09820295"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac744445dab32b1d2a2cf70cb3d9a8000"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="debug_8h.html#ac744445dab32b1d2a2cf70cb3d9a8000">gcu_realloc</a> (void *pointer, size_t size, const char *file, size_t line)</td></tr>
-<tr class="memdesc:ac744445dab32b1d2a2cf70cb3d9a8000"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wrapper for the standard realloc() function.  <a href="debug_8h.html#ac744445dab32b1d2a2cf70cb3d9a8000">More...</a><br /></td></tr>
-<tr class="separator:ac744445dab32b1d2a2cf70cb3d9a8000"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae344a1fc7264f2961fee63d76f991408"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="debug_8h.html#ae344a1fc7264f2961fee63d76f991408">gcu_free</a> (void *pointer, const char *file, size_t line)</td></tr>
-<tr class="memdesc:ae344a1fc7264f2961fee63d76f991408"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wrapper for the standard free() function.  <a href="debug_8h.html#ae344a1fc7264f2961fee63d76f991408">More...</a><br /></td></tr>
-<tr class="separator:ae344a1fc7264f2961fee63d76f991408"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8edbd4ff7a49d6cbc3b3a62e5b43821c"><td class="memItemLeft" align="right" valign="top"><a id="a8edbd4ff7a49d6cbc3b3a62e5b43821c"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="debug_8h.html#a8edbd4ff7a49d6cbc3b3a62e5b43821c">gcu_mem_start</a> (void)</td></tr>
-<tr class="memdesc:a8edbd4ff7a49d6cbc3b3a62e5b43821c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Signal that intercepted memory management calls should be logged to stderr. <br /></td></tr>
-<tr class="separator:a8edbd4ff7a49d6cbc3b3a62e5b43821c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aefcd23dd186e2d75f9878e626f467b20"><td class="memItemLeft" align="right" valign="top"><a id="aefcd23dd186e2d75f9878e626f467b20"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="debug_8h.html#aefcd23dd186e2d75f9878e626f467b20">gcu_mem_stop</a> (void)</td></tr>
-<tr class="memdesc:aefcd23dd186e2d75f9878e626f467b20"><td class="mdescLeft">&#160;</td><td class="mdescRight">Signal that intercepted memory management calls should no longer be logged to stderr. <br /></td></tr>
-<tr class="separator:aefcd23dd186e2d75f9878e626f467b20"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Header file for debugging-related functions. </p>
-<p>Use <code>#include &lt;<a class="el" href="debug_8h.html" title="Header file for debugging-related functions.">cutil/debug.h</a>&gt;</code> when compiling a file and all calls to <code>malloc()</code>, <code>calloc()</code>, <code>realloc()</code>, and <code>free()</code> will be logged to <code>stderr</code>. It will only affect code that is compiled with this header.</p>
-<p>Logging to <code>stderr</code> is enabled by default. It may be disabled by calling <a class="el" href="debug_8h.html#aefcd23dd186e2d75f9878e626f467b20" title="Signal that intercepted memory management calls should no longer be logged to stderr.">gcu_mem_stop()</a>, and re-enabled by calling <a class="el" href="debug_8h.html#a8edbd4ff7a49d6cbc3b3a62e5b43821c" title="Signal that intercepted memory management calls should be logged to stderr.">gcu_mem_start()</a>.</p>
-<p>You may need to control the logging, but also need to control when the logging starts and stops externally. Obviously, if this header is included, then memory management will also be logged, but this feature can be modified by the use of a <code>#define</code> <em>before</em> including the header.</p>
-<p>By defining <code>GHOTIIO_CUTIL_DEBUG_DO_NOT_REDECLARE_MEMORY_FUNCTIONS</code>, the standard <code>malloc()</code>, <code>realloc()</code>, and <code>free()</code> will <em>not</em> be redefined, but all other declarations will be intact. In fact, proper compilation of <code><a class="el" href="debug_8c.html">debug.c</a></code> depends on this behavior. </p>
-</div><h2 class="groupheader">Function Documentation</h2>
-<a id="a1289a767d707ae64ec74caba09820295"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1289a767d707ae64ec74caba09820295">&#9670;&nbsp;</a></span>gcu_calloc()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void* gcu_calloc </td>
-          <td>(</td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>nitems</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>size</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>file</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>line</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Wrapper for the standard calloc() function. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">nitems</td><td>The number of items to allocate. </td></tr>
-    <tr><td class="paramname">size</td><td>The number of bytes in each item. </td></tr>
-    <tr><td class="paramname">file</td><td>The name of the file from which the function was called. </td></tr>
-    <tr><td class="paramname">line</td><td>The line number on which the function was called. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The beginning byte of the allocated memory. </dd></dl>
-
-</div>
-</div>
-<a id="ae344a1fc7264f2961fee63d76f991408"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae344a1fc7264f2961fee63d76f991408">&#9670;&nbsp;</a></span>gcu_free()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void gcu_free </td>
-          <td>(</td>
-          <td class="paramtype">void *&#160;</td>
-          <td class="paramname"><em>pointer</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>file</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>line</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Wrapper for the standard free() function. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">pointer</td><td>The beginning byte of the currently allocated memory. </td></tr>
-    <tr><td class="paramname">file</td><td>The name of the file from which the function was called. </td></tr>
-    <tr><td class="paramname">line</td><td>The line number on which the function was called. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="af1ce7e85c9f3e8ec3df88df39b7183a2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af1ce7e85c9f3e8ec3df88df39b7183a2">&#9670;&nbsp;</a></span>gcu_malloc()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void* gcu_malloc </td>
-          <td>(</td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>size</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>file</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>line</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Wrapper for the standard malloc() function. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">size</td><td>The number of bytes requested. </td></tr>
-    <tr><td class="paramname">file</td><td>The name of the file from which the function was called. </td></tr>
-    <tr><td class="paramname">line</td><td>The line number on which the function was called. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The beginning byte of the allocated memory. </dd></dl>
-
-</div>
-</div>
-<a id="ac744445dab32b1d2a2cf70cb3d9a8000"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac744445dab32b1d2a2cf70cb3d9a8000">&#9670;&nbsp;</a></span>gcu_realloc()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void* gcu_realloc </td>
-          <td>(</td>
-          <td class="paramtype">void *&#160;</td>
-          <td class="paramname"><em>pointer</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>size</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>file</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>line</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Wrapper for the standard realloc() function. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">pointer</td><td>The beginning byte of the currently allocated memory. </td></tr>
-    <tr><td class="paramname">size</td><td>The newly requested size. </td></tr>
-    <tr><td class="paramname">file</td><td>The name of the file from which the function was called. </td></tr>
-    <tr><td class="paramname">line</td><td>The line number on which the function was called. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>The beginning byte of the reallocated memory. </dd></dl>
-
-</div>
-</div>
-</div><!-- contents -->
+</div></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

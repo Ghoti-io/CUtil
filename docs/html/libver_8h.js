@@ -1,5 +1,6 @@
 var libver_8h =
 [
+    [ "GCU_WCHAR_WIDTH", "libver_8h.html#aca1db13d3a8ea591075c850a670f7f3b", null ],
     [ "GHOTIIO_CUTIL", "libver_8h.html#afabc8bce6a807a7d8f13650326453f18", null ],
     [ "GHOTIIO_CUTIL_CONCAT2", "libver_8h.html#a59b6d2e56025c5cd0730dc253f79515f", null ],
     [ "GHOTIIO_CUTIL_CONCAT2_INNER", "libver_8h.html#a0cabbbd75793721fe0b48e51d5f99c5c", null ],

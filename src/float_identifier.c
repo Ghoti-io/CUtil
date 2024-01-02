@@ -1,5 +1,4 @@
 /**
- * @file
  * Simple program to generate correct floating point type names for a given
  * byte size.
  */

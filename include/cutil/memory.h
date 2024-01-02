@@ -106,6 +106,43 @@ void * gcu_realloc_debug(void * pointer, size_t size, const char * file, size_t 
  */
 void gcu_free_debug(void * pointer, const char * file, size_t line);
 
+#if DOXYGEN
+
+/**
+ * Cross-platform wrapper for the standard malloc() function.
+ *
+ * @param size The number of bytes requested.
+ * @returns The beginning byte of the allocated memory.
+ */
+void * gcu_malloc(size_t size);
+
+/**
+ * Cross-platform wrapper for the standard calloc() function.
+ *
+ * @param nitems The number of items to allocate.
+ * @param size The number of bytes in each item.
+ * @returns The beginning byte of the allocated memory.
+ */
+void * gcu_calloc(size_t nitems, size_t size);
+
+/**
+ * Cross-platform wrapper for the standard realloc() function.
+ *
+ * @param pointer The beginning byte of the currently allocated memory.
+ * @param size The newly requested size.
+ * @returns The beginning byte of the reallocated memory.
+ */
+void * gcu_realloc(void * pointer, size_t size);
+
+/**
+ * Wrapper for the standard free() function.
+ *
+ * @param pointer The beginning byte of the currently allocated memory.
+ */
+void gcu_free(void * pointer);
+
+#endif // DOXYGEN
+
 #ifdef GHOTIIO_CUTIL_ENABLE_MEMORY_DEBUG // Log memory accesses.
 
 /// @cond HIDDEN_SYMBOLS
@@ -147,43 +184,18 @@ static inline void gcu_free(void * pointer) {
 
 #else // Linux target
 
-/**
- * Cross-platform wrapper for the standard malloc() function.
- *
- * @param size The number of bytes requested.
- * @returns The beginning byte of the allocated memory.
- */
 static inline void * gcu_malloc(size_t size) {
   return malloc(size);
 }
 
-/**
- * Cross-platform wrapper for the standard calloc() function.
- *
- * @param nitems The number of items to allocate.
- * @param size The number of bytes in each item.
- * @returns The beginning byte of the allocated memory.
- */
 static inline void * gcu_calloc(size_t nitems, size_t size) {
   return calloc(nitems, size);
 }
 
-/**
- * Cross-platform wrapper for the standard realloc() function.
- *
- * @param pointer The beginning byte of the currently allocated memory.
- * @param size The newly requested size.
- * @returns The beginning byte of the reallocated memory.
- */
 static inline void * gcu_realloc(void * pointer, size_t size) {
   return realloc(pointer, size);
 }
 
-/**
- * Wrapper for the standard free() function.
- *
- * @param pointer The beginning byte of the currently allocated memory.
- */
 static inline void gcu_free(void * pointer) {
   free(pointer);
 }

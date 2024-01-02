@@ -91,26 +91,53 @@ $(document).ready(function(){initNavTree('libver_8h_source.html',''); initResiza
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#ifndef GHOTIIO_CUTIL_LIBVER_H</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_LIBVER_H</span></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160; </div>
-<div class="line"><a name="l00014"></a><span class="lineno"><a class="line" href="libver_8h.html#a513ec2be01ce0da868063d2de40e2747">   14</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_NAME ghotiio_cutil_dev</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160; </div>
-<div class="line"><a name="l00020"></a><span class="lineno"><a class="line" href="libver_8h.html#a1b93a4d1006eb6c6d667d630d0a758af">   20</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_VERSION &quot;dev&quot;</span></div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160; </div>
-<div class="line"><a name="l00030"></a><span class="lineno"><a class="line" href="libver_8h.html#afabc8bce6a807a7d8f13650326453f18">   30</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL(NAME) GHOTIIO_CUTIL_RENAME(GHOTIIO_CUTIL_NAME, _ ## NAME)</span></div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
-<div class="line"><a name="l00042"></a><span class="lineno"><a class="line" href="libver_8h.html#a489eddcf682a895377af3233f30709e7">   42</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_RENAME_INNER(a,b) a ## b</span></div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160; </div>
-<div class="line"><a name="l00052"></a><span class="lineno"><a class="line" href="libver_8h.html#a19212bbca793191d593bcbe86ca70d04">   52</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_RENAME(a,b) GHOTIIO_CUTIL_RENAME_INNER(a,b)</span></div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160; </div>
-<div class="line"><a name="l00065"></a><span class="lineno"><a class="line" href="libver_8h.html#a0cabbbd75793721fe0b48e51d5f99c5c">   65</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_CONCAT2_INNER(a,b) a ## b</span></div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160; </div>
-<div class="line"><a name="l00077"></a><span class="lineno"><a class="line" href="libver_8h.html#a59b6d2e56025c5cd0730dc253f79515f">   77</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_CONCAT2(a,b) GHOTIIO_CUTIL_CONCAT2_INNER(a,b)</span></div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160; </div>
-<div class="line"><a name="l00091"></a><span class="lineno"><a class="line" href="libver_8h.html#a682b5fdbe63befb36ebea6f3f32b9263">   91</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_CONCAT3_INNER(a,b,c) a ## b ## c</span></div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160; </div>
-<div class="line"><a name="l00104"></a><span class="lineno"><a class="line" href="libver_8h.html#ae5c2b8efc3f738616cd454d21c8c46de">  104</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_CONCAT3(a,b,c) GHOTIIO_CUTIL_CONCAT3_INNER(a,b,c)</span></div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160; </div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// GHOTIIO_CUTIL_LIBVER_H</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;wchar.h&gt;</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160; </div>
+<div class="line"><a name="l00016"></a><span class="lineno"><a class="line" href="libver_8h.html#a513ec2be01ce0da868063d2de40e2747">   16</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_NAME ghotiio_cutil_dev</span></div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160; </div>
+<div class="line"><a name="l00022"></a><span class="lineno"><a class="line" href="libver_8h.html#a1b93a4d1006eb6c6d667d630d0a758af">   22</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_VERSION &quot;dev&quot;</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160; </div>
+<div class="line"><a name="l00032"></a><span class="lineno"><a class="line" href="libver_8h.html#afabc8bce6a807a7d8f13650326453f18">   32</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL(NAME) GHOTIIO_CUTIL_RENAME(GHOTIIO_CUTIL_NAME, _ ## NAME)</span></div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160; </div>
+<div class="line"><a name="l00044"></a><span class="lineno"><a class="line" href="libver_8h.html#a489eddcf682a895377af3233f30709e7">   44</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_RENAME_INNER(a,b) a ## b</span></div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160; </div>
+<div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="libver_8h.html#a19212bbca793191d593bcbe86ca70d04">   54</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_RENAME(a,b) GHOTIIO_CUTIL_RENAME_INNER(a,b)</span></div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160; </div>
+<div class="line"><a name="l00067"></a><span class="lineno"><a class="line" href="libver_8h.html#a0cabbbd75793721fe0b48e51d5f99c5c">   67</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_CONCAT2_INNER(a,b) a ## b</span></div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160; </div>
+<div class="line"><a name="l00079"></a><span class="lineno"><a class="line" href="libver_8h.html#a59b6d2e56025c5cd0730dc253f79515f">   79</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_CONCAT2(a,b) GHOTIIO_CUTIL_CONCAT2_INNER(a,b)</span></div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160; </div>
+<div class="line"><a name="l00093"></a><span class="lineno"><a class="line" href="libver_8h.html#a682b5fdbe63befb36ebea6f3f32b9263">   93</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_CONCAT3_INNER(a,b,c) a ## b ## c</span></div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160; </div>
+<div class="line"><a name="l00106"></a><span class="lineno"><a class="line" href="libver_8h.html#ae5c2b8efc3f738616cd454d21c8c46de">  106</a></span>&#160;<span class="preprocessor">#define GHOTIIO_CUTIL_CONCAT3(a,b,c) GHOTIIO_CUTIL_CONCAT3_INNER(a,b,c)</span></div>
 <div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160; </div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;<span class="comment">//-----------------------------------------------------------------------------</span></div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;<span class="comment">// Compiler Definitions</span></div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;<span class="comment">//-----------------------------------------------------------------------------</span></div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160; </div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;<span class="comment">//-----------------------------------------------------------------------------</span></div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;<span class="comment">// Type-Related Definitions</span></div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;<span class="comment">//-----------------------------------------------------------------------------</span></div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160; </div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;<span class="preprocessor">#if DOXYGEN</span></div>
+<div class="line"><a name="l00120"></a><span class="lineno"><a class="line" href="libver_8h.html#aca1db13d3a8ea591075c850a670f7f3b">  120</a></span>&#160;<span class="preprocessor">#define GCU_WCHAR_WIDTH</span></div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// DOXYGEN</span></div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160; </div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;<span class="preprocessor">#if WCHAR_MAX == 0x7FFFFFFFFFFFFFFF</span></div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;<span class="comment">// 64-bit signed</span></div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;<span class="preprocessor">#define GCU_WCHAR_WIDTH 8</span></div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;<span class="preprocessor">#elif WCHAR_MAX == 0x7FFFFFFF</span></div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;<span class="comment">// 32-bit signed</span></div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;<span class="preprocessor">#define GCU_WCHAR_WIDTH 4</span></div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;<span class="preprocessor">#elif WCHAR_MAX == 0x7FFF</span></div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;<span class="comment">// 16-bit signed</span></div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;<span class="preprocessor">#define GCU_WCHAR_WIDTH 2</span></div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;<span class="preprocessor">#else</span></div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;<span class="preprocessor">#error &quot;Could not determine GCU_WCHAR_WIDTH&quot;</span></div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// GCU_WCHAR_WIDTH</span></div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160; </div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;<span class="preprocessor">#endif </span><span class="comment">// GHOTIIO_CUTIL_LIBVER_H</span></div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160; </div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

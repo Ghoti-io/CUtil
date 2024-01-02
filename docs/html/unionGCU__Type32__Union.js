@@ -7,5 +7,6 @@ var unionGCU__Type32__Union =
     [ "i8", "unionGCU__Type32__Union.html#aae6199ae6da600c743197f5d47c4d3cb", null ],
     [ "ui16", "unionGCU__Type32__Union.html#abccacd66a6891e50bacbf558915f3e53", null ],
     [ "ui32", "unionGCU__Type32__Union.html#a38e6871a99a466bfa14a7f86b144e286", null ],
-    [ "ui8", "unionGCU__Type32__Union.html#a8ba937964a482e81b38cea8d667dfe49", null ]
+    [ "ui8", "unionGCU__Type32__Union.html#a8ba937964a482e81b38cea8d667dfe49", null ],
+    [ "wc", "unionGCU__Type32__Union.html#a0966e0a3aeee664ccb1bac92b6736413", null ]
 ];

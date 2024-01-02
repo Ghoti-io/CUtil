@@ -1,9 +1,3 @@
-/**
- * @file
- *
- * Test the behavior of Ghoti.io CUtil memory library and tools.
- */
-
 #include <sstream>
 #include <gtest/gtest.h>
 

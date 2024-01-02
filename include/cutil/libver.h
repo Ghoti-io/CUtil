@@ -113,11 +113,13 @@
 // Type-Related Definitions
 //-----------------------------------------------------------------------------
 
+#if DOXYGEN
 /**
  * Indicate the size of the `wchar` type.
- *
- * @def GCU_WCHAR_WIDTH
  */
+#define GCU_WCHAR_WIDTH
+#endif // DOXYGEN
+
 #if WCHAR_MAX == 0x7FFFFFFFFFFFFFFF
 // 64-bit signed
 #define GCU_WCHAR_WIDTH 8

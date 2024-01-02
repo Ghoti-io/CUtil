@@ -58,7 +58,7 @@ extern "C" {
 /**
  * Create a 64-bit union variable with the type `void *`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type64_p()
@@ -71,7 +71,7 @@ extern "C" {
 /**
  * Create a 64-bit union variable with the type `uint64_t`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type64_ui64()
@@ -84,7 +84,7 @@ extern "C" {
 /**
  * Create a 64-bit union variable with the type `uint32_t`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type64_ui32()
@@ -97,7 +97,7 @@ extern "C" {
 /**
  * Create a 64-bit union variable with the type `uint16_t`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type64_ui16()
@@ -110,7 +110,7 @@ extern "C" {
 /**
  * Create a 64-bit union variable with the type `uint8_t`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type64_ui8()
@@ -123,7 +123,7 @@ extern "C" {
 /**
  * Create a 64-bit union variable with the type `int64_t`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type64_i64()
@@ -136,7 +136,7 @@ extern "C" {
 /**
  * Create a 64-bit union variable with the type `int32_t`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type64_i32()
@@ -149,7 +149,7 @@ extern "C" {
 /**
  * Create a 64-bit union variable with the type `int16_t`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type64_i16()
@@ -162,7 +162,7 @@ extern "C" {
 /**
  * Create a 64-bit union variable with the type `int8_t`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type64_i8()
@@ -175,7 +175,7 @@ extern "C" {
 /**
  * Create a 64-bit union variable with the type float with 64 bits.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type64_f64()
@@ -188,7 +188,7 @@ extern "C" {
 /**
  * Create a 64-bit union variable with the type float with 32 bits.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type64_f32()
@@ -201,7 +201,7 @@ extern "C" {
 /**
  * Create a 64-bit union variable with the type `wchar_t`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type64_wc()
@@ -214,7 +214,7 @@ extern "C" {
 /**
  * Create a 64-bit union variable with the type `char`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type64_c()
@@ -227,7 +227,7 @@ extern "C" {
 /**
  * Create a 32-bit union variable with the type `uint32_t`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type32_ui32()
@@ -240,7 +240,7 @@ extern "C" {
 /**
  * Create a 32-bit union variable with the type `uint16_t`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type32_ui16()
@@ -253,7 +253,7 @@ extern "C" {
 /**
  * Create a 32-bit union variable with the type `uint8_t`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type32_ui8()
@@ -266,7 +266,7 @@ extern "C" {
 /**
  * Create a 32-bit union variable with the type `int32_t`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type32_i32()
@@ -279,7 +279,7 @@ extern "C" {
 /**
  * Create a 32-bit union variable with the type `int16_t`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type32_i16()
@@ -292,7 +292,7 @@ extern "C" {
 /**
  * Create a 32-bit union variable with the type `int8_t`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type32_i8()
@@ -305,7 +305,7 @@ extern "C" {
 /**
  * Create a 32-bit union variable with the type float with 32 bits.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type32_f32()
@@ -319,7 +319,7 @@ extern "C" {
 /**
  * Create a 32-bit union variable with the type `wchar_t`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type32_wc()
@@ -333,7 +333,7 @@ extern "C" {
 /**
  * Create a 32-bit union variable with the type `char`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type32_c()
@@ -346,7 +346,7 @@ extern "C" {
 /**
  * Create a 16-bit union variable with the type `uint16_t`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type16_ui16()
@@ -359,7 +359,7 @@ extern "C" {
 /**
  * Create a 16-bit union variable with the type `uint8_t`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type16_ui8()
@@ -372,7 +372,7 @@ extern "C" {
 /**
  * Create a 16-bit union variable with the type `int16_t`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type16_i16()
@@ -385,7 +385,7 @@ extern "C" {
 /**
  * Create a 16-bit union variable with the type `int8_t`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type16_i8()
@@ -398,7 +398,7 @@ extern "C" {
 /**
  * Create a 16-bit union variable with the type `char`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type16_c()
@@ -411,7 +411,7 @@ extern "C" {
 /**
  * Create a 8-bit union variable with the type `uint8_t`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type8_ui8()
@@ -424,7 +424,7 @@ extern "C" {
 /**
  * Create a 8-bit union variable with the type `int8_t`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type8_i8()
@@ -437,7 +437,7 @@ extern "C" {
 /**
  * Create a 8-bit union variable with the type `char`.
  *
- * This #define is a compound literal.  It is allowed in C but not C++.
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
  * There is a corresponding function for use in C++.
  *
  * @see gcu_type8_c()
@@ -451,56 +451,56 @@ extern "C" {
  * A union of all basic, 64-bit types to be used by generic, 64-bit containers.
  */
 typedef union {
-  void * p;
-  uint64_t ui64;
-  uint32_t ui32;
-  uint16_t ui16;
-  uint8_t ui8;
-  int64_t i64;
-  int32_t i32;
-  int16_t i16;
-  int8_t i8;
-  GCU_float64_t f64;
-  GCU_float32_t f32;
-  wchar_t wc;
-  char c;
+  void * p;          ///< Pointer type value.
+  uint64_t ui64;     ///< uint64_t value.
+  uint32_t ui32;     ///< uint32_t value.
+  uint16_t ui16;     ///< uint16_t value.
+  uint8_t ui8;       ///< uint8_t value.
+  int64_t i64;       ///< int64_t value.
+  int32_t i32;       ///< int32_t value.
+  int16_t i16;       ///< int16_t value.
+  int8_t i8;         ///< int8_t value.
+  GCU_float64_t f64; ///< 64-bit float value.
+  GCU_float32_t f32; ///< 32-bit float value.
+  wchar_t wc;        ///< wchar_t value.
+  char c;            ///< char value.
 } GCU_Type64_Union;
 
 /**
  * A union of all basic, 32-bit types to be used by generic, 32-bit containers.
  */
 typedef union {
-  uint32_t ui32;
-  uint16_t ui16;
-  uint8_t ui8;
-  int32_t i32;
-  int16_t i16;
-  int8_t i8;
-  GCU_float32_t f32;
-#if GCU_WCHAR_WIDTH <= 4
-  wchar_t wc;
+  uint32_t ui32;     ///< uint32_t value.
+  uint16_t ui16;     ///< uint16_t value.
+  uint8_t ui8;       ///< uint8_t value.
+  int32_t i32;       ///< int32_t value.
+  int16_t i16;       ///< int16_t value.
+  int8_t i8;         ///< int8_t value.
+  GCU_float32_t f32; ///< 32-bit float value.
+#if GCU_WCHAR_WIDTH <= 4 || DOXYGEN
+  wchar_t wc;        ///< wchar_t value.
 #endif
-  char c;
+  char c;            ///< char value.
 } GCU_Type32_Union;
 
 /**
  * A union of all basic, 16-bit types to be used by generic, 16-bit containers.
  */
 typedef union {
-  uint16_t ui16;
-  uint8_t ui8;
-  int16_t i16;
-  int8_t i8;
-  char c;
+  uint16_t ui16;     ///< uint16_t value.
+  uint8_t ui8;       ///< uint8_t value.
+  int16_t i16;       ///< int16_t value.
+  int8_t i8;         ///< int8_t value.
+  char c;            ///< char value.
 } GCU_Type16_Union;
 
 /**
  * A union of all basic, 8-bit types to be used by generic, 8-bit containers.
  */
 typedef union {
-  uint8_t ui8;
-  int8_t i8;
-  char c;
+  uint8_t ui8;       ///< uint8_t value.
+  int8_t i8;         ///< int8_t value.
+  char c;            ///< char value.
 } GCU_Type8_Union;
 
 /**

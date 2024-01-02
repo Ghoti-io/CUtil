@@ -1,9 +1,3 @@
-/**
- * @file
- *
- * Test the behavior of Ghoti.io CUtil debug library and tools.
- */
-
 #include <sstream>
 #include <gtest/gtest.h>
 #include "cutil/debug.h"

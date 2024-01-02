@@ -1,9 +1,3 @@
-/**
- * @file
- *
- * Test the behavior of Ghoti.io CUtil hash table library.
- */
-
 #include <sstream>
 #include <gtest/gtest.h>
 #include "cutil/vector.h"

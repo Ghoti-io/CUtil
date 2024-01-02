@@ -1,5 +1,4 @@
 /**
- * @file
  */
 
 #include <stdlib.h>

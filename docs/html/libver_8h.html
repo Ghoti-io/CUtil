@@ -92,28 +92,29 @@ $(document).ready(function(){initNavTree('libver_8h.html',''); initResizable(); 
 
 <p>Header file used to control the version numbering and function namespace for all of the library.  
 <a href="#details">More...</a></p>
-<div class="textblock"><div class="dynheader">
+<div class="textblock"><code>#include &lt;wchar.h&gt;</code><br />
+</div><div class="textblock"><div class="dynheader">
+Include dependency graph for libver.h:</div>
+<div class="dyncontent">
+<div class="center"><img src="libver_8h__incl.png" border="0" usemap="#ainclude_2cutil_2libver_8h" alt=""/></div>
+<map name="ainclude_2cutil_2libver_8h" id="ainclude_2cutil_2libver_8h">
+<area shape="rect" title="Header file used to control the version numbering and function namespace for all of the library." alt="" coords="5,5,159,32"/>
+<area shape="rect" title=" " alt="" coords="46,80,118,107"/>
+</map>
+</div>
+</div><div class="textblock"><div class="dynheader">
 This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="libver_8h__dep__incl.png" border="0" usemap="#ainclude_2cutil_2libver_8hdep" alt=""/></div>
 <map name="ainclude_2cutil_2libver_8hdep" id="ainclude_2cutil_2libver_8hdep">
-<area shape="rect" title="Header file used to control the version numbering and function namespace for all of the library." alt="" coords="473,5,627,32"/>
-<area shape="rect" href="debug_8h.html" title="Header file for debugging&#45;related functions." alt="" coords="295,80,453,107"/>
-<area shape="rect" href="float_8h.html" title="Type definitions for float types." alt="" coords="477,80,623,107"/>
-<area shape="rect" href="type_8h.html" title="Type definitions and utilities for use by the Ghoti.io projects." alt="" coords="559,155,706,181"/>
-<area shape="rect" href="debug_8c.html" title=" " alt="" coords="209,155,305,181"/>
-<area shape="rect" href="test-debug_8cpp.html" title="Test the behavior of Ghoti.io CUtil debug library and tools." alt="" coords="329,155,477,181"/>
-<area shape="rect" href="hash_8h.html" title="A simple hash table implementation." alt="" coords="112,229,260,256"/>
-<area shape="rect" href="string_8h.html" title="A collection of string&#45;related functions." alt="" coords="375,229,530,256"/>
-<area shape="rect" href="vector_8h.html" title="A simple vector implementation." alt="" coords="554,229,711,256"/>
-<area shape="rect" href="type_8c.html" title=" " alt="" coords="735,229,821,256"/>
-<area shape="rect" href="test-type_8cpp.html" title="Test the behavior of Ghoti.io CUtil type library." alt="" coords="845,229,983,256"/>
-<area shape="rect" href="hash_8c.html" title=" " alt="" coords="5,304,92,331"/>
-<area shape="rect" href="test-hash_8cpp.html" title="Test the behavior of Ghoti.io CUtil hash table library." alt="" coords="117,304,255,331"/>
-<area shape="rect" href="string_8c.html" title=" " alt="" coords="279,304,373,331"/>
-<area shape="rect" href="vector_8c.html" title=" " alt="" coords="567,304,663,331"/>
-<area shape="rect" href="test-string_8cpp.html" title="Test the behavior of Ghoti.io CUtil string library." alt="" coords="397,304,543,331"/>
-<area shape="rect" href="test-vector_8cpp.html" title="Test the behavior of Ghoti.io CUtil hash table library." alt="" coords="687,304,834,331"/>
+<area shape="rect" title="Header file used to control the version numbering and function namespace for all of the library." alt="" coords="238,5,391,32"/>
+<area shape="rect" href="debug_8h.html" title="Header file for debugging&#45;related functions." alt="" coords="5,80,163,107"/>
+<area shape="rect" href="float_8h.html" title="Type definitions for float types." alt="" coords="187,80,333,107"/>
+<area shape="rect" href="type_8h.html" title="Type definitions and utilities for use by the Ghoti.io projects." alt="" coords="241,155,388,181"/>
+<area shape="rect" href="memory_8h.html" title="Header file for memory&#45;related functions." alt="" coords="408,80,579,107"/>
+<area shape="rect" href="hash_8h.html" title="A simple hash table implementation." alt="" coords="65,229,213,256"/>
+<area shape="rect" href="string_8h.html" title="A collection of string&#45;related functions." alt="" coords="237,229,392,256"/>
+<area shape="rect" href="vector_8h.html" title="A simple vector implementation." alt="" coords="416,229,573,256"/>
 </map>
 </div>
 </div>
@@ -149,6 +150,10 @@ Macros</h2></td></tr>
 <tr class="memitem:ae5c2b8efc3f738616cd454d21c8c46de"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="libver_8h.html#ae5c2b8efc3f738616cd454d21c8c46de">GHOTIIO_CUTIL_CONCAT3</a>(a,  b,  c)&#160;&#160;&#160;<a class="el" href="libver_8h.html#a682b5fdbe63befb36ebea6f3f32b9263">GHOTIIO_CUTIL_CONCAT3_INNER</a>(a,b,c)</td></tr>
 <tr class="memdesc:ae5c2b8efc3f738616cd454d21c8c46de"><td class="mdescLeft">&#160;</td><td class="mdescRight">Helper macro to concatenate the identifiers.  <a href="libver_8h.html#ae5c2b8efc3f738616cd454d21c8c46de">More...</a><br /></td></tr>
 <tr class="separator:ae5c2b8efc3f738616cd454d21c8c46de"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aca1db13d3a8ea591075c850a670f7f3b"><td class="memItemLeft" align="right" valign="top"><a id="aca1db13d3a8ea591075c850a670f7f3b"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="libver_8h.html#aca1db13d3a8ea591075c850a670f7f3b">GCU_WCHAR_WIDTH</a></td></tr>
+<tr class="memdesc:aca1db13d3a8ea591075c850a670f7f3b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indicate the size of the <code>wchar</code> type. <br /></td></tr>
+<tr class="separator:aca1db13d3a8ea591075c850a670f7f3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Header file used to control the version numbering and function namespace for all of the library. </p>

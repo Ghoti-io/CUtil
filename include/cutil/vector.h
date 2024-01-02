@@ -93,6 +93,7 @@ void gcu_vector64_destroy(GCU_Vector64 * vector);
  * be attempted to be allocated.  This may invalidate any pointers to the
  * previous data locations.
  *
+ * @param vector The vector structure on which to operate.
  * @param value The item to append to the end of the vector.
  * @return `true` on success, `false` otherwise.
  */
@@ -159,6 +160,7 @@ void gcu_vector32_destroy(GCU_Vector32 * vector);
  * be attempted to be allocated.  This may invalidate any pointers to the
  * previous data locations.
  *
+ * @param vector The vector structure on which to operate.
  * @param value The item to append to the end of the vector.
  * @return `true` on success, `false` otherwise.
  */
@@ -225,6 +227,7 @@ void gcu_vector16_destroy(GCU_Vector16 * vector);
  * be attempted to be allocated.  This may invalidate any pointers to the
  * previous data locations.
  *
+ * @param vector The vector structure on which to operate.
  * @param value The item to append to the end of the vector.
  * @return `true` on success, `false` otherwise.
  */
@@ -291,6 +294,7 @@ void gcu_vector8_destroy(GCU_Vector8 * vector);
  * be attempted to be allocated.  This may invalidate any pointers to the
  * previous data locations.
  *
+ * @param vector The vector structure on which to operate.
  * @param value The item to append to the end of the vector.
  * @return `true` on success, `false` otherwise.
  */
