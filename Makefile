@@ -246,7 +246,7 @@ install: all
 	@cp include/cutil/*.h /usr/local/include/ghoti.io/cutil$(BRANCH)
 	# Installing the pkgconfig files
 	@mkdir -p /usr/local/share/pkgconfig
-	@ cat pkgconfig/ghoti.io-cutil.pc | sed 's/(BRANCH)/$(BRANCH)/g' | sed 's/(VERSION)/$(VERSION)/g' > /usr/local/share/pkgconfig/ghoti.io-cutil$(BRANCH).pc
+	@ cat pkgconfig/ghoti.io-cutil.pc | sed 's/(BRANCH)/$(BRANCH)/g; s/(VERSION)/$(VERSION)/g' > /usr/local/share/pkgconfig/ghoti.io-cutil$(BRANCH).pc
 	# Running ldconfig
 	@ldconfig >> /dev/null 2>&1
 	@echo "Ghoti.io CUtil$(BRANCH) installed"
