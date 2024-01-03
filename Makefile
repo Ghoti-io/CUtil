@@ -254,7 +254,7 @@ install: all
 docs: ## Generate the documentation in the ./docs subdirectory
 	doxygen
 
-docs-pdf: docs ## Generate the documentation as a pdf, in ./docs/shared_string_view-docs.pdf
+docs-pdf: docs ## Generate the documentation as a pdf, in ./docs/cutil(BRANCH)-docs.pdf
 	cd ./docs/latex/ && make
 	mv -f ./docs/latex/refman.pdf ./docs/cutil$(BRANCH)-docs.pdf
 
@@ -262,5 +262,5 @@ cloc: ## Count the lines of code used in the project
 	cloc src include test Makefile
 
 help: ## Display this help
-	@grep -E '^[ a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "%-15s %s\n", $$1, $$2}'
+	@grep -E '^[ a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "%-15s %s\n", $$1, $$2}' | sed 's/(BRANCH)/$(BRANCH)/g'
 
