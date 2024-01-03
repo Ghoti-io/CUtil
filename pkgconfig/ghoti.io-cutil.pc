@@ -2,6 +2,6 @@ Name: Ghoti.io CUtil(BRANCH)
 Description: C library providing generic, non-OS-specific classes for the Ghoti project
 Version: (VERSION)
 URL: htts://github.com/Ghoti-io/CUtil
-Libs: -L/usr/local/lib/ghoti.io -lghoti.io-cutil(BRANCH)
-CFlags: -I/usr/local/include/ghoti.io/cutil(BRANCH)
+Libs: -L/usr/local/lib/(SUITE) -l(SUITE)-(PROJECT)(BRANCH)
+CFlags: -I/usr/local/include/(SUITE)/(PROJECT)(BRANCH)
 
