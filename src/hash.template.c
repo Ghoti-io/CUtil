@@ -1,12 +1,28 @@
-GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Table) * GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _create)(size_t count) {
+#define TEMPLATE_GROW_HASH         GHOTIIO_CUTIL_CONCAT2(grow_hash, BITDEPTH)
+#define TEMPLATE_GCU_HASH_TABLE    GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Table)
+#define TEMPLATE_GCU_HASH_ITERATOR GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Iterator)
+#define TEMPLATE_GCU_HASH_CELL     GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Cell)
+#define TEMPLATE_GCU_HASH_VALUE    GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Value)
+#define TEMPLATE_GCU_TYPE_UNION    GHOTIIO_CUTIL_CONCAT3(GCU_Type, BITDEPTH, _Union)
+#define TEMPLATE_GCU_HASH_CREATE   GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _create)
+#define TEMPLATE_GCU_HASH_DESTROY  GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _destroy)
+#define TEMPLATE_GCU_HASH_SET      GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _set)
+#define TEMPLATE_GCU_HASH_GET      GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _get)
+#define TEMPLATE_GCU_HASH_CONTAINS GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _contains)
+#define TEMPLATE_GCU_HASH_REMOVE   GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _remove)
+#define TEMPLATE_GCU_HASH_COUNT    GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _count)
+#define TEMPLATE_GCU_HASH_ITERATOR_GET  GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _iterator_get)
+#define TEMPLATE_GCU_HASH_ITERATOR_NEXT GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _iterator_next)
+
+TEMPLATE_GCU_HASH_TABLE * TEMPLATE_GCU_HASH_CREATE(size_t count) {
   // Malloc Zeroed-out memory.
-  GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Table) * hashTable = calloc(1, sizeof(GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Table)));
+  TEMPLATE_GCU_HASH_TABLE * hashTable = calloc(1, sizeof(TEMPLATE_GCU_HASH_TABLE));
 
   // Reserve room for the data, if requested..
   if (count) {
     // We always want the capacity to be an odd number.
     size_t capacity = (count * 2) + 1;
-    hashTable->data = calloc(capacity, sizeof(GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Cell)));
+    hashTable->data = calloc(capacity, sizeof(TEMPLATE_GCU_HASH_CELL));
     if (hashTable->data) {
       hashTable->capacity = capacity;
     }
@@ -15,7 +31,7 @@ GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Table) * GHOTIIO_CUTIL_CONCAT3(gcu_ha
   return hashTable;
 }
 
-void GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _destroy)(GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Table) * hashTable) {
+void TEMPLATE_GCU_HASH_DESTROY(TEMPLATE_GCU_HASH_TABLE * hashTable) {
   // Verify that the pointer actually points to something.
   if (hashTable) {
     // Clean up the data table if needed.
@@ -27,7 +43,7 @@ void GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _destroy)(GHOTIIO_CUTIL_CONCAT3(G
   }
 }
 
-static bool GHOTIIO_CUTIL_CONCAT2(grow_hash, BITDEPTH)(GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Table) * hashTable, size_t size) {
+static bool TEMPLATE_GROW_HASH(TEMPLATE_GCU_HASH_TABLE * hashTable, size_t size) {
   // Verify that the pointer actually points to something.
   if (!hashTable) {
     return false;
@@ -37,33 +53,33 @@ static bool GHOTIIO_CUTIL_CONCAT2(grow_hash, BITDEPTH)(GHOTIIO_CUTIL_CONCAT3(GCU
     return false;
   }
 
-  GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Table) * newTable = GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _create)(size);
+  TEMPLATE_GCU_HASH_TABLE * newTable = TEMPLATE_GCU_HASH_CREATE(size);
   if (!newTable) {
     return false;
   }
 
-  GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Cell) * cursor = hashTable->data;
-  GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Cell) * end = &hashTable->data[hashTable->capacity];
+  TEMPLATE_GCU_HASH_CELL * cursor = hashTable->data;
+  TEMPLATE_GCU_HASH_CELL * end = &hashTable->data[hashTable->capacity];
 
   // Copy data into the new hash table.
   while (cursor != end) {
     if (cursor->occupied && !cursor->removed) {
-      GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _set)(newTable, cursor->hash, cursor->data);
+      TEMPLATE_GCU_HASH_SET(newTable, cursor->hash, cursor->data);
     }
     ++cursor;
   }
 
   // Swap the data.
-  GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Table) temp = *newTable;
+  TEMPLATE_GCU_HASH_TABLE temp = *newTable;
   *newTable = *hashTable;
   *hashTable = temp;
 
-  GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _destroy)(newTable);
+  TEMPLATE_GCU_HASH_DESTROY(newTable);
 
   return true;
 }
 
-bool GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _set)(GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Table) * hashTable, size_t hash, GHOTIIO_CUTIL_CONCAT3(GCU_Type, BITDEPTH, _Union) value) {
+bool TEMPLATE_GCU_HASH_SET(TEMPLATE_GCU_HASH_TABLE * hashTable, size_t hash, TEMPLATE_GCU_TYPE_UNION value) {
   // Verify that the pointer actually points to something.
   if (!hashTable) {
     return false;
@@ -71,7 +87,7 @@ bool GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _set)(GHOTIIO_CUTIL_CONCAT3(GCU_H
 
   // Grow the hash table if needed.
   if (hashTable->capacity < ((hashTable->entries + 1) * 2)) {
-    if (!GHOTIIO_CUTIL_CONCAT2(grow_hash, BITDEPTH)(hashTable, hashTable->capacity < 64
+    if (!TEMPLATE_GROW_HASH(hashTable, hashTable->capacity < 64
           ? 32
           : hashTable->capacity < 1024
             ? (hashTable->capacity * 2)
@@ -91,7 +107,7 @@ bool GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _set)(GHOTIIO_CUTIL_CONCAT3(GCU_H
   // Along the way, make a note of the first "removed" entry, which we may fall
   // back to if there is no active entry.
   size_t fallback_location = capacity;
-  GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Cell) * cursor = &hashTable->data[potential_location];
+  TEMPLATE_GCU_HASH_CELL * cursor = &hashTable->data[potential_location];
 
   // We are not protecting against an infinite loop, because at this point we
   // know that the capacity is larger than the size, and therefore an infinite
@@ -128,7 +144,7 @@ bool GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _set)(GHOTIIO_CUTIL_CONCAT3(GCU_H
   }
 
   // Finally, write the data.
-  *cursor = (GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Cell)) {
+  *cursor = (TEMPLATE_GCU_HASH_CELL) {
     .hash = hash,
     .data = value,
     .occupied = true,
@@ -137,16 +153,16 @@ bool GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _set)(GHOTIIO_CUTIL_CONCAT3(GCU_H
   return true;
 }
 
-GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Value) GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _get)(GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Table) * hashTable, size_t hash) {
+TEMPLATE_GCU_HASH_VALUE TEMPLATE_GCU_HASH_GET(TEMPLATE_GCU_HASH_TABLE * hashTable, size_t hash) {
   // Verify that the pointer actually points to something.
   if (hashTable) {
-    GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Cell) * cursor = hashTable->data;
-    GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Cell) * end = &hashTable->data[hashTable->capacity];
+    TEMPLATE_GCU_HASH_CELL * cursor = hashTable->data;
+    TEMPLATE_GCU_HASH_CELL * end = &hashTable->data[hashTable->capacity];
 
     // Find the entry, if it exists.
     while (cursor != end) {
       if (cursor->occupied && !cursor->removed && (cursor->hash == hash)) {
-        return (GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Value)) {
+        return (TEMPLATE_GCU_HASH_VALUE) {
           .exists = true,
           .value = cursor->data,
         };
@@ -154,17 +170,17 @@ GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Value) GHOTIIO_CUTIL_CONCAT3(gcu_hash
       ++cursor;
     }
   }
-  return (GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Value)) {
+  return (TEMPLATE_GCU_HASH_VALUE) {
     .exists = false,
-    .value = (GHOTIIO_CUTIL_CONCAT3(GCU_Type, BITDEPTH, _Union)){0}
+    .value = (TEMPLATE_GCU_TYPE_UNION){0}
   };
 }
 
-bool GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _contains)(GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Table) * hashTable, size_t hash) {
+bool TEMPLATE_GCU_HASH_CONTAINS(TEMPLATE_GCU_HASH_TABLE * hashTable, size_t hash) {
   // Verify that the pointer actually points to something.
   if (hashTable) {
-    GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Cell) * cursor = hashTable->data;
-    GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Cell) * end = &hashTable->data[hashTable->capacity];
+    TEMPLATE_GCU_HASH_CELL * cursor = hashTable->data;
+    TEMPLATE_GCU_HASH_CELL * end = &hashTable->data[hashTable->capacity];
 
     // Find the entry, if it exists.
     while (cursor != end) {
@@ -177,11 +193,11 @@ bool GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _contains)(GHOTIIO_CUTIL_CONCAT3(
   return false;
 }
 
-bool GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _remove)(GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Table) * hashTable, size_t hash) {
+bool TEMPLATE_GCU_HASH_REMOVE(TEMPLATE_GCU_HASH_TABLE * hashTable, size_t hash) {
   // Verify that the pointer actually points to something.
   if (hashTable) {
-    GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Cell) * cursor = &hashTable->data[hash % hashTable->capacity];
-    GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Cell) * end = &hashTable->data[hashTable->capacity];
+    TEMPLATE_GCU_HASH_CELL * cursor = &hashTable->data[hash % hashTable->capacity];
+    TEMPLATE_GCU_HASH_CELL * end = &hashTable->data[hashTable->capacity];
 
     // Find the entry to remove.
     while (cursor->occupied) {
@@ -199,7 +215,7 @@ bool GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _remove)(GHOTIIO_CUTIL_CONCAT3(GC
   return false;
 }
 
-size_t GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _count)(GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Table) * hashTable) {
+size_t TEMPLATE_GCU_HASH_COUNT(TEMPLATE_GCU_HASH_TABLE * hashTable) {
   // Verify that the pointer actually points to something.
   if (hashTable) {
     // Compute the size.
@@ -208,11 +224,11 @@ size_t GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _count)(GHOTIIO_CUTIL_CONCAT3(G
   return 0;
 }
 
-GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Iterator) GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _iterator_get)(GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Table) * hashTable) {
+TEMPLATE_GCU_HASH_ITERATOR TEMPLATE_GCU_HASH_ITERATOR_GET(TEMPLATE_GCU_HASH_TABLE * hashTable) {
   // Verify that the pointer actually points to something and that there is an
   // entry in the hash table.
   if (!hashTable || (hashTable->entries <= hashTable->removed)) {
-    return (GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Iterator)) {
+    return (TEMPLATE_GCU_HASH_ITERATOR) {
       .current = 0,
       .exists = false,
       .value = DEFAULT_TYPE(0),
@@ -221,7 +237,7 @@ GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Iterator) GHOTIIO_CUTIL_CONCAT3(gcu_h
   }
 
   size_t index = 0;
-  GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Cell) * cursor = hashTable->data;
+  TEMPLATE_GCU_HASH_CELL * cursor = hashTable->data;
 
   // Find the first entry.
   while (!cursor->occupied || cursor->removed) {
@@ -229,7 +245,7 @@ GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Iterator) GHOTIIO_CUTIL_CONCAT3(gcu_h
     ++cursor;
   }
 
-  return (GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Iterator)) {
+  return (TEMPLATE_GCU_HASH_ITERATOR) {
     .current = index,
     .exists = true,
     .value = cursor->data,
@@ -237,10 +253,10 @@ GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Iterator) GHOTIIO_CUTIL_CONCAT3(gcu_h
   };
 }
 
-GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Iterator) GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _iterator_next)(GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Iterator) iterator) {
-  GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Cell) * end = &iterator.hashTable->data[iterator.hashTable->capacity];
+TEMPLATE_GCU_HASH_ITERATOR TEMPLATE_GCU_HASH_ITERATOR_NEXT(TEMPLATE_GCU_HASH_ITERATOR iterator) {
+  TEMPLATE_GCU_HASH_CELL * end = &iterator.hashTable->data[iterator.hashTable->capacity];
   size_t index = iterator.current;
-  GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Cell) * cursor = &iterator.hashTable->data[index];
+  TEMPLATE_GCU_HASH_CELL * cursor = &iterator.hashTable->data[index];
 
   // Find the next entry.
   do {
@@ -249,7 +265,7 @@ GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Iterator) GHOTIIO_CUTIL_CONCAT3(gcu_h
   } while ((cursor != end) && (!cursor->occupied || cursor->removed));
 
   if (cursor == end) {
-    return (GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Iterator)) {
+    return (TEMPLATE_GCU_HASH_ITERATOR) {
       .current = index,
       .exists = false,
       .value = DEFAULT_TYPE(0),
@@ -257,11 +273,27 @@ GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Iterator) GHOTIIO_CUTIL_CONCAT3(gcu_h
     };
   }
 
-  return (GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Iterator)) {
+  return (TEMPLATE_GCU_HASH_ITERATOR) {
     .current = index,
     .exists = true,
     .value = cursor->data,
     .hashTable = iterator.hashTable,
   };
 }
+
+#undef TEMPLATE_GROW_HASH
+#undef TEMPLATE_GCU_HASH_TABLE
+#undef TEMPLATE_GCU_HASH_ITERATOR
+#undef TEMPLATE_GCU_HASH_CELL
+#undef TEMPLATE_GCU_HASH_VALUE
+#undef TEMPLATE_GCU_TYPE_UNION
+#undef TEMPLATE_GCU_HASH_CREATE
+#undef TEMPLATE_GCU_HASH_DESTROY
+#undef TEMPLATE_GCU_HASH_SET
+#undef TEMPLATE_GCU_HASH_GET
+#undef TEMPLATE_GCU_HASH_CONTAINS
+#undef TEMPLATE_GCU_HASH_REMOVE
+#undef TEMPLATE_GCU_HASH_COUNT
+#undef TEMPLATE_GCU_HASH_ITERATOR_GET
+#undef TEMPLATE_GCU_HASH_ITERATOR_NEXT
 
