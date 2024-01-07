@@ -14,24 +14,31 @@ extern "C" {
 #endif
 
 /// @cond HIDDEN_SYMBOLS
+#define GCU_Vector64_Cleanup GHOTIIO_CUTIL(GCU_Vector64_Cleanup)
 #define GCU_Vector64_Value GHOTIIO_CUTIL(GCU_Vector64_Value)
 #define GCU_Vector64 GHOTIIO_CUTIL(GCU_Vector64)
 #define gcu_vector64_create GHOTIIO_CUTIL(gcu_vector64_create)
 #define gcu_vector64_destroy GHOTIIO_CUTIL(gcu_vector64_destroy)
 #define gcu_vector64_append GHOTIIO_CUTIL(gcu_vector64_remove)
 #define gcu_vector64_count GHOTIIO_CUTIL(gcu_vector64_count)
+
+#define GCU_Vector32_Cleanup GHOTIIO_CUTIL(GCU_Vector32_Cleanup)
 #define GCU_Vector32_Value GHOTIIO_CUTIL(GCU_Vector32_Value)
 #define GCU_Vector32 GHOTIIO_CUTIL(GCU_Vector32)
 #define gcu_vector32_create GHOTIIO_CUTIL(gcu_vector32_create)
 #define gcu_vector32_destroy GHOTIIO_CUTIL(gcu_vector32_destroy)
 #define gcu_vector32_append GHOTIIO_CUTIL(gcu_vector32_remove)
 #define gcu_vector32_count GHOTIIO_CUTIL(gcu_vector32_count)
+
+#define GCU_Vector16_Cleanup GHOTIIO_CUTIL(GCU_Vector16_Cleanup)
 #define GCU_Vector16_Value GHOTIIO_CUTIL(GCU_Vector16_Value)
 #define GCU_Vector16 GHOTIIO_CUTIL(GCU_Vector16)
 #define gcu_vector16_create GHOTIIO_CUTIL(gcu_vector16_create)
 #define gcu_vector16_destroy GHOTIIO_CUTIL(gcu_vector16_destroy)
 #define gcu_vector16_append GHOTIIO_CUTIL(gcu_vector16_remove)
 #define gcu_vector16_count GHOTIIO_CUTIL(gcu_vector16_count)
+
+#define GCU_Vector8_Cleanup GHOTIIO_CUTIL(GCU_Vector8_Cleanup)
 #define GCU_Vector8_Value GHOTIIO_CUTIL(GCU_Vector8_Value)
 #define GCU_Vector8 GHOTIIO_CUTIL(GCU_Vector8)
 #define gcu_vector8_create GHOTIIO_CUTIL(gcu_vector8_create)
@@ -39,6 +46,51 @@ extern "C" {
 #define gcu_vector8_append GHOTIIO_CUTIL(gcu_vector8_remove)
 #define gcu_vector8_count GHOTIIO_CUTIL(gcu_vector8_count)
 /// @endcond
+
+typedef struct GCU_Vector64 GCU_Vector64;
+typedef struct GCU_Vector32 GCU_Vector32;
+typedef struct GCU_Vector16 GCU_Vector16;
+typedef struct GCU_Vector8 GCU_Vector8;
+
+/**
+ * Pointer to a function which will be called when the vector destroy function
+ * is called.
+ *
+ * @ref gcu_vector64_destroy
+ *
+ * @param vector The vector which is about to be destroyed.
+ */
+typedef void (* GCU_Vector64_Cleanup)(GCU_Vector64 * vector);
+
+/**
+ * Pointer to a function which will be called when the vector destroy function
+ * is called.
+ *
+ * @ref gcu_vector32_destroy
+ *
+ * @param vector The vector which is about to be destroyed.
+ */
+typedef void (* GCU_Vector32_Cleanup)(GCU_Vector32 * vector);
+
+/**
+ * Pointer to a function which will be called when the vector destroy function
+ * is called.
+ *
+ * @ref gcu_vector16_destroy
+ *
+ * @param vector The vector which is about to be destroyed.
+ */
+typedef void (* GCU_Vector16_Cleanup)(GCU_Vector16 * vector);
+
+/**
+ * Pointer to a function which will be called when the vector destroy function
+ * is called.
+ *
+ * @ref gcu_vector8_destroy
+ *
+ * @param vector The vector which is about to be destroyed.
+ */
+typedef void (* GCU_Vector8_Cleanup)(GCU_Vector8 * vector);
 
 /**
  * Container holding the information of the 64-bit vector.
@@ -51,11 +103,17 @@ extern "C" {
  *      will **not**, for example, attempt to manage any pointers that it
  *      may contain upon deletion.  The programmer is responsible for all
  *      memory management.
+ *
+ * The programmer may populate the `supplementary_data` data variable and
+ * the `cleanup` function pointer.  When the vector is destroyed, the `cleanup`
+ * function will be called (if provided).
  */
-typedef struct {
-  size_t capacity;       ///< The total item capacity of the vector.
-  size_t count;          ///< The count of non-empty cells.
-  GCU_Type64_Union * data; ///< A pointer to the array of data cells.
+typedef struct GCU_Vector64 {
+  size_t capacity;              ///< The total item capacity of the vector.
+  size_t count;                 ///< The count of non-empty cells.
+  GCU_Type64_Union * data;      ///< A pointer to the array of data cells.
+  void * supplementary_data;    ///< User-defined.
+  GCU_Vector64_Cleanup cleanup; ///< User-defined cleanup function.
 } GCU_Vector64;
 
 /**
@@ -119,10 +177,12 @@ size_t gcu_vector64_count(GCU_Vector64 * vector);
  *      may contain upon deletion.  The programmer is responsible for all
  *      memory management.
  */
-typedef struct {
-  size_t capacity;       ///< The total item capacity of the vector.
-  size_t count;          ///< The count of non-empty cells.
-  GCU_Type32_Union * data; ///< A pointer to the array of data cells.
+typedef struct GCU_Vector32 {
+  size_t capacity;              ///< The total item capacity of the vector.
+  size_t count;                 ///< The count of non-empty cells.
+  GCU_Type32_Union * data;      ///< A pointer to the array of data cells.
+  void * supplementary_data;    ///< User-defined.
+  GCU_Vector32_Cleanup cleanup; ///< User-defined cleanup function.
 } GCU_Vector32;
 
 /**
@@ -186,10 +246,12 @@ size_t gcu_vector32_count(GCU_Vector32 * vector);
  *      may contain upon deletion.  The programmer is responsible for all
  *      memory management.
  */
-typedef struct {
-  size_t capacity;       ///< The total item capacity of the vector.
-  size_t count;          ///< The count of non-empty cells.
-  GCU_Type16_Union * data; ///< A pointer to the array of data cells.
+typedef struct GCU_Vector16 {
+  size_t capacity;              ///< The total item capacity of the vector.
+  size_t count;                 ///< The count of non-empty cells.
+  GCU_Type16_Union * data;      ///< A pointer to the array of data cells.
+  void * supplementary_data;    ///< User-defined.
+  GCU_Vector16_Cleanup cleanup; ///< User-defined cleanup function.
 } GCU_Vector16;
 
 /**
@@ -253,10 +315,12 @@ size_t gcu_vector16_count(GCU_Vector16 * vector);
  *      may contain upon deletion.  The programmer is responsible for all
  *      memory management.
  */
-typedef struct {
-  size_t capacity;       ///< The total item capacity of the vector.
-  size_t count;          ///< The count of non-empty cells.
-  GCU_Type8_Union * data; ///< A pointer to the array of data cells.
+typedef struct GCU_Vector8 {
+  size_t capacity;             ///< The total item capacity of the vector.
+  size_t count;                ///< The count of non-empty cells.
+  GCU_Type8_Union * data;      ///< A pointer to the array of data cells.
+  void * supplementary_data;   ///< User-defined.
+  GCU_Vector8_Cleanup cleanup; ///< User-defined cleanup function.
 } GCU_Vector8;
 
 /**

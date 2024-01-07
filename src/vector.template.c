@@ -24,6 +24,11 @@ TEMPLATE_GCU_VECTOR * TEMPLATE_GCU_VECTOR_CREATE(size_t count) {
 void TEMPLATE_GCU_VECTOR_DESTROY(TEMPLATE_GCU_VECTOR * vector) {
   // Verify that the pointer actually points to something.
   if (vector) {
+    // Call the `cleanup` function, if it exists.
+    if (vector->cleanup) {
+      vector->cleanup(vector);
+    }
+
     // Clean up the data table if needed.
     if (vector->data) {
       free(vector->data);
