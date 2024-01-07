@@ -32,6 +32,7 @@ extern "C" {
 #define gcu_type64_i8 GHOTIIO_CUTIL(gcu_type64_i8)
 #define gcu_type64_wc GHOTIIO_CUTIL(gcu_type64_wc)
 #define gcu_type64_c GHOTIIO_CUTIL(gcu_type64_c)
+#define gcu_type64_b GHOTIIO_CUTIL(gcu_type64_b)
 
 #define gcu_type32_ui32 GHOTIIO_CUTIL(gcu_type32_ui32)
 #define gcu_type32_ui16 GHOTIIO_CUTIL(gcu_type32_ui16)
@@ -43,16 +44,19 @@ extern "C" {
 #define gcu_type32_wc GHOTIIO_CUTIL(gcu_type32_wc)
 #endif
 #define gcu_type32_c GHOTIIO_CUTIL(gcu_type32_c)
+#define gcu_type32_b GHOTIIO_CUTIL(gcu_type32_b)
 
 #define gcu_type16_ui16 GHOTIIO_CUTIL(gcu_type16_ui16)
 #define gcu_type16_ui8 GHOTIIO_CUTIL(gcu_type16_ui8)
 #define gcu_type16_i16 GHOTIIO_CUTIL(gcu_type16_i16)
 #define gcu_type16_i8 GHOTIIO_CUTIL(gcu_type16_i8)
 #define gcu_type16_c GHOTIIO_CUTIL(gcu_type16_c)
+#define gcu_type16_b GHOTIIO_CUTIL(gcu_type16_b)
 
 #define gcu_type8_ui8 GHOTIIO_CUTIL(gcu_type8_ui8)
 #define gcu_type8_i8 GHOTIIO_CUTIL(gcu_type8_i8)
 #define gcu_type8_c GHOTIIO_CUTIL(gcu_type8_c)
+#define gcu_type8_b GHOTIIO_CUTIL(gcu_type8_b)
 /// @endcond
 
 /**
@@ -225,6 +229,19 @@ extern "C" {
 #define GCU_TYPE64_C(val) ((GCU_Type64_Union) {.c = val})
 
 /**
+ * Create a 64-bit union variable with the type `bool`.
+ *
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
+ * There is a corresponding function for use in C++.
+ *
+ * @see gcu_type64_b()
+ *
+ * @param val The value to put into the union.
+ * @return The union variable.
+ */
+#define GCU_TYPE64_B(val) ((GCU_Type64_Union) {.b = val})
+
+/**
  * Create a 32-bit union variable with the type `uint32_t`.
  *
  * This `#define` is a compound literal.  It is allowed in C but not C++.
@@ -344,6 +361,19 @@ extern "C" {
 #define GCU_TYPE32_C(val) ((GCU_Type32_Union) {.c = val})
 
 /**
+ * Create a 32-bit union variable with the type `bool`.
+ *
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
+ * There is a corresponding function for use in C++.
+ *
+ * @see gcu_type32_b()
+ *
+ * @param val The value to put into the union.
+ * @return The union variable.
+ */
+#define GCU_TYPE32_B(val) ((GCU_Type32_Union) {.b = val})
+
+/**
  * Create a 16-bit union variable with the type `uint16_t`.
  *
  * This `#define` is a compound literal.  It is allowed in C but not C++.
@@ -409,6 +439,19 @@ extern "C" {
 #define GCU_TYPE16_C(val) ((GCU_Type16_Union) {.c = val})
 
 /**
+ * Create a 16-bit union variable with the type `bool`.
+ *
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
+ * There is a corresponding function for use in C++.
+ *
+ * @see gcu_type16_b()
+ *
+ * @param val The value to put into the union.
+ * @return The union variable.
+ */
+#define GCU_TYPE16_B(val) ((GCU_Type16_Union) {.b = val})
+
+/**
  * Create a 8-bit union variable with the type `uint8_t`.
  *
  * This `#define` is a compound literal.  It is allowed in C but not C++.
@@ -448,6 +491,19 @@ extern "C" {
 #define GCU_TYPE8_C(val) ((GCU_Type8_Union) {.c = val})
 
 /**
+ * Create a 8-bit union variable with the type `bool`.
+ *
+ * This `#define` is a compound literal.  It is allowed in C but not C++.
+ * There is a corresponding function for use in C++.
+ *
+ * @see gcu_type8_b()
+ *
+ * @param val The value to put into the union.
+ * @return The union variable.
+ */
+#define GCU_TYPE8_B(val) ((GCU_Type8_Union) {.b = val})
+
+/**
  * A union of all basic, 64-bit types to be used by generic, 64-bit containers.
  */
 typedef union {
@@ -464,6 +520,7 @@ typedef union {
   GCU_float32_t f32; ///< 32-bit float value.
   wchar_t wc;        ///< wchar_t value.
   char c;            ///< char value.
+  bool b;            ///< bool value.
 } GCU_Type64_Union;
 
 /**
@@ -481,6 +538,7 @@ typedef union {
   wchar_t wc;        ///< wchar_t value.
 #endif
   char c;            ///< char value.
+  bool b;            ///< bool value.
 } GCU_Type32_Union;
 
 /**
@@ -492,6 +550,7 @@ typedef union {
   int16_t i16;       ///< int16_t value.
   int8_t i8;         ///< int8_t value.
   char c;            ///< char value.
+  bool b;            ///< bool value.
 } GCU_Type16_Union;
 
 /**
@@ -501,6 +560,7 @@ typedef union {
   uint8_t ui8;       ///< uint8_t value.
   int8_t i8;         ///< int8_t value.
   char c;            ///< char value.
+  bool b;            ///< bool value.
 } GCU_Type8_Union;
 
 /**
@@ -673,6 +733,19 @@ GCU_Type64_Union gcu_type64_wc(wchar_t val);
 GCU_Type64_Union gcu_type64_c(char val);
 
 /**
+ * Create a 64-bit union variable with the type `bool`.
+ *
+ * This function is provided as a helper in C++ because C++ does not allow the
+ * use of compound literals.  If in C, use the `#define`.
+ *
+ * @see GCU_TYPE64_B()
+ *
+ * @param val The value to put into the union.
+ * @return The union variable.
+ */
+GCU_Type64_Union gcu_type64_b(bool val);
+
+/**
  * Create a 32-bit union variable with the type `uint32_t`.
  *
  * This function is provided as a helper in C++ because C++ does not allow the
@@ -792,6 +865,19 @@ GCU_Type32_Union gcu_type32_wc(wchar_t val);
 GCU_Type32_Union gcu_type32_c(char val);
 
 /**
+ * Create a 32-bit union variable with the type `bool`.
+ *
+ * This function is provided as a helper in C++ because C++ does not allow the
+ * use of compound literals.  If in C, use the `#define`.
+ *
+ * @see GCU_TYPE32_B()
+ *
+ * @param val The value to put into the union.
+ * @return The union variable.
+ */
+GCU_Type32_Union gcu_type32_b(bool val);
+
+/**
  * Create a 16-bit union variable with the type `uint16_t`.
  *
  * This function is provided as a helper in C++ because C++ does not allow the
@@ -856,6 +942,19 @@ GCU_Type16_Union gcu_type16_i8(int8_t val);
  */
 GCU_Type16_Union gcu_type16_c(char val);
 
+/**
+ * Create a 16-bit union variable with the type `bool`.
+ *
+ * This function is provided as a helper in C++ because C++ does not allow the
+ * use of compound literals.  If in C, use the `#define`.
+ *
+ * @see GCU_TYPE16_B()
+ *
+ * @param val The value to put into the union.
+ * @return The union variable.
+ */
+GCU_Type16_Union gcu_type16_b(bool val);
+
 
 /**
  * Create a 8-bit union variable with the type `uint8_t`.
@@ -895,6 +994,19 @@ GCU_Type8_Union gcu_type8_i8(int8_t val);
  * @return The union variable.
  */
 GCU_Type8_Union gcu_type8_c(char val);
+
+/**
+ * Create a 8-bit union variable with the type `bool`.
+ *
+ * This function is provided as a helper in C++ because C++ does not allow the
+ * use of compound literals.  If in C, use the `#define`.
+ *
+ * @see GCU_TYPE8_B()
+ *
+ * @param val The value to put into the union.
+ * @return The union variable.
+ */
+GCU_Type8_Union gcu_type8_b(bool val);
 
 #ifdef __cplusplus
 }

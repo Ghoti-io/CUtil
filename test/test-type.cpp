@@ -20,6 +20,8 @@ TEST(Type, Union) {
   ASSERT_EQ(gcu_type64_f32(1000000.5).f32, 1000000.5);
   ASSERT_EQ(gcu_type64_wc('A').wc, (wchar_t)'A');
   ASSERT_EQ(gcu_type64_c('A').c, 'A');
+  ASSERT_EQ(gcu_type64_b(true).b, true);
+  ASSERT_NE(gcu_type64_b(true).b, gcu_type64_b(false).b);
 
   ASSERT_EQ(gcu_type32_ui32(3000000000).ui32, 3000000000);
   ASSERT_EQ(gcu_type32_ui16(50000).ui16, 50000);
@@ -32,16 +34,22 @@ TEST(Type, Union) {
   ASSERT_EQ(gcu_type32_wc('A').wc, (wchar_t)'A');
 #endif
   ASSERT_EQ(gcu_type32_c('A').c, 'A');
+  ASSERT_EQ(gcu_type32_b(true).b, true);
+  ASSERT_NE(gcu_type32_b(true).b, gcu_type32_b(false).b);
 
   ASSERT_EQ(gcu_type16_ui16(50000).ui16, 50000);
   ASSERT_EQ(gcu_type16_ui8(200).ui8, 200);
   ASSERT_EQ(gcu_type16_i16(-20000).i16, -20000);
   ASSERT_EQ(gcu_type16_i8(-100).i8, -100);
   ASSERT_EQ(gcu_type16_c('A').c, 'A');
+  ASSERT_EQ(gcu_type16_b(true).b, true);
+  ASSERT_NE(gcu_type16_b(true).b, gcu_type16_b(false).b);
 
   ASSERT_EQ(gcu_type8_ui8(200).ui8, 200);
   ASSERT_EQ(gcu_type8_i8(-100).i8, -100);
   ASSERT_EQ(gcu_type8_c('A').c, 'A');
+  ASSERT_EQ(gcu_type8_b(true).b, true);
+  ASSERT_NE(gcu_type8_b(true).b, gcu_type8_b(false).b);
 }
 
 int main(int argc, char** argv) {

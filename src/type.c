@@ -56,6 +56,10 @@ GCU_Type64_Union gcu_type64_c(char val) {
   return GCU_TYPE64_C(val);
 }
 
+GCU_Type64_Union gcu_type64_b(bool val) {
+  return GCU_TYPE64_B(val);
+}
+
 GCU_Type32_Union gcu_type32_ui32(uint32_t val) {
   return GCU_TYPE32_UI32(val);
 }
@@ -94,6 +98,10 @@ GCU_Type32_Union gcu_type32_c(char val) {
   return GCU_TYPE32_C(val);
 }
 
+GCU_Type32_Union gcu_type32_b(bool val) {
+  return GCU_TYPE32_B(val);
+}
+
 GCU_Type16_Union gcu_type16_ui16(uint16_t val) {
   return GCU_TYPE16_UI16(val);
 }
@@ -114,6 +122,10 @@ GCU_Type16_Union gcu_type16_c(char val) {
   return GCU_TYPE16_C(val);
 }
 
+GCU_Type16_Union gcu_type16_b(bool val) {
+  return GCU_TYPE16_B(val);
+}
+
 GCU_Type8_Union gcu_type8_ui8(uint8_t val) {
   return GCU_TYPE8_UI8(val);
 }
@@ -124,5 +136,9 @@ GCU_Type8_Union gcu_type8_i8(int8_t val) {
 
 GCU_Type8_Union gcu_type8_c(char val) {
   return GCU_TYPE8_C(val);
+}
+
+GCU_Type8_Union gcu_type8_b(bool val) {
+  return GCU_TYPE8_B(val);
 }
 
