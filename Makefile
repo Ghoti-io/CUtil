@@ -109,7 +109,7 @@ $(OBJ_DIR)/type.o: \
 $(OBJ_DIR)/vector.o: \
 				src/vector.c \
 				src/vector.template.c \
-				$(DEP_TYPE)
+				$(DEP_VECTOR)
 
 ####################################################################
 # Shared Library
