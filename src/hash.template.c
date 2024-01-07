@@ -1,5 +1,5 @@
 #define TEMPLATE_GROW_HASH         GHOTIIO_CUTIL_CONCAT2(grow_hash, BITDEPTH)
-#define TEMPLATE_GCU_HASH_TABLE    GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Table)
+#define TEMPLATE_GCU_HASH          GHOTIIO_CUTIL_CONCAT2(GCU_Hash, BITDEPTH)
 #define TEMPLATE_GCU_HASH_ITERATOR GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Iterator)
 #define TEMPLATE_GCU_HASH_CELL     GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Cell)
 #define TEMPLATE_GCU_HASH_VALUE    GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Value)
@@ -14,9 +14,9 @@
 #define TEMPLATE_GCU_HASH_ITERATOR_GET  GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _iterator_get)
 #define TEMPLATE_GCU_HASH_ITERATOR_NEXT GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _iterator_next)
 
-TEMPLATE_GCU_HASH_TABLE * TEMPLATE_GCU_HASH_CREATE(size_t count) {
+TEMPLATE_GCU_HASH * TEMPLATE_GCU_HASH_CREATE(size_t count) {
   // Malloc Zeroed-out memory.
-  TEMPLATE_GCU_HASH_TABLE * hashTable = calloc(1, sizeof(TEMPLATE_GCU_HASH_TABLE));
+  TEMPLATE_GCU_HASH * hashTable = calloc(1, sizeof(TEMPLATE_GCU_HASH));
 
   // Reserve room for the data, if requested..
   if (count) {
@@ -31,7 +31,7 @@ TEMPLATE_GCU_HASH_TABLE * TEMPLATE_GCU_HASH_CREATE(size_t count) {
   return hashTable;
 }
 
-void TEMPLATE_GCU_HASH_DESTROY(TEMPLATE_GCU_HASH_TABLE * hashTable) {
+void TEMPLATE_GCU_HASH_DESTROY(TEMPLATE_GCU_HASH * hashTable) {
   // Verify that the pointer actually points to something.
   if (hashTable) {
     // Call the `cleanup` function, if it exists.
@@ -48,7 +48,7 @@ void TEMPLATE_GCU_HASH_DESTROY(TEMPLATE_GCU_HASH_TABLE * hashTable) {
   }
 }
 
-static bool TEMPLATE_GROW_HASH(TEMPLATE_GCU_HASH_TABLE * hashTable, size_t size) {
+static bool TEMPLATE_GROW_HASH(TEMPLATE_GCU_HASH * hashTable, size_t size) {
   // Verify that the pointer actually points to something.
   if (!hashTable) {
     return false;
@@ -58,7 +58,7 @@ static bool TEMPLATE_GROW_HASH(TEMPLATE_GCU_HASH_TABLE * hashTable, size_t size)
     return false;
   }
 
-  TEMPLATE_GCU_HASH_TABLE * newTable = TEMPLATE_GCU_HASH_CREATE(size);
+  TEMPLATE_GCU_HASH * newTable = TEMPLATE_GCU_HASH_CREATE(size);
   if (!newTable) {
     return false;
   }
@@ -75,7 +75,7 @@ static bool TEMPLATE_GROW_HASH(TEMPLATE_GCU_HASH_TABLE * hashTable, size_t size)
   }
 
   // Swap the data.
-  TEMPLATE_GCU_HASH_TABLE temp = *newTable;
+  TEMPLATE_GCU_HASH temp = *newTable;
   *newTable = *hashTable;
   *hashTable = temp;
 
@@ -84,7 +84,7 @@ static bool TEMPLATE_GROW_HASH(TEMPLATE_GCU_HASH_TABLE * hashTable, size_t size)
   return true;
 }
 
-bool TEMPLATE_GCU_HASH_SET(TEMPLATE_GCU_HASH_TABLE * hashTable, size_t hash, TEMPLATE_GCU_TYPE_UNION value) {
+bool TEMPLATE_GCU_HASH_SET(TEMPLATE_GCU_HASH * hashTable, size_t hash, TEMPLATE_GCU_TYPE_UNION value) {
   // Verify that the pointer actually points to something.
   if (!hashTable) {
     return false;
@@ -158,7 +158,7 @@ bool TEMPLATE_GCU_HASH_SET(TEMPLATE_GCU_HASH_TABLE * hashTable, size_t hash, TEM
   return true;
 }
 
-TEMPLATE_GCU_HASH_VALUE TEMPLATE_GCU_HASH_GET(TEMPLATE_GCU_HASH_TABLE * hashTable, size_t hash) {
+TEMPLATE_GCU_HASH_VALUE TEMPLATE_GCU_HASH_GET(TEMPLATE_GCU_HASH * hashTable, size_t hash) {
   // Verify that the pointer actually points to something.
   if (hashTable) {
     TEMPLATE_GCU_HASH_CELL * cursor = hashTable->data;
@@ -181,7 +181,7 @@ TEMPLATE_GCU_HASH_VALUE TEMPLATE_GCU_HASH_GET(TEMPLATE_GCU_HASH_TABLE * hashTabl
   };
 }
 
-bool TEMPLATE_GCU_HASH_CONTAINS(TEMPLATE_GCU_HASH_TABLE * hashTable, size_t hash) {
+bool TEMPLATE_GCU_HASH_CONTAINS(TEMPLATE_GCU_HASH * hashTable, size_t hash) {
   // Verify that the pointer actually points to something.
   if (hashTable) {
     TEMPLATE_GCU_HASH_CELL * cursor = hashTable->data;
@@ -198,7 +198,7 @@ bool TEMPLATE_GCU_HASH_CONTAINS(TEMPLATE_GCU_HASH_TABLE * hashTable, size_t hash
   return false;
 }
 
-bool TEMPLATE_GCU_HASH_REMOVE(TEMPLATE_GCU_HASH_TABLE * hashTable, size_t hash) {
+bool TEMPLATE_GCU_HASH_REMOVE(TEMPLATE_GCU_HASH * hashTable, size_t hash) {
   // Verify that the pointer actually points to something.
   if (hashTable) {
     TEMPLATE_GCU_HASH_CELL * cursor = &hashTable->data[hash % hashTable->capacity];
@@ -220,7 +220,7 @@ bool TEMPLATE_GCU_HASH_REMOVE(TEMPLATE_GCU_HASH_TABLE * hashTable, size_t hash) 
   return false;
 }
 
-size_t TEMPLATE_GCU_HASH_COUNT(TEMPLATE_GCU_HASH_TABLE * hashTable) {
+size_t TEMPLATE_GCU_HASH_COUNT(TEMPLATE_GCU_HASH * hashTable) {
   // Verify that the pointer actually points to something.
   if (hashTable) {
     // Compute the size.
@@ -229,7 +229,7 @@ size_t TEMPLATE_GCU_HASH_COUNT(TEMPLATE_GCU_HASH_TABLE * hashTable) {
   return 0;
 }
 
-TEMPLATE_GCU_HASH_ITERATOR TEMPLATE_GCU_HASH_ITERATOR_GET(TEMPLATE_GCU_HASH_TABLE * hashTable) {
+TEMPLATE_GCU_HASH_ITERATOR TEMPLATE_GCU_HASH_ITERATOR_GET(TEMPLATE_GCU_HASH * hashTable) {
   // Verify that the pointer actually points to something and that there is an
   // entry in the hash table.
   if (!hashTable || (hashTable->entries <= hashTable->removed)) {
@@ -287,7 +287,7 @@ TEMPLATE_GCU_HASH_ITERATOR TEMPLATE_GCU_HASH_ITERATOR_NEXT(TEMPLATE_GCU_HASH_ITE
 }
 
 #undef TEMPLATE_GROW_HASH
-#undef TEMPLATE_GCU_HASH_TABLE
+#undef TEMPLATE_GCU_HASH
 #undef TEMPLATE_GCU_HASH_ITERATOR
 #undef TEMPLATE_GCU_HASH_CELL
 #undef TEMPLATE_GCU_HASH_VALUE

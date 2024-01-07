@@ -164,7 +164,7 @@ TEST(Hash64, Iterator) {
 }
 
 // Helper function for next test.
-static void addOne64(GCU_Hash64_Table * t) {
+static void addOne64(GCU_Hash64 * t) {
   GCU_Hash64_Iterator i = gcu_hash64_iterator_get(t);
   while (i.exists) {
     ++*(size_t *)(t->supplementary_data);
@@ -344,7 +344,7 @@ TEST(Hash32, Iterator) {
 }
 
 // Helper function for next test.
-static void addOne32(GCU_Hash32_Table * t) {
+static void addOne32(GCU_Hash32 * t) {
   GCU_Hash32_Iterator i = gcu_hash32_iterator_get(t);
   while (i.exists) {
     ++*(size_t *)(t->supplementary_data);
@@ -524,7 +524,7 @@ TEST(Hash16, Iterator) {
 }
 
 // Helper function for next test.
-static void addOne16(GCU_Hash16_Table * t) {
+static void addOne16(GCU_Hash16 * t) {
   GCU_Hash16_Iterator i = gcu_hash16_iterator_get(t);
   while (i.exists) {
     ++*(size_t *)(t->supplementary_data);
@@ -704,7 +704,7 @@ TEST(Hash8, Iterator) {
 }
 
 // Helper function for next test.
-static void addOne8(GCU_Hash8_Table * t) {
+static void addOne8(GCU_Hash8 * t) {
   GCU_Hash8_Iterator i = gcu_hash8_iterator_get(t);
   while (i.exists) {
     ++*(size_t *)(t->supplementary_data);

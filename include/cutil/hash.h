@@ -17,7 +17,7 @@ extern "C" {
 #define GCU_Hash64_Cleanup GHOTIIO_CUTIL(GCU_Hash64_Cleanup)
 #define GCU_Hash64_Value GHOTIIO_CUTIL(GCU_Hash64_Value)
 #define GCU_Hash64_Cell GHOTIIO_CUTIL(GCU_Hash64_Cell)
-#define GCU_Hash64_Table GHOTIIO_CUTIL(GCU_Hash64_Table)
+#define GCU_Hash64 GHOTIIO_CUTIL(GCU_Hash64)
 #define GCU_Hash64_Iterator GHOTIIO_CUTIL(GCU_Hash64_Iterator)
 
 #define gcu_hash64_create GHOTIIO_CUTIL(gcu_hash64_create)
@@ -33,7 +33,7 @@ extern "C" {
 #define GCU_Hash32_Cleanup GHOTIIO_CUTIL(GCU_Hash32_Cleanup)
 #define GCU_Hash32_Value GHOTIIO_CUTIL(GCU_Hash32_Value)
 #define GCU_Hash32_Cell GHOTIIO_CUTIL(GCU_Hash32_Cell)
-#define GCU_Hash32_Table GHOTIIO_CUTIL(GCU_Hash32_Table)
+#define GCU_Hash32 GHOTIIO_CUTIL(GCU_Hash32)
 #define GCU_Hash32_Iterator GHOTIIO_CUTIL(GCU_Hash32_Iterator)
 
 #define gcu_hash32_create GHOTIIO_CUTIL(gcu_hash32_create)
@@ -49,7 +49,7 @@ extern "C" {
 #define GCU_Hash16_Cleanup GHOTIIO_CUTIL(GCU_Hash16_Cleanup)
 #define GCU_Hash16_Value GHOTIIO_CUTIL(GCU_Hash16_Value)
 #define GCU_Hash16_Cell GHOTIIO_CUTIL(GCU_Hash16_Cell)
-#define GCU_Hash16_Table GHOTIIO_CUTIL(GCU_Hash16_Table)
+#define GCU_Hash16 GHOTIIO_CUTIL(GCU_Hash16)
 #define GCU_Hash16_Iterator GHOTIIO_CUTIL(GCU_Hash16_Iterator)
 
 #define gcu_hash16_create GHOTIIO_CUTIL(gcu_hash16_create)
@@ -65,7 +65,7 @@ extern "C" {
 #define GCU_Hash8_Cleanup GHOTIIO_CUTIL(GCU_Hash8_Cleanup)
 #define GCU_Hash8_Value GHOTIIO_CUTIL(GCU_Hash8_Value)
 #define GCU_Hash8_Cell GHOTIIO_CUTIL(GCU_Hash8_Cell)
-#define GCU_Hash8_Table GHOTIIO_CUTIL(GCU_Hash8_Table)
+#define GCU_Hash8 GHOTIIO_CUTIL(GCU_Hash8)
 #define GCU_Hash8_Iterator GHOTIIO_CUTIL(GCU_Hash8_Iterator)
 
 #define gcu_hash8_create GHOTIIO_CUTIL(gcu_hash8_create)
@@ -79,10 +79,10 @@ extern "C" {
 #define gcu_hash8_iterator_next GHOTIIO_CUTIL(gcu_hash8_iterator_next)
 /// @endcond
 
-typedef struct GCU_Hash64_Table GCU_Hash64_Table;
-typedef struct GCU_Hash32_Table GCU_Hash32_Table;
-typedef struct GCU_Hash16_Table GCU_Hash16_Table;
-typedef struct GCU_Hash8_Table GCU_Hash8_Table;
+typedef struct GCU_Hash64 GCU_Hash64;
+typedef struct GCU_Hash32 GCU_Hash32;
+typedef struct GCU_Hash16 GCU_Hash16;
+typedef struct GCU_Hash8 GCU_Hash8;
 
 /**
  * Pointer to a function which will be called when the hash table destroy
@@ -92,7 +92,7 @@ typedef struct GCU_Hash8_Table GCU_Hash8_Table;
  *
  * @param hash table The hash table which is about to be destroyed.
  */
-typedef void (* GCU_Hash64_Cleanup)(GCU_Hash64_Table * hashTable);
+typedef void (* GCU_Hash64_Cleanup)(GCU_Hash64 * hashTable);
 
 /**
  * Pointer to a function which will be called when the hash table destroy
@@ -102,7 +102,7 @@ typedef void (* GCU_Hash64_Cleanup)(GCU_Hash64_Table * hashTable);
  *
  * @param hash table The hash table which is about to be destroyed.
  */
-typedef void (* GCU_Hash32_Cleanup)(GCU_Hash32_Table * hashTable);
+typedef void (* GCU_Hash32_Cleanup)(GCU_Hash32 * hashTable);
 
 /**
  * Pointer to a function which will be called when the hash table destroy
@@ -112,7 +112,7 @@ typedef void (* GCU_Hash32_Cleanup)(GCU_Hash32_Table * hashTable);
  *
  * @param hash table The hash table which is about to be destroyed.
  */
-typedef void (* GCU_Hash16_Cleanup)(GCU_Hash16_Table * hashTable);
+typedef void (* GCU_Hash16_Cleanup)(GCU_Hash16 * hashTable);
 
 /**
  * Pointer to a function which will be called when the hash table destroy
@@ -122,7 +122,7 @@ typedef void (* GCU_Hash16_Cleanup)(GCU_Hash16_Table * hashTable);
  *
  * @param hash table The hash table which is about to be destroyed.
  */
-typedef void (* GCU_Hash8_Cleanup)(GCU_Hash8_Table * hashTable);
+typedef void (* GCU_Hash8_Cleanup)(GCU_Hash8 * hashTable);
 
 /**
  * 64-bit container used to return the result of looking for a hash in the hash
@@ -166,7 +166,7 @@ typedef struct {
  *      may contain upon deletion.  The programmer is responsible for all
  *      memory management.
  */
-typedef struct GCU_Hash64_Table {
+typedef struct GCU_Hash64 {
   size_t capacity;            ///< The total item capacity of the hash table.
   size_t entries;             ///< The count of non-empty cells.
   size_t removed;             ///< The count of non-empty cells that represent
@@ -174,7 +174,7 @@ typedef struct GCU_Hash64_Table {
   GCU_Hash64_Cell * data;     ///< A pointer to the array of data cells.
   void * supplementary_data;  ///< User-defined.
   GCU_Hash64_Cleanup cleanup; ///< User-defined cleanup function.
-} GCU_Hash64_Table;
+} GCU_Hash64;
 
 /**
  * A 64-bit container used to hold the state of an iterator which can be used
@@ -192,12 +192,11 @@ typedef struct GCU_Hash64_Table {
  * use the `value` in any way.
  */
 typedef struct {
-  size_t current;               ///< The current index into the hashTable data
-                                ///<   structure corresponding to the iterator.
-  bool exists;                  ///< Whether or not the iterator points to valid
-                                ///<   data.
-  GCU_Type64_Union value;       ///< The data pointed to by the iterator.
-  GCU_Hash64_Table * hashTable; ///< The hash table that the iterator traverses.
+  size_t current;         ///< The current index into the hashTable data
+                          ///<   structure corresponding to the iterator.
+  bool exists;            ///< Whether or not the iterator points to valid data.
+  GCU_Type64_Union value; ///< The data pointed to by the iterator.
+  GCU_Hash64 * hashTable; ///< The hash table that the iterator traverses.
 } GCU_Hash64_Iterator;
 
 /**
@@ -215,7 +214,7 @@ typedef struct {
  * @param count The number of items anticipated to be stored in the hash table.
  * @return A struct containing the hash table information.
  */
-GCU_Hash64_Table * gcu_hash64_create(size_t count);
+GCU_Hash64 * gcu_hash64_create(size_t count);
 
 /**
  * Destroy a hash table structure and clean up memory allocations.
@@ -226,7 +225,7 @@ GCU_Hash64_Table * gcu_hash64_create(size_t count);
  *
  * @param hashTable The hash table structure to be destroyed.
  */
-void gcu_hash64_destroy(GCU_Hash64_Table * hashTable);
+void gcu_hash64_destroy(GCU_Hash64 * hashTable);
 
 /**
  * Set a value in the hash table.
@@ -240,7 +239,7 @@ void gcu_hash64_destroy(GCU_Hash64_Table * hashTable);
  * @param value The value to insert into the hash table.
  * @return `true` on success, `false` on failure.
  */
-bool gcu_hash64_set(GCU_Hash64_Table * hashTable, size_t hash, GCU_Type64_Union value);
+bool gcu_hash64_set(GCU_Hash64 * hashTable, size_t hash, GCU_Type64_Union value);
 
 /**
  * Get a value from the hash table (if it exists).
@@ -250,7 +249,7 @@ bool gcu_hash64_set(GCU_Hash64_Table * hashTable, size_t hash, GCU_Type64_Union 
  * @returns A result that indicates the success or failure of the operation, as
  *   well as the associated value (if it exists).
  */
-GCU_Hash64_Value gcu_hash64_get(GCU_Hash64_Table * hashTable, size_t hash);
+GCU_Hash64_Value gcu_hash64_get(GCU_Hash64 * hashTable, size_t hash);
 
 /**
  * Check to see whether or not a hash table contains a specific hash.
@@ -259,7 +258,7 @@ GCU_Hash64_Value gcu_hash64_get(GCU_Hash64_Table * hashTable, size_t hash);
  * @param hash The hash whose associated value will be searched for.
  * @return `true` if the hash is in the table, `false` otherwise.
  */
-bool gcu_hash64_contains(GCU_Hash64_Table * hashTable, size_t hash);
+bool gcu_hash64_contains(GCU_Hash64 * hashTable, size_t hash);
 
 /**
  * Remove a hash from the table.
@@ -272,7 +271,7 @@ bool gcu_hash64_contains(GCU_Hash64_Table * hashTable, size_t hash);
  * @param hash The hash whose associated value will be removed from the table.
  * @return `true` if the entry existed and was removed, `false` otherwise.
  */
-bool gcu_hash64_remove(GCU_Hash64_Table * hashTable, size_t hash);
+bool gcu_hash64_remove(GCU_Hash64 * hashTable, size_t hash);
 
 /**
  * Get a count of active entries in the hash table.
@@ -280,7 +279,7 @@ bool gcu_hash64_remove(GCU_Hash64_Table * hashTable, size_t hash);
  * @param hashTable The hash table structure on which to operate.
  * @return The count of active entries in the hash table.
  */
-size_t gcu_hash64_count(GCU_Hash64_Table * hashTable);
+size_t gcu_hash64_count(GCU_Hash64 * hashTable);
 
 /**
  * Get an iterator which can be used to iterate through the entries of the
@@ -290,7 +289,7 @@ size_t gcu_hash64_count(GCU_Hash64_Table * hashTable);
  * @return An iterator pointing to the first element in the hash table (if it
  *   exists).
  */
-GCU_Hash64_Iterator gcu_hash64_iterator_get(GCU_Hash64_Table * hashTable);
+GCU_Hash64_Iterator gcu_hash64_iterator_get(GCU_Hash64 * hashTable);
 
 /**
  * Get an iterator to the next element in the table (if it exists).
@@ -349,7 +348,7 @@ typedef struct {
  *      may contain upon deletion.  The programmer is responsible for all
  *      memory management.
  */
-typedef struct GCU_Hash32_Table {
+typedef struct GCU_Hash32 {
   size_t capacity;            ///< The total item capacity of the hash table.
   size_t entries;             ///< The count of non-empty cells.
   size_t removed;             ///< The count of non-empty cells that represent
@@ -357,7 +356,7 @@ typedef struct GCU_Hash32_Table {
   GCU_Hash32_Cell * data;     ///< A pointer to the array of data cells.
   void * supplementary_data;  ///< User-defined.
   GCU_Hash32_Cleanup cleanup; ///< User-defined cleanup function.
-} GCU_Hash32_Table;
+} GCU_Hash32;
 
 /**
  * A container used to hold the state of an iterator which can be used to
@@ -375,12 +374,11 @@ typedef struct GCU_Hash32_Table {
  * use the `value` in any way.
  */
 typedef struct {
-  size_t current;               ///< The current index into the hashTable data
-                                ///<   structure corresponding to the iterator.
-  bool exists;                  ///< Whether or not the iterator points to valid
-                                ///<   data.
-  GCU_Type32_Union value;       ///< The data pointed to by the iterator.
-  GCU_Hash32_Table * hashTable; ///< The hash table that the iterator traverses.
+  size_t current;         ///< The current index into the hashTable data
+                          ///<   structure corresponding to the iterator.
+  bool exists;            ///< Whether or not the iterator points to valid data.
+  GCU_Type32_Union value; ///< The data pointed to by the iterator.
+  GCU_Hash32 * hashTable; ///< The hash table that the iterator traverses.
 } GCU_Hash32_Iterator;
 
 /**
@@ -398,7 +396,7 @@ typedef struct {
  * @param count The number of items anticipated to be stored in the hash table.
  * @return A struct containing the hash table information.
  */
-GCU_Hash32_Table * gcu_hash32_create(size_t count);
+GCU_Hash32 * gcu_hash32_create(size_t count);
 
 /**
  * Destroy a hash table structure and clean up memory allocations.
@@ -409,7 +407,7 @@ GCU_Hash32_Table * gcu_hash32_create(size_t count);
  *
  * @param hashTable The hash table structure to be destroyed.
  */
-void gcu_hash32_destroy(GCU_Hash32_Table * hashTable);
+void gcu_hash32_destroy(GCU_Hash32 * hashTable);
 
 /**
  * Set a value in the hash table.
@@ -423,7 +421,7 @@ void gcu_hash32_destroy(GCU_Hash32_Table * hashTable);
  * @param value The value to insert into the hash table.
  * @return `true` on success, `false` on failure.
  */
-bool gcu_hash32_set(GCU_Hash32_Table * hashTable, size_t hash, GCU_Type32_Union value);
+bool gcu_hash32_set(GCU_Hash32 * hashTable, size_t hash, GCU_Type32_Union value);
 
 /**
  * Get a value from the hash table (if it exists).
@@ -433,7 +431,7 @@ bool gcu_hash32_set(GCU_Hash32_Table * hashTable, size_t hash, GCU_Type32_Union 
  * @returns A result that indicates the success or failure of the operation, as
  *   well as the associated value (if it exists).
  */
-GCU_Hash32_Value gcu_hash32_get(GCU_Hash32_Table * hashTable, size_t hash);
+GCU_Hash32_Value gcu_hash32_get(GCU_Hash32 * hashTable, size_t hash);
 
 /**
  * Check to see whether or not a hash table contains a specific hash.
@@ -442,7 +440,7 @@ GCU_Hash32_Value gcu_hash32_get(GCU_Hash32_Table * hashTable, size_t hash);
  * @param hash The hash whose associated value will be searched for.
  * @return `true` if the hash is in the table, `false` otherwise.
  */
-bool gcu_hash32_contains(GCU_Hash32_Table * hashTable, size_t hash);
+bool gcu_hash32_contains(GCU_Hash32 * hashTable, size_t hash);
 
 /**
  * Remove a hash from the table.
@@ -455,7 +453,7 @@ bool gcu_hash32_contains(GCU_Hash32_Table * hashTable, size_t hash);
  * @param hash The hash whose associated value will be removed from the table.
  * @return `true` if the entry existed and was removed, `false` otherwise.
  */
-bool gcu_hash32_remove(GCU_Hash32_Table * hashTable, size_t hash);
+bool gcu_hash32_remove(GCU_Hash32 * hashTable, size_t hash);
 
 /**
  * Get a count of active entries in the hash table.
@@ -463,7 +461,7 @@ bool gcu_hash32_remove(GCU_Hash32_Table * hashTable, size_t hash);
  * @param hashTable The hash table structure on which to operate.
  * @return The count of active entries in the hash table.
  */
-size_t gcu_hash32_count(GCU_Hash32_Table * hashTable);
+size_t gcu_hash32_count(GCU_Hash32 * hashTable);
 
 /**
  * Get an iterator which can be used to iterate through the entries of the
@@ -473,7 +471,7 @@ size_t gcu_hash32_count(GCU_Hash32_Table * hashTable);
  * @return An iterator pointing to the first element in the hash table (if it
  *   exists).
  */
-GCU_Hash32_Iterator gcu_hash32_iterator_get(GCU_Hash32_Table * hashTable);
+GCU_Hash32_Iterator gcu_hash32_iterator_get(GCU_Hash32 * hashTable);
 
 /**
  * Get an iterator to the next element in the table (if it exists).
@@ -532,7 +530,7 @@ typedef struct {
  *      may contain upon deletion.  The programmer is responsible for all
  *      memory management.
  */
-typedef struct GCU_Hash16_Table {
+typedef struct GCU_Hash16 {
   size_t capacity;            ///< The total item capacity of the hash table.
   size_t entries;             ///< The count of non-empty cells.
   size_t removed;             ///< The count of non-empty cells that represent
@@ -540,7 +538,7 @@ typedef struct GCU_Hash16_Table {
   GCU_Hash16_Cell * data;     ///< A pointer to the array of data cells.
   void * supplementary_data;  ///< User-defined.
   GCU_Hash16_Cleanup cleanup; ///< User-defined cleanup function.
-} GCU_Hash16_Table;
+} GCU_Hash16;
 
 /**
  * A container used to hold the state of an iterator which can be used to
@@ -558,12 +556,11 @@ typedef struct GCU_Hash16_Table {
  * use the `value` in any way.
  */
 typedef struct {
-  size_t current;               ///< The current index into the hashTable data
-                                ///<   structure corresponding to the iterator.
-  bool exists;                  ///< Whether or not the iterator points to valid
-                                ///<   data.
-  GCU_Type16_Union value;       ///< The data pointed to by the iterator.
-  GCU_Hash16_Table * hashTable; ///< The hash table that the iterator traverses.
+  size_t current;         ///< The current index into the hashTable data
+                          ///<   structure corresponding to the iterator.
+  bool exists;            ///< Whether or not the iterator points to valid data.
+  GCU_Type16_Union value; ///< The data pointed to by the iterator.
+  GCU_Hash16 * hashTable; ///< The hash table that the iterator traverses.
 } GCU_Hash16_Iterator;
 
 /**
@@ -581,7 +578,7 @@ typedef struct {
  * @param count The number of items anticipated to be stored in the hash table.
  * @return A struct containing the hash table information.
  */
-GCU_Hash16_Table * gcu_hash16_create(size_t count);
+GCU_Hash16 * gcu_hash16_create(size_t count);
 
 /**
  * Destroy a hash table structure and clean up memory allocations.
@@ -592,7 +589,7 @@ GCU_Hash16_Table * gcu_hash16_create(size_t count);
  *
  * @param hashTable The hash table structure to be destroyed.
  */
-void gcu_hash16_destroy(GCU_Hash16_Table * hashTable);
+void gcu_hash16_destroy(GCU_Hash16 * hashTable);
 
 /**
  * Set a value in the hash table.
@@ -606,7 +603,7 @@ void gcu_hash16_destroy(GCU_Hash16_Table * hashTable);
  * @param value The value to insert into the hash table.
  * @return `true` on success, `false` on failure.
  */
-bool gcu_hash16_set(GCU_Hash16_Table * hashTable, size_t hash, GCU_Type16_Union value);
+bool gcu_hash16_set(GCU_Hash16 * hashTable, size_t hash, GCU_Type16_Union value);
 
 /**
  * Get a value from the hash table (if it exists).
@@ -616,7 +613,7 @@ bool gcu_hash16_set(GCU_Hash16_Table * hashTable, size_t hash, GCU_Type16_Union 
  * @returns A result that indicates the success or failure of the operation, as
  *   well as the associated value (if it exists).
  */
-GCU_Hash16_Value gcu_hash16_get(GCU_Hash16_Table * hashTable, size_t hash);
+GCU_Hash16_Value gcu_hash16_get(GCU_Hash16 * hashTable, size_t hash);
 
 /**
  * Check to see whether or not a hash table contains a specific hash.
@@ -625,7 +622,7 @@ GCU_Hash16_Value gcu_hash16_get(GCU_Hash16_Table * hashTable, size_t hash);
  * @param hash The hash whose associated value will be searched for.
  * @return `true` if the hash is in the table, `false` otherwise.
  */
-bool gcu_hash16_contains(GCU_Hash16_Table * hashTable, size_t hash);
+bool gcu_hash16_contains(GCU_Hash16 * hashTable, size_t hash);
 
 /**
  * Remove a hash from the table.
@@ -638,7 +635,7 @@ bool gcu_hash16_contains(GCU_Hash16_Table * hashTable, size_t hash);
  * @param hash The hash whose associated value will be removed from the table.
  * @return `true` if the entry existed and was removed, `false` otherwise.
  */
-bool gcu_hash16_remove(GCU_Hash16_Table * hashTable, size_t hash);
+bool gcu_hash16_remove(GCU_Hash16 * hashTable, size_t hash);
 
 /**
  * Get a count of active entries in the hash table.
@@ -646,7 +643,7 @@ bool gcu_hash16_remove(GCU_Hash16_Table * hashTable, size_t hash);
  * @param hashTable The hash table structure on which to operate.
  * @return The count of active entries in the hash table.
  */
-size_t gcu_hash16_count(GCU_Hash16_Table * hashTable);
+size_t gcu_hash16_count(GCU_Hash16 * hashTable);
 
 /**
  * Get an iterator which can be used to iterate through the entries of the
@@ -656,7 +653,7 @@ size_t gcu_hash16_count(GCU_Hash16_Table * hashTable);
  * @return An iterator pointing to the first element in the hash table (if it
  *   exists).
  */
-GCU_Hash16_Iterator gcu_hash16_iterator_get(GCU_Hash16_Table * hashTable);
+GCU_Hash16_Iterator gcu_hash16_iterator_get(GCU_Hash16 * hashTable);
 
 /**
  * Get an iterator to the next element in the table (if it exists).
@@ -714,7 +711,7 @@ typedef struct {
  *      may contain upon deletion.  The programmer is responsible for all
  *      memory management.
  */
-typedef struct GCU_Hash8_Table {
+typedef struct GCU_Hash8 {
   size_t capacity;           ///< The total item capacity of the hash table.
   size_t entries;            ///< The count of non-empty cells.
   size_t removed;            ///< The count of non-empty cells that represent
@@ -722,7 +719,7 @@ typedef struct GCU_Hash8_Table {
   GCU_Hash8_Cell * data;     ///< A pointer to the array of data cells.
   void * supplementary_data; ///< User-defined.
   GCU_Hash8_Cleanup cleanup; ///< User-defined cleanup function.
-} GCU_Hash8_Table;
+} GCU_Hash8;
 
 /**
  * A container used to hold the state of an iterator which can be used to
@@ -740,12 +737,11 @@ typedef struct GCU_Hash8_Table {
  * use the `value` in any way.
  */
 typedef struct {
-  size_t current;              ///< The current index into the hashTable data
-                               ///<   structure corresponding to the iterator.
-  bool exists;                 ///< Whether or not the iterator points to valid
-                               ///<   data.
-  GCU_Type8_Union value;       ///< The data pointed to by the iterator.
-  GCU_Hash8_Table * hashTable; ///< The hash table that the iterator traverses.
+  size_t current;        ///< The current index into the hashTable data
+                         ///<   structure corresponding to the iterator.
+  bool exists;           ///< Whether or not the iterator points to valid data.
+  GCU_Type8_Union value; ///< The data pointed to by the iterator.
+  GCU_Hash8 * hashTable; ///< The hash table that the iterator traverses.
 } GCU_Hash8_Iterator;
 
 /**
@@ -763,7 +759,7 @@ typedef struct {
  * @param count The number of items anticipated to be stored in the hash table.
  * @return A struct containing the hash table information.
  */
-GCU_Hash8_Table * gcu_hash8_create(size_t count);
+GCU_Hash8 * gcu_hash8_create(size_t count);
 
 /**
  * Destroy a hash table structure and clean up memory allocations.
@@ -774,7 +770,7 @@ GCU_Hash8_Table * gcu_hash8_create(size_t count);
  *
  * @param hashTable The hash table structure to be destroyed.
  */
-void gcu_hash8_destroy(GCU_Hash8_Table * hashTable);
+void gcu_hash8_destroy(GCU_Hash8 * hashTable);
 
 /**
  * Set a value in the hash table.
@@ -788,7 +784,7 @@ void gcu_hash8_destroy(GCU_Hash8_Table * hashTable);
  * @param value The value to insert into the hash table.
  * @return `true` on success, `false` on failure.
  */
-bool gcu_hash8_set(GCU_Hash8_Table * hashTable, size_t hash, GCU_Type8_Union value);
+bool gcu_hash8_set(GCU_Hash8 * hashTable, size_t hash, GCU_Type8_Union value);
 
 /**
  * Get a value from the hash table (if it exists).
@@ -798,7 +794,7 @@ bool gcu_hash8_set(GCU_Hash8_Table * hashTable, size_t hash, GCU_Type8_Union val
  * @returns A result that indicates the success or failure of the operation, as
  *   well as the associated value (if it exists).
  */
-GCU_Hash8_Value gcu_hash8_get(GCU_Hash8_Table * hashTable, size_t hash);
+GCU_Hash8_Value gcu_hash8_get(GCU_Hash8 * hashTable, size_t hash);
 
 /**
  * Check to see whether or not a hash table contains a specific hash.
@@ -807,7 +803,7 @@ GCU_Hash8_Value gcu_hash8_get(GCU_Hash8_Table * hashTable, size_t hash);
  * @param hash The hash whose associated value will be searched for.
  * @return `true` if the hash is in the table, `false` otherwise.
  */
-bool gcu_hash8_contains(GCU_Hash8_Table * hashTable, size_t hash);
+bool gcu_hash8_contains(GCU_Hash8 * hashTable, size_t hash);
 
 /**
  * Remove a hash from the table.
@@ -820,7 +816,7 @@ bool gcu_hash8_contains(GCU_Hash8_Table * hashTable, size_t hash);
  * @param hash The hash whose associated value will be removed from the table.
  * @return `true` if the entry existed and was removed, `false` otherwise.
  */
-bool gcu_hash8_remove(GCU_Hash8_Table * hashTable, size_t hash);
+bool gcu_hash8_remove(GCU_Hash8 * hashTable, size_t hash);
 
 /**
  * Get a count of active entries in the hash table.
@@ -828,7 +824,7 @@ bool gcu_hash8_remove(GCU_Hash8_Table * hashTable, size_t hash);
  * @param hashTable The hash table structure on which to operate.
  * @return The count of active entries in the hash table.
  */
-size_t gcu_hash8_count(GCU_Hash8_Table * hashTable);
+size_t gcu_hash8_count(GCU_Hash8 * hashTable);
 
 /**
  * Get an iterator which can be used to iterate through the entries of the
@@ -838,7 +834,7 @@ size_t gcu_hash8_count(GCU_Hash8_Table * hashTable);
  * @return An iterator pointing to the first element in the hash table (if it
  *   exists).
  */
-GCU_Hash8_Iterator gcu_hash8_iterator_get(GCU_Hash8_Table * hashTable);
+GCU_Hash8_Iterator gcu_hash8_iterator_get(GCU_Hash8 * hashTable);
 
 /**
  * Get an iterator to the next element in the table (if it exists).
