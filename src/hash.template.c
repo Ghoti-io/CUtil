@@ -34,6 +34,11 @@ TEMPLATE_GCU_HASH_TABLE * TEMPLATE_GCU_HASH_CREATE(size_t count) {
 void TEMPLATE_GCU_HASH_DESTROY(TEMPLATE_GCU_HASH_TABLE * hashTable) {
   // Verify that the pointer actually points to something.
   if (hashTable) {
+    // Call the `cleanup` function, if it exists.
+    if (hashTable->cleanup) {
+      hashTable->cleanup(hashTable);
+    }
+
     // Clean up the data table if needed.
     if (hashTable->data) {
       free(hashTable->data);

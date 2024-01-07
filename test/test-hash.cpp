@@ -163,6 +163,27 @@ TEST(Hash64, Iterator) {
   gcu_hash64_destroy(t);
 }
 
+// Helper function for next test.
+static void addOne64(GCU_Hash64_Table * t) {
+  GCU_Hash64_Iterator i = gcu_hash64_iterator_get(t);
+  while (i.exists) {
+    ++*(size_t *)(t->supplementary_data);
+    i = gcu_hash64_iterator_next(i);
+  }
+}
+
+TEST(Hash64, Cleanup) {
+  auto t = gcu_hash64_create(6);
+  size_t count = 0;
+  t->supplementary_data = (void *)&count;
+  t->cleanup = addOne64;
+  gcu_hash64_set(t, 0, gcu_type64_b(true));
+  gcu_hash64_set(t, 1, gcu_type64_b(true));
+  gcu_hash64_set(t, 2, gcu_type64_b(true));
+  gcu_hash64_destroy(t);
+  ASSERT_EQ(count, 3);
+}
+
 TEST(Hash32, CreateEmpty) {
   auto t = gcu_hash32_create(0);
   ASSERT_EQ(gcu_hash32_count(t), 0);
@@ -320,6 +341,27 @@ TEST(Hash32, Iterator) {
 
   // Cleanup.
   gcu_hash32_destroy(t);
+}
+
+// Helper function for next test.
+static void addOne32(GCU_Hash32_Table * t) {
+  GCU_Hash32_Iterator i = gcu_hash32_iterator_get(t);
+  while (i.exists) {
+    ++*(size_t *)(t->supplementary_data);
+    i = gcu_hash32_iterator_next(i);
+  }
+}
+
+TEST(Hash32, Cleanup) {
+  auto t = gcu_hash32_create(6);
+  size_t count = 0;
+  t->supplementary_data = (void *)&count;
+  t->cleanup = addOne32;
+  gcu_hash32_set(t, 0, gcu_type32_b(true));
+  gcu_hash32_set(t, 1, gcu_type32_b(true));
+  gcu_hash32_set(t, 2, gcu_type32_b(true));
+  gcu_hash32_destroy(t);
+  ASSERT_EQ(count, 3);
 }
 
 TEST(Hash16, CreateEmpty) {
@@ -481,6 +523,27 @@ TEST(Hash16, Iterator) {
   gcu_hash16_destroy(t);
 }
 
+// Helper function for next test.
+static void addOne16(GCU_Hash16_Table * t) {
+  GCU_Hash16_Iterator i = gcu_hash16_iterator_get(t);
+  while (i.exists) {
+    ++*(size_t *)(t->supplementary_data);
+    i = gcu_hash16_iterator_next(i);
+  }
+}
+
+TEST(Hash16, Cleanup) {
+  auto t = gcu_hash16_create(6);
+  size_t count = 0;
+  t->supplementary_data = (void *)&count;
+  t->cleanup = addOne16;
+  gcu_hash16_set(t, 0, gcu_type16_b(true));
+  gcu_hash16_set(t, 1, gcu_type16_b(true));
+  gcu_hash16_set(t, 2, gcu_type16_b(true));
+  gcu_hash16_destroy(t);
+  ASSERT_EQ(count, 3);
+}
+
 TEST(Hash8, CreateEmpty) {
   auto t = gcu_hash8_create(0);
   ASSERT_EQ(gcu_hash8_count(t), 0);
@@ -638,6 +701,27 @@ TEST(Hash8, Iterator) {
 
   // Cleanup.
   gcu_hash8_destroy(t);
+}
+
+// Helper function for next test.
+static void addOne8(GCU_Hash8_Table * t) {
+  GCU_Hash8_Iterator i = gcu_hash8_iterator_get(t);
+  while (i.exists) {
+    ++*(size_t *)(t->supplementary_data);
+    i = gcu_hash8_iterator_next(i);
+  }
+}
+
+TEST(Hash8, Cleanup) {
+  auto t = gcu_hash8_create(6);
+  size_t count = 0;
+  t->supplementary_data = (void *)&count;
+  t->cleanup = addOne8;
+  gcu_hash8_set(t, 0, gcu_type8_b(true));
+  gcu_hash8_set(t, 1, gcu_type8_b(true));
+  gcu_hash8_set(t, 2, gcu_type8_b(true));
+  gcu_hash8_destroy(t);
+  ASSERT_EQ(count, 3);
 }
 
 int main(int argc, char** argv) {
