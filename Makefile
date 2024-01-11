@@ -22,6 +22,7 @@ LIBOBJECTS := $(OBJ_DIR)/debug.o \
 							$(OBJ_DIR)/hash.o \
 							$(OBJ_DIR)/memory.o \
 							$(OBJ_DIR)/string.o \
+							$(OBJ_DIR)/thread.o \
 							$(OBJ_DIR)/type.o \
 							$(OBJ_DIR)/vector.o
 
@@ -40,6 +41,9 @@ DEP_LIBVER = \
   include/$(PROJECT)/libver.h
 DEP_MUTEX = \
 	include/$(PROJECT)/mutex.h
+DEP_THREAD = \
+	$(DEP_LIBVER) \
+	include/$(PROJECT)/thread.h
 DEP_DEBUG = \
 	$(DEP_LIBVER) \
 	include/$(PROJECT)/debug.h
@@ -105,6 +109,10 @@ $(OBJ_DIR)/memory.o: \
 $(OBJ_DIR)/string.o: \
 				src/string.c \
 				$(DEP_STRING)
+
+$(OBJ_DIR)/thread.o: \
+				src/thread.c \
+				$(DEP_THREAD)
 
 $(OBJ_DIR)/type.o: \
 				src/type.c \
