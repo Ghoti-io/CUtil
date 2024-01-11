@@ -16,16 +16,33 @@
 
 TEMPLATE_GCU_HASH * TEMPLATE_GCU_HASH_CREATE(size_t count) {
   // Malloc Zeroed-out memory.
-  TEMPLATE_GCU_HASH * hashTable = calloc(1, sizeof(TEMPLATE_GCU_HASH));
+  TEMPLATE_GCU_HASH * hashTable = gcu_calloc(1, sizeof(TEMPLATE_GCU_HASH));
+
+  // If the allocation failed, return null.
+  if (!hashTable) {
+    return 0;
+  }
 
   // Reserve room for the data, if requested..
   if (count) {
     // We always want the capacity to be an odd number.
     size_t capacity = (count * 2) + 1;
-    hashTable->data = calloc(capacity, sizeof(TEMPLATE_GCU_HASH_CELL));
+    hashTable->data = gcu_calloc(capacity, sizeof(TEMPLATE_GCU_HASH_CELL));
     if (hashTable->data) {
       hashTable->capacity = capacity;
     }
+  }
+
+  // Allocate the mutex.
+  bool failure = GCU_MUTEX_CREATE(hashTable->mutex);
+
+  // If the allocation failed, clean up and return null.
+  if (failure) {
+    if (hashTable->data) {
+      gcu_free(hashTable->data);
+    }
+    gcu_free(hashTable);
+    return 0;
   }
 
   return hashTable;
@@ -41,10 +58,12 @@ void TEMPLATE_GCU_HASH_DESTROY(TEMPLATE_GCU_HASH * hashTable) {
 
     // Clean up the data table if needed.
     if (hashTable->data) {
-      free(hashTable->data);
+      gcu_free(hashTable->data);
       hashTable->data = 0;
     }
-    free(hashTable);
+
+    GCU_MUTEX_DESTROY(hashTable->mutex);
+    gcu_free(hashTable);
   }
 }
 

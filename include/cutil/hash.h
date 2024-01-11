@@ -8,6 +8,7 @@
 
 #include <stddef.h>
 #include "cutil/type.h"
+#include "cutil/mutex.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -174,6 +175,7 @@ typedef struct GCU_Hash64 {
   GCU_Hash64_Cell * data;     ///< A pointer to the array of data cells.
   void * supplementary_data;  ///< User-defined.
   GCU_Hash64_Cleanup cleanup; ///< User-defined cleanup function.
+  GCU_MUTEX_T mutex;          ///< Mutex for thread-safety.
 } GCU_Hash64;
 
 /**
@@ -356,6 +358,7 @@ typedef struct GCU_Hash32 {
   GCU_Hash32_Cell * data;     ///< A pointer to the array of data cells.
   void * supplementary_data;  ///< User-defined.
   GCU_Hash32_Cleanup cleanup; ///< User-defined cleanup function.
+  GCU_MUTEX_T mutex;          ///< Mutex for thread-safety.
 } GCU_Hash32;
 
 /**
@@ -538,6 +541,7 @@ typedef struct GCU_Hash16 {
   GCU_Hash16_Cell * data;     ///< A pointer to the array of data cells.
   void * supplementary_data;  ///< User-defined.
   GCU_Hash16_Cleanup cleanup; ///< User-defined cleanup function.
+  GCU_MUTEX_T mutex;          ///< Mutex for thread-safety.
 } GCU_Hash16;
 
 /**
@@ -719,6 +723,7 @@ typedef struct GCU_Hash8 {
   GCU_Hash8_Cell * data;     ///< A pointer to the array of data cells.
   void * supplementary_data; ///< User-defined.
   GCU_Hash8_Cleanup cleanup; ///< User-defined cleanup function.
+  GCU_MUTEX_T mutex;         ///< Mutex for thread-safety.
 } GCU_Hash8;
 
 /**

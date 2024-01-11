@@ -8,14 +8,31 @@
 
 TEMPLATE_GCU_VECTOR * TEMPLATE_GCU_VECTOR_CREATE(size_t count) {
   // Malloc Zeroed-out memory.
-  TEMPLATE_GCU_VECTOR * vector = calloc(1, sizeof(TEMPLATE_GCU_VECTOR));
+  TEMPLATE_GCU_VECTOR * vector = gcu_calloc(1, sizeof(TEMPLATE_GCU_VECTOR));
+
+  // If the allocation failed, return null.
+  if (!vector) {
+    return 0;
+  }
 
   // Reserve room for the data, if requested..
   if (count) {
-    vector->data = calloc(count, sizeof(TEMPLATE_GCU_TYPE_UNION));
+    vector->data = gcu_calloc(count, sizeof(TEMPLATE_GCU_TYPE_UNION));
     if (vector->data) {
       vector->capacity = count;
     }
+  }
+
+  // Allocate the mutex.
+  bool failure = GCU_MUTEX_CREATE(vector->mutex);
+
+  // If the allocation failed, clean up and return null.
+  if (failure) {
+    if (vector->data) {
+      gcu_free(vector->data);
+    }
+    gcu_free(vector);
+    return 0;
   }
 
   return vector;
@@ -31,10 +48,12 @@ void TEMPLATE_GCU_VECTOR_DESTROY(TEMPLATE_GCU_VECTOR * vector) {
 
     // Clean up the data table if needed.
     if (vector->data) {
-      free(vector->data);
+      gcu_free(vector->data);
       vector->data = 0;
     }
-    free(vector);
+
+    GCU_MUTEX_DESTROY(vector->mutex);
+    gcu_free(vector);
   }
 }
 
@@ -54,7 +73,7 @@ static bool TEMPLATE_GROW_VECTOR(TEMPLATE_GCU_VECTOR * vector, size_t size) {
   }
 
   // Attempt to allocate more memory;
-  void * newMem = realloc(vector->data, size * (sizeof (TEMPLATE_GCU_TYPE_UNION)));
+  void * newMem = gcu_realloc(vector->data, size * (sizeof (TEMPLATE_GCU_TYPE_UNION)));
   if (newMem) {
     // Zero out the new memory.
     memset((TEMPLATE_GCU_TYPE_UNION *)newMem + vector->capacity, 0, (size - vector->capacity) * sizeof(TEMPLATE_GCU_TYPE_UNION));

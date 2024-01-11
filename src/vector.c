@@ -1,8 +1,10 @@
 /**
  */
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include "cutil/memory.h"
 #include "cutil/vector.h"
 
 #define GROWTH_FACTOR 1.3

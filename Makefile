@@ -38,6 +38,8 @@ all: $(APP_DIR)/$(TARGET) ## Build the shared library
 ####################################################################
 DEP_LIBVER = \
   include/$(PROJECT)/libver.h
+DEP_MUTEX = \
+	include/$(PROJECT)/mutex.h
 DEP_DEBUG = \
 	$(DEP_LIBVER) \
 	include/$(PROJECT)/debug.h
@@ -53,10 +55,12 @@ DEP_TYPE = \
 DEP_HASH= \
 	$(DEP_TYPE) \
 	$(DEP_MEMORY) \
+	$(DEP_MUTEX) \
 	include/$(PROJECT)/hash.h
 DEP_VECTOR= \
 	$(DEP_TYPE) \
 	$(DEP_MEMORY) \
+	$(DEP_MUTEX) \
 	include/$(PROJECT)/vector.h
 DEP_STRING = \
 	$(DEP_LIBVER) \

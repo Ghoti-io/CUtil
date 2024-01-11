@@ -8,6 +8,7 @@
 
 #include <stddef.h>
 #include "cutil/type.h"
+#include "cutil/mutex.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -114,6 +115,7 @@ typedef struct GCU_Vector64 {
   GCU_Type64_Union * data;      ///< A pointer to the array of data cells.
   void * supplementary_data;    ///< User-defined.
   GCU_Vector64_Cleanup cleanup; ///< User-defined cleanup function.
+  GCU_MUTEX_T mutex;            ///< Mutex for thread-safety.
 } GCU_Vector64;
 
 /**
@@ -183,6 +185,7 @@ typedef struct GCU_Vector32 {
   GCU_Type32_Union * data;      ///< A pointer to the array of data cells.
   void * supplementary_data;    ///< User-defined.
   GCU_Vector32_Cleanup cleanup; ///< User-defined cleanup function.
+  GCU_MUTEX_T mutex;            ///< Mutex for thread-safety.
 } GCU_Vector32;
 
 /**
@@ -252,6 +255,7 @@ typedef struct GCU_Vector16 {
   GCU_Type16_Union * data;      ///< A pointer to the array of data cells.
   void * supplementary_data;    ///< User-defined.
   GCU_Vector16_Cleanup cleanup; ///< User-defined cleanup function.
+  GCU_MUTEX_T mutex;            ///< Mutex for thread-safety.
 } GCU_Vector16;
 
 /**
@@ -321,6 +325,7 @@ typedef struct GCU_Vector8 {
   GCU_Type8_Union * data;      ///< A pointer to the array of data cells.
   void * supplementary_data;   ///< User-defined.
   GCU_Vector8_Cleanup cleanup; ///< User-defined cleanup function.
+  GCU_MUTEX_T mutex;           ///< Mutex for thread-safety.
 } GCU_Vector8;
 
 /**
