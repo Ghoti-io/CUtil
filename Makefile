@@ -176,6 +176,13 @@ $(APP_DIR)/test-hash: \
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
+$(APP_DIR)/test-semaphore: \
+				test/test-semaphore.cpp \
+				$(APP_DIR)/$(TARGET)
+	@echo "\n### Compiling Semaphore Test ###"
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+
 $(APP_DIR)/test-string: \
 				test/test-string.cpp \
 				$(APP_DIR)/$(TARGET)
@@ -230,6 +237,7 @@ test: \
 				$(APP_DIR)/test-debug \
 				$(APP_DIR)/test-memory \
 				$(APP_DIR)/test-type \
+				$(APP_DIR)/test-semaphore \
 				$(APP_DIR)/test-string \
 				$(APP_DIR)/test-hash \
 				$(APP_DIR)/test-thread \
@@ -244,6 +252,7 @@ test: \
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-memory --gtest_brief=1
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-thread --gtest_brief=1
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-type --gtest_brief=1
+	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-semaphore --gtest_brief=1
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-string --gtest_brief=1
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-hash --gtest_brief=1
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-vector --gtest_brief=1
