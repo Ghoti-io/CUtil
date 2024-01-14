@@ -41,9 +41,6 @@ DEP_LIBVER = \
   include/$(PROJECT)/libver.h
 DEP_MUTEX = \
 	include/$(PROJECT)/mutex.h
-DEP_THREAD = \
-	$(DEP_LIBVER) \
-	include/$(PROJECT)/thread.h
 DEP_DEBUG = \
 	$(DEP_LIBVER) \
 	include/$(PROJECT)/debug.h
@@ -61,6 +58,10 @@ DEP_HASH= \
 	$(DEP_MEMORY) \
 	$(DEP_MUTEX) \
 	include/$(PROJECT)/hash.h
+DEP_THREAD = \
+	$(DEP_LIBVER) \
+	$(DEP_HASH) \
+	include/$(PROJECT)/thread.h
 DEP_VECTOR= \
 	$(DEP_TYPE) \
 	$(DEP_MEMORY) \
@@ -174,6 +175,13 @@ $(APP_DIR)/test-string: \
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
+$(APP_DIR)/test-thread: \
+				test/test-thread.cpp \
+				$(APP_DIR)/$(TARGET)
+	@echo "\n### Compiling Thread Test ###"
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+
 $(APP_DIR)/test-vector: \
 				test/test-vector.cpp \
 				$(APP_DIR)/$(TARGET)
@@ -216,6 +224,7 @@ test: \
 				$(APP_DIR)/test-type \
 				$(APP_DIR)/test-string \
 				$(APP_DIR)/test-hash \
+				$(APP_DIR)/test-thread \
 				$(APP_DIR)/test-vector \
 				$(APP_DIR/$(TARGET)
 	@echo "\033[0;32m"
@@ -225,6 +234,7 @@ test: \
 	@echo "\033[0m"
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-debug --gtest_brief=1
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-memory --gtest_brief=1
+	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-thread --gtest_brief=1
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-type --gtest_brief=1
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-string --gtest_brief=1
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-hash --gtest_brief=1

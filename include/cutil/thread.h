@@ -7,6 +7,8 @@
 #ifndef G_CUTIL_THREAD_H
 #define G_CUTIL_THREAD_H
 
+#include <stdbool.h>
+#include <stdint.h>
 #include "cutil/libver.h"
 
 #ifdef __cplusplus
@@ -14,10 +16,14 @@ extern "C" {
 #endif // __cplusplus
 
 /// @cond HIDDEN_SYMBOLS
+#define GCU_Thread GHOTIIO_CUTIL(GCU_Thread)
+#define gcu_thread_constructor GHOTIIO_CUTIL(gcu_thread_constructor)
+#define gcu_thread_destructor GHOTIIO_CUTIL(gcu_thread_destructor)
 #define gcu_thread_create GHOTIIO_CUTIL(gcu_thread_create)
 #define gcu_thread_join GHOTIIO_CUTIL(gcu_thread_join)
 #define gcu_thread_detach GHOTIIO_CUTIL(gcu_thread_detach)
-#define gcu_thread_get_id GHOTIIO_CUTIL(gcu_thread_get_id)
+#define gcu_thread_is_running GHOTIIO_CUTIL(gcu_thread_is_running)
+#define gcu_thread_cancel GHOTIIO_CUTIL(gcu_thread_cancel)
 #define gcu_thread_sleep GHOTIIO_CUTIL(gcu_thread_sleep)
 #define gcu_thread_yield GHOTIIO_CUTIL(gcu_thread_yield)
 #define gcu_thread_get_num_processors GHOTIIO_CUTIL(gcu_thread_get_num_processors)
@@ -29,22 +35,28 @@ extern "C" {
 #define gcu_thread_get_name GHOTIIO_CUTIL(gcu_thread_get_name)
 #define gcu_thread_get_current_name GHOTIIO_CUTIL(gcu_thread_get_current_name)
 #define gcu_thread_get_current_id GHOTIIO_CUTIL(gcu_thread_get_current_id)
-#define gcu_thread_get_current_handle GHOTIIO_CUTIL(gcu_thread_get_current_handle)
-#define gcu_thread_get_id_from_handle GHOTIIO_CUTIL(gcu_thread_get_id_from_handle)
-#define gcu_thread_get_id_from_name GHOTIIO_CUTIL(gcu_thread_get_id_from_name)
-#define gcu_thread_get_handle_from_id GHOTIIO_CUTIL(gcu_thread_get_handle_from_id)
-#define gcu_thread_get_handle_from_name GHOTIIO_CUTIL(gcu_thread_get_handle_from_name)
 /// @endcond
 
 #ifdef _WIN32
 #include <windows.h>
 typedef HANDLE GCU_THREAD_T;
-typedef DWORD (WINAPI *GCU_THREAD_FUNC)(LPVOID);
+typedef DWORD GCU_THREAD_FUNC_RETURN_T;
+#define GCU_THREAD_FUNC_CALLING_CONVENTION WINAPI
+typedef LPVOID GCU_THREAD_FUNC_ARG_T;
 #else
 #include <pthread.h>
 typedef pthread_t GCU_THREAD_T;
-typedef void *(*GCU_THREAD_FUNC)(void *);
+typedef void * GCU_THREAD_FUNC_RETURN_T;
+#define GCU_THREAD_FUNC_CALLING_CONVENTION
+typedef void * GCU_THREAD_FUNC_ARG_T;
 #endif // _WIN32
+
+typedef GCU_THREAD_FUNC_RETURN_T (GCU_THREAD_FUNC_CALLING_CONVENTION *GCU_THREAD_FUNC)(GCU_THREAD_FUNC_ARG_T);
+
+typedef uint32_t GCU_Thread;
+
+void gcu_thread_constructor() __attribute__((constructor));
+void gcu_thread_destructor() __attribute__((destructor));
 
 /**
  * Create a new thread.
@@ -54,7 +66,7 @@ typedef void *(*GCU_THREAD_FUNC)(void *);
  * @param arg Argument to pass to the thread function.
  * @return 0 on success, -1 on failure.
  */
-int gcu_thread_create(GCU_THREAD_T *thread, GCU_THREAD_FUNC func, void *arg);
+int gcu_thread_create(GCU_Thread * thread, GCU_THREAD_FUNC func, void * arg);
 
 /**
  * Wait for a thread to finish.
@@ -62,7 +74,7 @@ int gcu_thread_create(GCU_THREAD_T *thread, GCU_THREAD_FUNC func, void *arg);
  * @param thread Thread handle.
  * @return 0 on success, -1 on failure.
  */
-int gcu_thread_join(GCU_THREAD_T thread);
+int gcu_thread_join(GCU_Thread thread);
 
 /**
  * Detach a thread.
@@ -70,14 +82,7 @@ int gcu_thread_join(GCU_THREAD_T thread);
  * @param thread Thread handle.
  * @return 0 on success, -1 on failure.
  */
-int gcu_thread_detach(GCU_THREAD_T thread);
-
-/**
- * Get the current thread ID.
- *
- * @return The current thread ID.
- */
-unsigned long gcu_thread_get_id();
+int gcu_thread_detach(GCU_Thread thread);
 
 /**
  * Sleep for a specified number of milliseconds.
@@ -105,7 +110,7 @@ unsigned int gcu_thread_get_num_processors();
  * @param mask Affinity mask.
  * @return 0 on success, -1 on failure.
  */
-int gcu_thread_set_affinity(GCU_THREAD_T thread, unsigned long mask);
+int gcu_thread_set_affinity(GCU_Thread thread, unsigned long mask);
 
 /**
  * Get the thread affinity mask.
@@ -114,7 +119,7 @@ int gcu_thread_set_affinity(GCU_THREAD_T thread, unsigned long mask);
  * @param mask Pointer to a variable to store the affinity mask.
  * @return 0 on success, -1 on failure.
  */
-int gcu_thread_get_affinity(GCU_THREAD_T thread, unsigned long *mask);
+int gcu_thread_get_affinity(GCU_Thread thread, unsigned long * mask);
 
 /**
  * Set the thread priority.
@@ -123,7 +128,7 @@ int gcu_thread_get_affinity(GCU_THREAD_T thread, unsigned long *mask);
  * @param priority Thread priority.
  * @return 0 on success, -1 on failure.
  */
-int gcu_thread_set_priority(GCU_THREAD_T thread, int priority);
+int gcu_thread_set_priority(GCU_Thread thread, int priority);
 
 /**
  * Get the thread priority.
@@ -132,7 +137,7 @@ int gcu_thread_set_priority(GCU_THREAD_T thread, int priority);
  * @param priority Pointer to a variable to store the thread priority.
  * @return 0 on success, -1 on failure.
  */
-int gcu_thread_get_priority(GCU_THREAD_T thread, int *priority);
+int gcu_thread_get_priority(GCU_Thread thread, int * priority);
 
 /**
  * Set the thread name.
@@ -141,7 +146,7 @@ int gcu_thread_get_priority(GCU_THREAD_T thread, int *priority);
  * @param name Thread name.
  * @return 0 on success, -1 on failure.
  */
-int gcu_thread_set_name(GCU_THREAD_T thread, const char *name);
+int gcu_thread_set_name(GCU_Thread thread, const char * name);
 
 /**
  * Get the thread name.
@@ -149,9 +154,9 @@ int gcu_thread_set_name(GCU_THREAD_T thread, const char *name);
  * @param thread Thread handle.
  * @param name Pointer to a variable to store the thread name.
  * @param size Size of the name buffer.
- * @return 0 on success, -1 on failure.
+ * @return 0 on success, nonzero on failure.
  */
-int gcu_thread_get_name(GCU_THREAD_T thread, char *name, size_t size);
+int gcu_thread_get_name(GCU_Thread thread, char * name, size_t size);
 
 /**
  * Get the thread name of the current thread.
@@ -160,53 +165,41 @@ int gcu_thread_get_name(GCU_THREAD_T thread, char *name, size_t size);
  * @param size Size of the name buffer.
  * @return 0 on success, -1 on failure.
  */
-int gcu_thread_get_current_name(char *name, size_t size);
+int gcu_thread_get_current_name(char * name, size_t size);
 
 /**
  * Get the thread ID of the current thread.
  *
  * @return The thread ID of the current thread.
  */
-unsigned long gcu_thread_get_current_id();
+GCU_Thread gcu_thread_get_current_id();
 
 /**
- * Get the thread handle of the current thread.
+ * Return whether or not the thread is running.
  *
- * @return The thread handle of the current thread.
+ * @param thread The thread id.
+ * @param is_running Pointer to a variable to store the result.
+ * @return 0 on success, -1 on failure.
  */
-GCU_THREAD_T gcu_thread_get_current_handle();
+int gcu_thread_is_running(GCU_Thread thread, bool * is_running);
 
 /**
- * Get the thread ID of the specified thread.
+ * Return whether or not a thread has been joined.
  *
- * @param thread Thread handle.
- * @return The thread ID of the specified thread.
+ * @param thread The thread id.
+ * @param is_joined Pointer to a variable to store the result.
+ * @return 0 on success, -1 on failure.
  */
-unsigned long gcu_thread_get_id_from_handle(GCU_THREAD_T thread);
+int gcu_thread_is_joined(GCU_Thread thread, bool * is_joined);
 
 /**
- * Get the thread ID of the specified thread.
+ * Return whether or not a thread has been detached.
  *
- * @param name Thread name.
- * @return The thread ID of the specified thread.
+ * @param thread The thread id.
+ * @param is_detached Pointer to a variable to store the result.
+ * @return 0 on success, -1 on failure.
  */
-unsigned long gcu_thread_get_id_from_name(const char *name);
-
-/**
- * Get the thread handle of the specified thread.
- *
- * @param id Thread ID.
- * @return The thread handle of the specified thread.
- */
-GCU_THREAD_T gcu_thread_get_handle_from_id(unsigned long id);
-
-/**
- * Get the thread handle of the specified thread.
- *
- * @param name Thread name.
- * @return The thread handle of the specified thread.
- */
-GCU_THREAD_T gcu_thread_get_handle_from_name(const char *name);
+int gcu_thread_is_detached(GCU_Thread thread, bool * is_detached);
 
 #ifdef __cplusplus
 }
