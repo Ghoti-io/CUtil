@@ -77,8 +77,12 @@ TEST(Thread, SingleThreadLifetime) {
   // Stop the loop
   status.run = false;
 
-  // Wait a few milliseconds so that the thread can stop.
-  gcu_thread_sleep(SLEEP_MS);
+  // Wait so that the thread can stop.
+  volatile bool * is_running = &status.is_running;
+  while (*is_running) {
+    gcu_thread_yield();
+  }
+
 
   // Check the thread state.
   EXPECT_EQ(status.is_running, false);

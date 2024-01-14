@@ -239,6 +239,29 @@ int gcu_thread_create(GCU_Thread * thread, GCU_THREAD_FUNC func, void * arg) {
   }
   *thread = *thread_id;
 
+  // We now have the thread id, but it is possible that the thread ID has
+  // already been set in the hash table.  If this is the case, then we need to
+  // reclaim the record for the current thread.
+  GCU_Hash64_Value hash_value = gcu_hash64_get(gcu_thread_hash, *thread);
+  if (hash_value.exists) {
+    GCU_Thread_Internal * old_thread_internal = hash_value.value.p;
+
+    // Verify that the record can be overwritten.
+    // The record can be overwritten if the thread has been joined.
+    // If the thread is running, then something went wrong, and we must abort.
+    if (!old_thread_internal->joined) {
+      // Note: This should never happen.  If it does, then that means that the
+      // OS has reused a thread ID before the old thread has been joined.
+      assert(false);
+      gcu_free(thread_internal);
+      GCU_MUTEX_UNLOCK(gcu_thread_hash->mutex);
+      return -1;
+    }
+
+    // Release the memory from the old record.
+    gcu_free(old_thread_internal);
+  }
+
   // Add the thread record to the hash.
   assert(gcu_hash64_set(gcu_thread_hash, *thread, GCU_TYPE64_P(thread_internal)));
 

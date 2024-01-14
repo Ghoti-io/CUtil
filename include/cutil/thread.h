@@ -37,6 +37,30 @@ extern "C" {
 #define gcu_thread_get_current_id GHOTIIO_CUTIL(gcu_thread_get_current_id)
 /// @endcond
 
+#ifdef DOXYGEN
+/**
+ * Platform-specific Thread handle.
+ */
+typedef void * GCU_THREAD_T;
+
+/**
+ * Platform-specific Thread function return type.
+ */
+typedef void * GCU_THREAD_FUNC_RETURN_T;
+
+/**
+ * Platform-specific Thread function calling convention.
+ *
+ * @note This is only used on Windows.
+ */
+#define GCU_THREAD_FUNC_CALLING_CONVENTION
+
+/**
+ * Platform-specific Thread function argument type.
+ */
+typedef void * GCU_THREAD_FUNC_ARG_T;
+#endif // DOXYGEN
+
 #ifdef _WIN32
 #include <windows.h>
 typedef HANDLE GCU_THREAD_T;
@@ -51,15 +75,57 @@ typedef void * GCU_THREAD_FUNC_RETURN_T;
 typedef void * GCU_THREAD_FUNC_ARG_T;
 #endif // _WIN32
 
+/**
+ * Thread function type.
+ *
+ * @param arg Pointer to an argument which will be passed to the thread
+ *              function.
+ * @return The thread function return value.
+ */
 typedef GCU_THREAD_FUNC_RETURN_T (GCU_THREAD_FUNC_CALLING_CONVENTION *GCU_THREAD_FUNC)(GCU_THREAD_FUNC_ARG_T);
 
+/**
+ * GCU-specific thread handle.
+ *
+ * This is, essentially, just a number.  It should be the TID on Linux and
+ * Windows, but because the platforms don't handle the TID the same way, we
+ * provide this abstraction.
+ */
 typedef uint32_t GCU_Thread;
 
+/**
+ * Constructor for the thread module.
+ *
+ * This is called automatically when the module is loaded.  It will initialize
+ * the module and prepare it for use, including allocating any memory needed by
+ * the module.
+ */
 void gcu_thread_constructor() __attribute__((constructor));
+
+/**
+ * Destructor for the thread module.
+ *
+ * This is called automatically when the module is unloaded.  It will wait for
+ * all threads to finish before returning and it will clean up the memory
+ * allocated by the module.
+ */
 void gcu_thread_destructor() __attribute__((destructor));
 
 /**
  * Create a new thread.
+ *
+ * This will create a new thread and start it running.  Because we must wait for
+ * the thread to start running before we can get the TID, we must block until
+ * the information is available.  This means that the thread will be running
+ * before this function returns.
+ *
+ * Thread execution is wrapped by a helper function which is how we get the TID.
+ * There is no way to get the TID of a thread from outside of the thread itself
+ * on Linux, so this is the only guaranteed solution.  The wrapper function also
+ * sets and clears the running flag, whis is also not otherwise possible to
+ * determine.
+ *
+ * A TID may be reused after a thread has joined (since it is set by the OS).
  *
  * @param thread Pointer to a thread handle.
  * @param func Function to run in the thread.
