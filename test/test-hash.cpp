@@ -142,18 +142,22 @@ TEST(Hash64, Iterator) {
 
   GCU_Hash64_Iterator iterator = gcu_hash64_iterator_get(t);
   ASSERT_EQ(iterator.value.ui32, 185);
+  ASSERT_EQ(iterator.hash, iterator.value.ui32);
   ASSERT_TRUE(iterator.exists);
 
   iterator = gcu_hash64_iterator_next(iterator);
   ASSERT_EQ(iterator.value.ui32, 5);
+  ASSERT_EQ(iterator.hash, iterator.value.ui32);
   ASSERT_TRUE(iterator.exists);
 
   iterator = gcu_hash64_iterator_next(iterator);
   ASSERT_EQ(iterator.value.ui32, 6845);
+  ASSERT_EQ(iterator.hash, iterator.value.ui32);
   ASSERT_TRUE(iterator.exists);
 
   iterator = gcu_hash64_iterator_next(iterator);
   ASSERT_EQ(iterator.value.ui32, 253265);
+  ASSERT_EQ(iterator.hash, iterator.value.ui32);
   ASSERT_TRUE(iterator.exists);
 
   iterator = gcu_hash64_iterator_next(iterator);
@@ -322,18 +326,22 @@ TEST(Hash32, Iterator) {
 
   GCU_Hash32_Iterator iterator = gcu_hash32_iterator_get(t);
   ASSERT_EQ(iterator.value.ui32, 185);
+  ASSERT_EQ(iterator.hash, iterator.value.ui32);
   ASSERT_TRUE(iterator.exists);
 
   iterator = gcu_hash32_iterator_next(iterator);
   ASSERT_EQ(iterator.value.ui32, 5);
+  ASSERT_EQ(iterator.hash, iterator.value.ui32);
   ASSERT_TRUE(iterator.exists);
 
   iterator = gcu_hash32_iterator_next(iterator);
   ASSERT_EQ(iterator.value.ui32, 6845);
+  ASSERT_EQ(iterator.hash, iterator.value.ui32);
   ASSERT_TRUE(iterator.exists);
 
   iterator = gcu_hash32_iterator_next(iterator);
   ASSERT_EQ(iterator.value.ui32, 253265);
+  ASSERT_EQ(iterator.hash, iterator.value.ui32);
   ASSERT_TRUE(iterator.exists);
 
   iterator = gcu_hash32_iterator_next(iterator);
@@ -502,18 +510,22 @@ TEST(Hash16, Iterator) {
 
   GCU_Hash16_Iterator iterator = gcu_hash16_iterator_get(t);
   ASSERT_EQ(iterator.value.ui16, 1445);
+  ASSERT_EQ(iterator.hash, iterator.value.ui16);
   ASSERT_TRUE(iterator.exists);
 
   iterator = gcu_hash16_iterator_next(iterator);
   ASSERT_EQ(iterator.value.ui16, 5);
+  ASSERT_EQ(iterator.hash, iterator.value.ui16);
   ASSERT_TRUE(iterator.exists);
 
   iterator = gcu_hash16_iterator_next(iterator);
   ASSERT_EQ(iterator.value.ui16, 85);
+  ASSERT_EQ(iterator.hash, iterator.value.ui16);
   ASSERT_TRUE(iterator.exists);
 
   iterator = gcu_hash16_iterator_next(iterator);
   ASSERT_EQ(iterator.value.ui16, 24565);
+  ASSERT_EQ(iterator.hash, iterator.value.ui16);
   ASSERT_TRUE(iterator.exists);
 
   iterator = gcu_hash16_iterator_next(iterator);
@@ -661,7 +673,7 @@ TEST(Hash8, Iterator) {
   size_t hash1 = (capacity / 2) - 1;
   size_t hash2 = hash1 * 7;
   size_t hash3 = hash2 * 7;
-  size_t hash4 = hash3 * 7;
+  size_t hash4 = hash3 / 11;
 
   // Add three items that have a hash collision.
   ASSERT_TRUE(gcu_hash8_set(t, hash1, gcu_type8_ui8(hash1)));
@@ -682,18 +694,22 @@ TEST(Hash8, Iterator) {
 
   GCU_Hash8_Iterator iterator = gcu_hash8_iterator_get(t);
   ASSERT_EQ(iterator.value.ui8, 5);
+  ASSERT_EQ(iterator.hash, iterator.value.ui8);
   ASSERT_TRUE(iterator.exists);
 
   iterator = gcu_hash8_iterator_next(iterator);
   ASSERT_EQ(iterator.value.ui8, 35);
+  ASSERT_EQ(iterator.hash, iterator.value.ui8);
+  ASSERT_TRUE(iterator.exists);
+
+  iterator = gcu_hash8_iterator_next(iterator);
+  ASSERT_EQ(iterator.value.ui8, 22);
+  ASSERT_EQ(iterator.hash, iterator.value.ui8);
   ASSERT_TRUE(iterator.exists);
 
   iterator = gcu_hash8_iterator_next(iterator);
   ASSERT_EQ(iterator.value.ui8, 245);
-  ASSERT_TRUE(iterator.exists);
-
-  iterator = gcu_hash8_iterator_next(iterator);
-  ASSERT_EQ(iterator.value.ui8, 179);
+  ASSERT_EQ(iterator.hash, iterator.value.ui8);
   ASSERT_TRUE(iterator.exists);
 
   iterator = gcu_hash8_iterator_next(iterator);

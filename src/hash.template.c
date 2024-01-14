@@ -125,7 +125,7 @@ bool TEMPLATE_GCU_HASH_SET(TEMPLATE_GCU_HASH * hashTable, size_t hash, TEMPLATE_
   size_t potential_location = hash % capacity;
 
   // Look for a viable location.
-  
+
   // First, determine wether or not there is an active entry for this hash in
   // the table that we can reuse.
   // Along the way, make a note of the first "removed" entry, which we may fall
@@ -255,6 +255,7 @@ TEMPLATE_GCU_HASH_ITERATOR TEMPLATE_GCU_HASH_ITERATOR_GET(TEMPLATE_GCU_HASH * ha
     return (TEMPLATE_GCU_HASH_ITERATOR) {
       .current = 0,
       .exists = false,
+      .hash = 0,
       .value = DEFAULT_TYPE(0),
       .hashTable = hashTable,
     };
@@ -272,6 +273,7 @@ TEMPLATE_GCU_HASH_ITERATOR TEMPLATE_GCU_HASH_ITERATOR_GET(TEMPLATE_GCU_HASH * ha
   return (TEMPLATE_GCU_HASH_ITERATOR) {
     .current = index,
     .exists = true,
+    .hash = cursor->hash,
     .value = cursor->data,
     .hashTable = hashTable,
   };
@@ -292,6 +294,7 @@ TEMPLATE_GCU_HASH_ITERATOR TEMPLATE_GCU_HASH_ITERATOR_NEXT(TEMPLATE_GCU_HASH_ITE
     return (TEMPLATE_GCU_HASH_ITERATOR) {
       .current = index,
       .exists = false,
+      .hash = 0,
       .value = DEFAULT_TYPE(0),
       .hashTable = iterator.hashTable,
     };
@@ -300,6 +303,7 @@ TEMPLATE_GCU_HASH_ITERATOR TEMPLATE_GCU_HASH_ITERATOR_NEXT(TEMPLATE_GCU_HASH_ITE
   return (TEMPLATE_GCU_HASH_ITERATOR) {
     .current = index,
     .exists = true,
+    .hash = cursor->hash,
     .value = cursor->data,
     .hashTable = iterator.hashTable,
   };

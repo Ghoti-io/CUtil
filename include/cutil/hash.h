@@ -7,6 +7,7 @@
 #define GHOTIIO_CUTIL_HASH_H
 
 #include <stddef.h>
+#include <stdint.h>
 #include "cutil/type.h"
 #include "cutil/mutex.h"
 
@@ -197,6 +198,7 @@ typedef struct {
   size_t current;         ///< The current index into the hashTable data
                           ///<   structure corresponding to the iterator.
   bool exists;            ///< Whether or not the iterator points to valid data.
+  size_t hash;            ///< The hash pointed to by the iterator.
   GCU_Type64_Union value; ///< The data pointed to by the iterator.
   GCU_Hash64 * hashTable; ///< The hash table that the iterator traverses.
 } GCU_Hash64_Iterator;
@@ -380,6 +382,7 @@ typedef struct {
   size_t current;         ///< The current index into the hashTable data
                           ///<   structure corresponding to the iterator.
   bool exists;            ///< Whether or not the iterator points to valid data.
+  size_t hash;            ///< The hash pointed to by the iterator.
   GCU_Type32_Union value; ///< The data pointed to by the iterator.
   GCU_Hash32 * hashTable; ///< The hash table that the iterator traverses.
 } GCU_Hash32_Iterator;
@@ -563,6 +566,7 @@ typedef struct {
   size_t current;         ///< The current index into the hashTable data
                           ///<   structure corresponding to the iterator.
   bool exists;            ///< Whether or not the iterator points to valid data.
+  size_t hash;            ///< The hash pointed to by the iterator.
   GCU_Type16_Union value; ///< The data pointed to by the iterator.
   GCU_Hash16 * hashTable; ///< The hash table that the iterator traverses.
 } GCU_Hash16_Iterator;
@@ -745,6 +749,7 @@ typedef struct {
   size_t current;        ///< The current index into the hashTable data
                          ///<   structure corresponding to the iterator.
   bool exists;           ///< Whether or not the iterator points to valid data.
+  size_t hash;           ///< The hash pointed to by the iterator.
   GCU_Type8_Union value; ///< The data pointed to by the iterator.
   GCU_Hash8 * hashTable; ///< The hash table that the iterator traverses.
 } GCU_Hash8_Iterator;
