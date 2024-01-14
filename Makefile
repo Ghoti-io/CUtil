@@ -21,6 +21,7 @@ INCLUDE := -I include/
 LIBOBJECTS := $(OBJ_DIR)/debug.o \
 							$(OBJ_DIR)/hash.o \
 							$(OBJ_DIR)/memory.o \
+							$(OBJ_DIR)/semaphore.o \
 							$(OBJ_DIR)/string.o \
 							$(OBJ_DIR)/thread.o \
 							$(OBJ_DIR)/type.o \
@@ -41,6 +42,9 @@ DEP_LIBVER = \
   include/$(PROJECT)/libver.h
 DEP_MUTEX = \
 	include/$(PROJECT)/mutex.h
+DEP_SEMAPHORE = \
+	$(DEP_LIBVER) \
+	include/$(PROJECT)/semaphore.h
 DEP_DEBUG = \
 	$(DEP_LIBVER) \
 	include/$(PROJECT)/debug.h
@@ -106,6 +110,10 @@ $(OBJ_DIR)/hash.o: \
 $(OBJ_DIR)/memory.o: \
 				src/memory.c \
 				$(DEP_MEMORY)
+
+$(OBJ_DIR)/semaphore.o: \
+				src/semaphore.c \
+				$(DEP_SEMAPHORE)
 
 $(OBJ_DIR)/string.o: \
 				src/string.c \
