@@ -22,6 +22,7 @@ extern "C" {
 #define gcu_vector64_destroy GHOTIIO_CUTIL(gcu_vector64_destroy)
 #define gcu_vector64_append GHOTIIO_CUTIL(gcu_vector64_remove)
 #define gcu_vector64_count GHOTIIO_CUTIL(gcu_vector64_count)
+#define gcu_vector64_reserve GHOTIIO_CUTIL(gcu_vector64_reserve)
 
 #define GCU_Vector32_Cleanup GHOTIIO_CUTIL(GCU_Vector32_Cleanup)
 #define GCU_Vector32_Value GHOTIIO_CUTIL(GCU_Vector32_Value)
@@ -30,6 +31,7 @@ extern "C" {
 #define gcu_vector32_destroy GHOTIIO_CUTIL(gcu_vector32_destroy)
 #define gcu_vector32_append GHOTIIO_CUTIL(gcu_vector32_remove)
 #define gcu_vector32_count GHOTIIO_CUTIL(gcu_vector32_count)
+#define gcu_vector32_reserve GHOTIIO_CUTIL(gcu_vector32_reserve)
 
 #define GCU_Vector16_Cleanup GHOTIIO_CUTIL(GCU_Vector16_Cleanup)
 #define GCU_Vector16_Value GHOTIIO_CUTIL(GCU_Vector16_Value)
@@ -38,6 +40,7 @@ extern "C" {
 #define gcu_vector16_destroy GHOTIIO_CUTIL(gcu_vector16_destroy)
 #define gcu_vector16_append GHOTIIO_CUTIL(gcu_vector16_remove)
 #define gcu_vector16_count GHOTIIO_CUTIL(gcu_vector16_count)
+#define gcu_vector16_reserve GHOTIIO_CUTIL(gcu_vector16_reserve)
 
 #define GCU_Vector8_Cleanup GHOTIIO_CUTIL(GCU_Vector8_Cleanup)
 #define GCU_Vector8_Value GHOTIIO_CUTIL(GCU_Vector8_Value)
@@ -46,6 +49,7 @@ extern "C" {
 #define gcu_vector8_destroy GHOTIIO_CUTIL(gcu_vector8_destroy)
 #define gcu_vector8_append GHOTIIO_CUTIL(gcu_vector8_remove)
 #define gcu_vector8_count GHOTIIO_CUTIL(gcu_vector8_count)
+#define gcu_vector8_reserve GHOTIIO_CUTIL(gcu_vector8_reserve)
 /// @endcond
 
 typedef struct GCU_Vector64 GCU_Vector64;
@@ -168,6 +172,19 @@ bool gcu_vector64_append(GCU_Vector64 * vector, GCU_Type64_Union value);
 size_t gcu_vector64_count(GCU_Vector64 * vector);
 
 /**
+ * Reserve space in the vector.
+ *
+ * If the vector is larger than the requested amount, then nothing will be
+ * done.  If the vector is smaller than the requested amount, then the vector
+ * capacity will be increased to the requested amount (if possible).
+ *
+ * @param vector The vector structure on which to operate.
+ * @param count The number of items to reserve.
+ * @return `true` on success, `false` otherwise.
+ */
+bool gcu_vector64_reserve(GCU_Vector64 * vector, size_t count);
+
+/**
  * Container holding the information of the 32-bit vector.
  *
  * For proper memory management, the programmer is responsible for 4 things:
@@ -236,6 +253,19 @@ bool gcu_vector32_append(GCU_Vector32 * vector, GCU_Type32_Union value);
  * @return The count of entries in the vector.
  */
 size_t gcu_vector32_count(GCU_Vector32 * vector);
+
+/**
+ * Reserve space in the vector.
+ *
+ * If the vector is larger than the requested amount, then nothing will be
+ * done.  If the vector is smaller than the requested amount, then the vector
+ * capacity will be increased to the requested amount (if possible).
+ *
+ * @param vector The vector structure on which to operate.
+ * @param count The number of items to reserve.
+ * @return `true` on success, `false` otherwise.
+ */
+bool gcu_vector32_reserve(GCU_Vector32 * vector, size_t count);
 
 /**
  * Container holding the information of the 16-bit vector.
@@ -308,6 +338,19 @@ bool gcu_vector16_append(GCU_Vector16 * vector, GCU_Type16_Union value);
 size_t gcu_vector16_count(GCU_Vector16 * vector);
 
 /**
+ * Reserve space in the vector.
+ *
+ * If the vector is larger than the requested amount, then nothing will be
+ * done.  If the vector is smaller than the requested amount, then the vector
+ * capacity will be increased to the requested amount (if possible).
+ *
+ * @param vector The vector structure on which to operate.
+ * @param count The number of items to reserve.
+ * @return `true` on success, `false` otherwise.
+ */
+bool gcu_vector16_reserve(GCU_Vector16 * vector, size_t count);
+
+/**
  * Container holding the information of the 8-bit vector.
  *
  * For proper memory management, the programmer is responsible for 4 things:
@@ -376,6 +419,19 @@ bool gcu_vector8_append(GCU_Vector8 * vector, GCU_Type8_Union value);
  * @return The count of entries in the vector.
  */
 size_t gcu_vector8_count(GCU_Vector8 * vector);
+
+/**
+ * Reserve space in the vector.
+ *
+ * If the vector is larger than the requested amount, then nothing will be
+ * done.  If the vector is smaller than the requested amount, then the vector
+ * capacity will be increased to the requested amount (if possible).
+ *
+ * @param vector The vector structure on which to operate.
+ * @param count The number of items to reserve.
+ * @return `true` on success, `false` otherwise.
+ */
+bool gcu_vector8_reserve(GCU_Vector8 * vector, size_t count);
 
 #ifdef __cplusplus
 }
