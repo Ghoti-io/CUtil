@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 #include "cutil/hash.h"
 #include "cutil/memory.h"
 

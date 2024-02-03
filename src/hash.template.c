@@ -6,6 +6,7 @@
 #define TEMPLATE_GCU_TYPE_UNION    GHOTIIO_CUTIL_CONCAT3(GCU_Type, BITDEPTH, _Union)
 #define TEMPLATE_GCU_HASH_CREATE   GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _create)
 #define TEMPLATE_GCU_HASH_DESTROY  GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _destroy)
+#define TEMPLATE_GCU_HASH_CLONE    GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _clone)
 #define TEMPLATE_GCU_HASH_SET      GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _set)
 #define TEMPLATE_GCU_HASH_GET      GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _get)
 #define TEMPLATE_GCU_HASH_CONTAINS GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _contains)
@@ -65,6 +66,40 @@ void TEMPLATE_GCU_HASH_DESTROY(TEMPLATE_GCU_HASH * hashTable) {
     GCU_MUTEX_DESTROY(hashTable->mutex);
     gcu_free(hashTable);
   }
+}
+
+TEMPLATE_GCU_HASH * TEMPLATE_GCU_HASH_CLONE(TEMPLATE_GCU_HASH * source) {
+  // Verify that the pointer actually points to something.
+  if (!source) {
+    return 0;
+  }
+
+  // Create a new hash table and copy all of the source information.
+  TEMPLATE_GCU_HASH * newTable = gcu_malloc(sizeof(TEMPLATE_GCU_HASH));
+  if (!newTable) {
+    return 0;
+  }
+  memcpy(newTable, source, sizeof(TEMPLATE_GCU_HASH));
+
+  // Copy the data from the source.
+  newTable->data = gcu_malloc(source->capacity * sizeof(TEMPLATE_GCU_HASH_CELL));
+  if (!newTable->data) {
+    gcu_free(newTable);
+    return 0;
+  }
+  memcpy(newTable->data, source->data, source->capacity * sizeof(TEMPLATE_GCU_HASH_CELL));
+
+  // Allocate the mutex.
+  bool failure = GCU_MUTEX_CREATE(newTable->mutex);
+
+  // If the allocation failed, clean up and return null.
+  if (failure) {
+    gcu_free(newTable->data);
+    gcu_free(newTable);
+    return 0;
+  }
+
+  return newTable;
 }
 
 static bool TEMPLATE_GROW_HASH(TEMPLATE_GCU_HASH * hashTable, size_t size) {

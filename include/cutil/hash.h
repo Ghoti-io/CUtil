@@ -24,6 +24,7 @@ extern "C" {
 
 #define gcu_hash64_create GHOTIIO_CUTIL(gcu_hash64_create)
 #define gcu_hash64_destroy GHOTIIO_CUTIL(gcu_hash64_destroy)
+#define gcu_hash64_clone GHOTIIO_CUTIL(gcu_hash64_clone)
 #define gcu_hash64_set GHOTIIO_CUTIL(gcu_hash64_set)
 #define gcu_hash64_get GHOTIIO_CUTIL(gcu_hash64_get)
 #define gcu_hash64_contains GHOTIIO_CUTIL(gcu_hash64_contains)
@@ -40,6 +41,7 @@ extern "C" {
 
 #define gcu_hash32_create GHOTIIO_CUTIL(gcu_hash32_create)
 #define gcu_hash32_destroy GHOTIIO_CUTIL(gcu_hash32_destroy)
+#define gcu_hash32_clone GHOTIIO_CUTIL(gcu_hash32_clone)
 #define gcu_hash32_set GHOTIIO_CUTIL(gcu_hash32_set)
 #define gcu_hash32_get GHOTIIO_CUTIL(gcu_hash32_get)
 #define gcu_hash32_contains GHOTIIO_CUTIL(gcu_hash32_contains)
@@ -56,6 +58,7 @@ extern "C" {
 
 #define gcu_hash16_create GHOTIIO_CUTIL(gcu_hash16_create)
 #define gcu_hash16_destroy GHOTIIO_CUTIL(gcu_hash16_destroy)
+#define gcu_hash16_clone GHOTIIO_CUTIL(gcu_hash16_clone)
 #define gcu_hash16_set GHOTIIO_CUTIL(gcu_hash16_set)
 #define gcu_hash16_get GHOTIIO_CUTIL(gcu_hash16_get)
 #define gcu_hash16_contains GHOTIIO_CUTIL(gcu_hash16_contains)
@@ -72,6 +75,7 @@ extern "C" {
 
 #define gcu_hash8_create GHOTIIO_CUTIL(gcu_hash8_create)
 #define gcu_hash8_destroy GHOTIIO_CUTIL(gcu_hash8_destroy)
+#define gcu_hash8_clone GHOTIIO_CUTIL(gcu_hash8_clone)
 #define gcu_hash8_set GHOTIIO_CUTIL(gcu_hash8_set)
 #define gcu_hash8_get GHOTIIO_CUTIL(gcu_hash8_get)
 #define gcu_hash8_contains GHOTIIO_CUTIL(gcu_hash8_contains)
@@ -230,6 +234,17 @@ GCU_Hash64 * gcu_hash64_create(size_t count);
  * @param hashTable The hash table structure to be destroyed.
  */
 void gcu_hash64_destroy(GCU_Hash64 * hashTable);
+
+/**
+ * Clone a hash table structure.
+ *
+ * This function will create a new hash table with the same contents as the
+ * source hash table.  The new hash table will have the same capacity as the
+ * source hash table, but will not share any memory with the source hash table.
+ * The new hash table will have a new mutex, and the `supplementary_data` and
+ * `cleanup` fields will be copied from the source hash table.
+ */
+GCU_Hash64 * gcu_hash64_clone(GCU_Hash64 * source);
 
 /**
  * Set a value in the hash table.
@@ -416,6 +431,17 @@ GCU_Hash32 * gcu_hash32_create(size_t count);
 void gcu_hash32_destroy(GCU_Hash32 * hashTable);
 
 /**
+ * Clone a hash table structure.
+ *
+ * This function will create a new hash table with the same contents as the
+ * source hash table.  The new hash table will have the same capacity as the
+ * source hash table, but will not share any memory with the source hash table.
+ * The new hash table will have a new mutex, and the `supplementary_data` and
+ * `cleanup` fields will be copied from the source hash table.
+ */
+GCU_Hash32 * gcu_hash32_clone(GCU_Hash32 * source);
+
+/**
  * Set a value in the hash table.
  *
  * Setting a value may trigger a resize of the hash table.  This can be avoided
@@ -600,6 +626,17 @@ GCU_Hash16 * gcu_hash16_create(size_t count);
 void gcu_hash16_destroy(GCU_Hash16 * hashTable);
 
 /**
+ * Clone a hash table structure.
+ *
+ * This function will create a new hash table with the same contents as the
+ * source hash table.  The new hash table will have the same capacity as the
+ * source hash table, but will not share any memory with the source hash table.
+ * The new hash table will have a new mutex, and the `supplementary_data` and
+ * `cleanup` fields will be copied from the source hash table.
+ */
+GCU_Hash16 * gcu_hash16_clone(GCU_Hash16 * source);
+
+/**
  * Set a value in the hash table.
  *
  * Setting a value may trigger a resize of the hash table.  This can be avoided
@@ -781,6 +818,17 @@ GCU_Hash8 * gcu_hash8_create(size_t count);
  * @param hashTable The hash table structure to be destroyed.
  */
 void gcu_hash8_destroy(GCU_Hash8 * hashTable);
+
+/**
+ * Clone a hash table structure.
+ *
+ * This function will create a new hash table with the same contents as the
+ * source hash table.  The new hash table will have the same capacity as the
+ * source hash table, but will not share any memory with the source hash table.
+ * The new hash table will have a new mutex, and the `supplementary_data` and
+ * `cleanup` fields will be copied from the source hash table.
+ */
+GCU_Hash8 * gcu_hash8_clone(GCU_Hash8 * source);
 
 /**
  * Set a value in the hash table.

@@ -103,6 +103,28 @@ TEST(Hash64, Remove) {
   gcu_hash64_destroy(t);
 }
 
+TEST(Hash64, Clone) {
+  auto t = gcu_hash64_create(6);
+  size_t hash = 1001;
+  gcu_hash64_set(t, hash, gcu_type64_ui32(42));
+  auto t2 = gcu_hash64_clone(t);
+  ASSERT_NE(t2, nullptr);
+  ASSERT_NE(t, t2);
+  ASSERT_EQ(t->capacity, t2->capacity);
+  ASSERT_EQ(t->entries, t2->entries);
+  ASSERT_EQ(t->removed, t2->removed);
+  ASSERT_EQ(t->supplementary_data, t2->supplementary_data);
+  ASSERT_EQ(t->cleanup, t2->cleanup);
+  ASSERT_NE(t->data, t2->data);
+  ASSERT_TRUE(gcu_hash64_contains(t2, hash));
+  ASSERT_EQ(gcu_hash64_get(t2, hash).value.ui32, 42);
+  gcu_hash64_remove(t2, hash);
+  ASSERT_FALSE(gcu_hash64_contains(t2, hash));
+  ASSERT_TRUE(gcu_hash64_contains(t, hash));
+  gcu_hash64_destroy(t);
+  gcu_hash64_destroy(t2);
+}
+
 TEST(Hash64, IteratorOnEmpty) {
   auto t = gcu_hash64_create(6);
 
@@ -285,6 +307,28 @@ TEST(Hash32, Remove) {
 
   // Cleanup.
   gcu_hash32_destroy(t);
+}
+
+TEST(Hash32, Clone) {
+  auto t = gcu_hash32_create(6);
+  size_t hash = 1001;
+  gcu_hash32_set(t, hash, gcu_type32_ui32(42));
+  auto t2 = gcu_hash32_clone(t);
+  ASSERT_NE(t2, nullptr);
+  ASSERT_NE(t, t2);
+  ASSERT_EQ(t->capacity, t2->capacity);
+  ASSERT_EQ(t->entries, t2->entries);
+  ASSERT_EQ(t->removed, t2->removed);
+  ASSERT_EQ(t->supplementary_data, t2->supplementary_data);
+  ASSERT_EQ(t->cleanup, t2->cleanup);
+  ASSERT_NE(t->data, t2->data);
+  ASSERT_TRUE(gcu_hash32_contains(t2, hash));
+  ASSERT_EQ(gcu_hash32_get(t2, hash).value.ui32, 42);
+  gcu_hash32_remove(t2, hash);
+  ASSERT_FALSE(gcu_hash32_contains(t2, hash));
+  ASSERT_TRUE(gcu_hash32_contains(t, hash));
+  gcu_hash32_destroy(t);
+  gcu_hash32_destroy(t2);
 }
 
 TEST(Hash32, IteratorOnEmpty) {
@@ -471,6 +515,28 @@ TEST(Hash16, Remove) {
   gcu_hash16_destroy(t);
 }
 
+TEST(Hash16, Clone) {
+  auto t = gcu_hash16_create(6);
+  size_t hash = 1001;
+  gcu_hash16_set(t, hash, gcu_type16_ui16(42));
+  auto t2 = gcu_hash16_clone(t);
+  ASSERT_NE(t2, nullptr);
+  ASSERT_NE(t, t2);
+  ASSERT_EQ(t->capacity, t2->capacity);
+  ASSERT_EQ(t->entries, t2->entries);
+  ASSERT_EQ(t->removed, t2->removed);
+  ASSERT_EQ(t->supplementary_data, t2->supplementary_data);
+  ASSERT_EQ(t->cleanup, t2->cleanup);
+  ASSERT_NE(t->data, t2->data);
+  ASSERT_TRUE(gcu_hash16_contains(t2, hash));
+  ASSERT_EQ(gcu_hash16_get(t2, hash).value.ui16, 42);
+  gcu_hash16_remove(t2, hash);
+  ASSERT_FALSE(gcu_hash16_contains(t2, hash));
+  ASSERT_TRUE(gcu_hash16_contains(t, hash));
+  gcu_hash16_destroy(t);
+  gcu_hash16_destroy(t2);
+}
+
 TEST(Hash16, IteratorOnEmpty) {
   auto t = gcu_hash16_create(6);
 
@@ -653,6 +719,28 @@ TEST(Hash8, Remove) {
 
   // Cleanup.
   gcu_hash8_destroy(t);
+}
+
+TEST(Hash8, Clone) {
+  auto t = gcu_hash8_create(6);
+  size_t hash = 1001;
+  gcu_hash8_set(t, hash, gcu_type8_ui8(42));
+  auto t2 = gcu_hash8_clone(t);
+  ASSERT_NE(t2, nullptr);
+  ASSERT_NE(t, t2);
+  ASSERT_EQ(t->capacity, t2->capacity);
+  ASSERT_EQ(t->entries, t2->entries);
+  ASSERT_EQ(t->removed, t2->removed);
+  ASSERT_EQ(t->supplementary_data, t2->supplementary_data);
+  ASSERT_EQ(t->cleanup, t2->cleanup);
+  ASSERT_NE(t->data, t2->data);
+  ASSERT_TRUE(gcu_hash8_contains(t2, hash));
+  ASSERT_EQ(gcu_hash8_get(t2, hash).value.ui8, 42);
+  gcu_hash8_remove(t2, hash);
+  ASSERT_FALSE(gcu_hash8_contains(t2, hash));
+  ASSERT_TRUE(gcu_hash8_contains(t, hash));
+  gcu_hash8_destroy(t);
+  gcu_hash8_destroy(t2);
 }
 
 TEST(Hash8, IteratorOnEmpty) {
