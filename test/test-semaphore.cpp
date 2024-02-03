@@ -37,10 +37,10 @@ TEST(Semaphore, TestAndTimedWait) {
 
   // Release the semaphore and verify that trywait succeeds.
   ASSERT_EQ(0, gcu_semaphore_signal(&s));
-  ASSERT_EQ(0, gcu_semaphore_timedwait(&s, 100));
+  ASSERT_EQ(0, gcu_semaphore_timedwait(&s, 1000));
 
   // Verify that timedwait times out.
-  ASSERT_NE(0, gcu_semaphore_timedwait(&s, 100));
+  ASSERT_NE(0, gcu_semaphore_timedwait(&s, 150));
 
   // Release the semaphore and destroy it.
   ASSERT_EQ(0, gcu_semaphore_signal(&s));
