@@ -269,8 +269,8 @@ clean: ## Remove all contents of the build directories.
 #   lib(SUITE)-(PROJECT)(BRANCH).so.(MAJOR) link to previous
 #   lib(SUITE)-(PROJECT)(BRANCH).so link to previous
 # /etc/ld.so.conf.d/(SUITE)-(PROJECT)(BRANCH).conf will point to /usr/local/lib/(SUITE)
-# /usr/local/include/(SUITE)/(PROJECT)(BRANCH)
-#   *.h copied from ./include/(PROJECT)
+# /usr/local/include/(SUITE)/(PROJECT)(BRANCH)/
+#   * copied from ./include/
 # /usr/local/share/pkgconfig
 #   (SUITE)-(PROJECT)(BRANCH).pc created
 
@@ -284,7 +284,7 @@ install: all
 	@echo "/usr/local/lib/$(SUITE)" > /etc/ld.so.conf.d/$(SUITE)-$(PROJECT)$(BRANCH).conf
 	# Installing the headers.
 	@mkdir -p /usr/local/include/$(SUITE)/$(PROJECT)$(BRANCH)
-	@cp include/$(PROJECT)/*.h /usr/local/include/$(SUITE)/$(PROJECT)$(BRANCH)
+	@cd include &&	find . -name "*.h" -exec cp --parents '{}' /usr/local/include/$(SUITE)/$(PROJECT)$(BRANCH)/ \;
 	# Installing the pkg-config files.
 	@mkdir -p /usr/local/share/pkgconfig
 	@cat pkgconfig/$(SUITE)-$(PROJECT).pc | sed 's/(SUITE)/$(SUITE)/g; s/(PROJECT)/$(PROJECT)/g; s/(BRANCH)/$(BRANCH)/g; s/(VERSION)/$(VERSION)/g' > /usr/local/share/pkgconfig/$(SUITE)-$(PROJECT)$(BRANCH).pc
