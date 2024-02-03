@@ -15,7 +15,7 @@ extern "C" {
 
 /// @cond HIDDEN_SYMBOLS
 #define gcu_string_hash_32 GHOTIIO_CUTIL(gcu_string_hash_32)
-#define gcu_string_hash_128 GHOTIIO_CUTIL(gcu_string_hash_128)
+#define gcu_string_hash_64 GHOTIIO_CUTIL(gcu_string_hash_64)
 #define gcu_string_murmur3_32 GHOTIIO_CUTIL(gcu_string_murmur3_32)
 #define gcu_string_murmur3_x86_128 GHOTIIO_CUTIL(gcu_string_murmur3_x86_128)
 #define gcu_string_murmur3_x64_128 GHOTIIO_CUTIL(gcu_string_murmur3_x64_128)
