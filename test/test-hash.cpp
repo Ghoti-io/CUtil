@@ -210,6 +210,19 @@ TEST(Hash64, Cleanup) {
   ASSERT_EQ(count, 3);
 }
 
+TEST(Hash64, InPlaceCleanup) {
+  GCU_Hash64 t;
+  ASSERT_TRUE(gcu_hash64_create_in_place(&t, 6));
+  size_t count = 0;
+  t.supplementary_data = (void *)&count;
+  t.cleanup = addOne64;
+  gcu_hash64_set(&t, 0, gcu_type64_b(true));
+  gcu_hash64_set(&t, 1, gcu_type64_b(true));
+  gcu_hash64_set(&t, 2, gcu_type64_b(true));
+  gcu_hash64_destroy_in_place(&t);
+  ASSERT_EQ(count, 3);
+}
+
 TEST(Hash32, CreateEmpty) {
   auto t = gcu_hash32_create(0);
   ASSERT_EQ(gcu_hash32_count(t), 0);
@@ -413,6 +426,19 @@ TEST(Hash32, Cleanup) {
   gcu_hash32_set(t, 1, gcu_type32_b(true));
   gcu_hash32_set(t, 2, gcu_type32_b(true));
   gcu_hash32_destroy(t);
+  ASSERT_EQ(count, 3);
+}
+
+TEST(Hash32, InPlaceCleanup) {
+  GCU_Hash32 t;
+  ASSERT_TRUE(gcu_hash32_create_in_place(&t, 6));
+  size_t count = 0;
+  t.supplementary_data = (void *)&count;
+  t.cleanup = addOne32;
+  gcu_hash32_set(&t, 0, gcu_type32_b(true));
+  gcu_hash32_set(&t, 1, gcu_type32_b(true));
+  gcu_hash32_set(&t, 2, gcu_type32_b(true));
+  gcu_hash32_destroy_in_place(&t);
   ASSERT_EQ(count, 3);
 }
 
@@ -622,6 +648,19 @@ TEST(Hash16, Cleanup) {
   ASSERT_EQ(count, 3);
 }
 
+TEST(Hash16, InPlaceCleanup) {
+  GCU_Hash16 t;
+  ASSERT_TRUE(gcu_hash16_create_in_place(&t, 6));
+  size_t count = 0;
+  t.supplementary_data = (void *)&count;
+  t.cleanup = addOne16;
+  gcu_hash16_set(&t, 0, gcu_type16_b(true));
+  gcu_hash16_set(&t, 1, gcu_type16_b(true));
+  gcu_hash16_set(&t, 2, gcu_type16_b(true));
+  gcu_hash16_destroy_in_place(&t);
+  ASSERT_EQ(count, 3);
+}
+
 TEST(Hash8, CreateEmpty) {
   auto t = gcu_hash8_create(0);
   ASSERT_EQ(gcu_hash8_count(t), 0);
@@ -825,6 +864,19 @@ TEST(Hash8, Cleanup) {
   gcu_hash8_set(t, 1, gcu_type8_b(true));
   gcu_hash8_set(t, 2, gcu_type8_b(true));
   gcu_hash8_destroy(t);
+  ASSERT_EQ(count, 3);
+}
+
+TEST(Hash8, InPlaceCleanup) {
+  GCU_Hash8 t;
+  ASSERT_TRUE(gcu_hash8_create_in_place(&t, 6));
+  size_t count = 0;
+  t.supplementary_data = (void *)&count;
+  t.cleanup = addOne8;
+  gcu_hash8_set(&t, 0, gcu_type8_b(true));
+  gcu_hash8_set(&t, 1, gcu_type8_b(true));
+  gcu_hash8_set(&t, 2, gcu_type8_b(true));
+  gcu_hash8_destroy_in_place(&t);
   ASSERT_EQ(count, 3);
 }
 

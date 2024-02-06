@@ -5,7 +5,9 @@
 #define TEMPLATE_GCU_HASH_VALUE    GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Value)
 #define TEMPLATE_GCU_TYPE_UNION    GHOTIIO_CUTIL_CONCAT3(GCU_Type, BITDEPTH, _Union)
 #define TEMPLATE_GCU_HASH_CREATE   GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _create)
+#define TEMPLATE_GCU_HASH_CREATE_IN_PLACE GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _create_in_place)
 #define TEMPLATE_GCU_HASH_DESTROY  GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _destroy)
+#define TEMPLATE_GCU_HASH_DESTROY_IN_PLACE GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _destroy_in_place)
 #define TEMPLATE_GCU_HASH_CLONE    GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _clone)
 #define TEMPLATE_GCU_HASH_SET      GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _set)
 #define TEMPLATE_GCU_HASH_GET      GHOTIIO_CUTIL_CONCAT3(gcu_hash, BITDEPTH, _get)
@@ -23,6 +25,23 @@ TEMPLATE_GCU_HASH * TEMPLATE_GCU_HASH_CREATE(size_t count) {
   if (!hashTable) {
     return 0;
   }
+
+  if (!TEMPLATE_GCU_HASH_CREATE_IN_PLACE(hashTable, count)) {
+    gcu_free(hashTable);
+    return 0;
+  }
+
+  return hashTable;
+}
+
+bool TEMPLATE_GCU_HASH_CREATE_IN_PLACE(TEMPLATE_GCU_HASH * hashTable, size_t count) {
+  *hashTable = (TEMPLATE_GCU_HASH) {
+    .entries = 0,
+    .removed = 0,
+    .capacity = 0,
+    .data = 0,
+    .cleanup = 0,
+  };
 
   // Reserve room for the data, if requested..
   if (count) {
@@ -42,14 +61,21 @@ TEMPLATE_GCU_HASH * TEMPLATE_GCU_HASH_CREATE(size_t count) {
     if (hashTable->data) {
       gcu_free(hashTable->data);
     }
-    gcu_free(hashTable);
-    return 0;
+    return false;
   }
 
-  return hashTable;
+  return true;
 }
 
 void TEMPLATE_GCU_HASH_DESTROY(TEMPLATE_GCU_HASH * hashTable) {
+  // Verify that the pointer actually points to something.
+  if (hashTable) {
+    TEMPLATE_GCU_HASH_DESTROY_IN_PLACE(hashTable);
+    gcu_free(hashTable);
+  }
+}
+
+void TEMPLATE_GCU_HASH_DESTROY_IN_PLACE(TEMPLATE_GCU_HASH * hashTable) {
   // Verify that the pointer actually points to something.
   if (hashTable) {
     // Call the `cleanup` function, if it exists.
@@ -64,7 +90,6 @@ void TEMPLATE_GCU_HASH_DESTROY(TEMPLATE_GCU_HASH * hashTable) {
     }
 
     GCU_MUTEX_DESTROY(hashTable->mutex);
-    gcu_free(hashTable);
   }
 }
 

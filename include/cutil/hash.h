@@ -23,7 +23,9 @@ extern "C" {
 #define GCU_Hash64_Iterator GHOTIIO_CUTIL(GCU_Hash64_Iterator)
 
 #define gcu_hash64_create GHOTIIO_CUTIL(gcu_hash64_create)
+#define gcu_hash64_create_in_place GHOTIIO_CUTIL(gcu_hash64_create_in_place)
 #define gcu_hash64_destroy GHOTIIO_CUTIL(gcu_hash64_destroy)
+#define gcu_hash64_destroy_in_place GHOTIIO_CUTIL(gcu_hash64_destroy_in_place)
 #define gcu_hash64_clone GHOTIIO_CUTIL(gcu_hash64_clone)
 #define gcu_hash64_set GHOTIIO_CUTIL(gcu_hash64_set)
 #define gcu_hash64_get GHOTIIO_CUTIL(gcu_hash64_get)
@@ -40,7 +42,9 @@ extern "C" {
 #define GCU_Hash32_Iterator GHOTIIO_CUTIL(GCU_Hash32_Iterator)
 
 #define gcu_hash32_create GHOTIIO_CUTIL(gcu_hash32_create)
+#define gcu_hash32_create_in_place GHOTIIO_CUTIL(gcu_hash32_create_in_place)
 #define gcu_hash32_destroy GHOTIIO_CUTIL(gcu_hash32_destroy)
+#define gcu_hash32_destroy_in_place GHOTIIO_CUTIL(gcu_hash32_destroy_in_place)
 #define gcu_hash32_clone GHOTIIO_CUTIL(gcu_hash32_clone)
 #define gcu_hash32_set GHOTIIO_CUTIL(gcu_hash32_set)
 #define gcu_hash32_get GHOTIIO_CUTIL(gcu_hash32_get)
@@ -57,7 +61,9 @@ extern "C" {
 #define GCU_Hash16_Iterator GHOTIIO_CUTIL(GCU_Hash16_Iterator)
 
 #define gcu_hash16_create GHOTIIO_CUTIL(gcu_hash16_create)
+#define gcu_hash16_create_in_place GHOTIIO_CUTIL(gcu_hash16_create_in_place)
 #define gcu_hash16_destroy GHOTIIO_CUTIL(gcu_hash16_destroy)
+#define gcu_hash16_destroy_in_place GHOTIIO_CUTIL(gcu_hash16_destroy_in_place)
 #define gcu_hash16_clone GHOTIIO_CUTIL(gcu_hash16_clone)
 #define gcu_hash16_set GHOTIIO_CUTIL(gcu_hash16_set)
 #define gcu_hash16_get GHOTIIO_CUTIL(gcu_hash16_get)
@@ -74,7 +80,9 @@ extern "C" {
 #define GCU_Hash8_Iterator GHOTIIO_CUTIL(GCU_Hash8_Iterator)
 
 #define gcu_hash8_create GHOTIIO_CUTIL(gcu_hash8_create)
+#define gcu_hash8_create_in_place GHOTIIO_CUTIL(gcu_hash8_create_in_place)
 #define gcu_hash8_destroy GHOTIIO_CUTIL(gcu_hash8_destroy)
+#define gcu_hash8_destroy_in_place GHOTIIO_CUTIL(gcu_hash8_destroy_in_place)
 #define gcu_hash8_clone GHOTIIO_CUTIL(gcu_hash8_clone)
 #define gcu_hash8_set GHOTIIO_CUTIL(gcu_hash8_set)
 #define gcu_hash8_get GHOTIIO_CUTIL(gcu_hash8_get)
@@ -225,6 +233,16 @@ typedef struct {
 GCU_Hash64 * gcu_hash64_create(size_t count);
 
 /**
+ * Create a hash table structure for 64-bit entries in a pre-allocated memory
+ * space.
+ *
+ * @param hash The hash table structure to be initialized.
+ * @param count The number of items anticipated to be stored in the hash table.
+ * @return `true` on success, `false` on failure.
+ */
+bool gcu_hash64_create_in_place(GCU_Hash64 * hash, size_t count);
+
+/**
  * Destroy a hash table structure and clean up memory allocations.
  *
  * This function will not address any memory allocations of the elements
@@ -234,6 +252,13 @@ GCU_Hash64 * gcu_hash64_create(size_t count);
  * @param hashTable The hash table structure to be destroyed.
  */
 void gcu_hash64_destroy(GCU_Hash64 * hashTable);
+
+/**
+ * Destroy a hash table (except for the structure memory allocation).
+ *
+ * @param hashTable The hash table structure to be destroyed.
+ */
+void gcu_hash64_destroy_in_place(GCU_Hash64 * hashTable);
 
 /**
  * Clone a hash table structure.
@@ -420,6 +445,16 @@ typedef struct {
 GCU_Hash32 * gcu_hash32_create(size_t count);
 
 /**
+ * Create a hash table structure for 32-bit entries in a pre-allocated memory
+ * space.
+ *
+ * @param hash The hash table structure to be initialized.
+ * @param count The number of items anticipated to be stored in the hash table.
+ * @return `true` on success, `false` on failure.
+ */
+bool gcu_hash32_create_in_place(GCU_Hash32 * hash, size_t count);
+
+/**
  * Destroy a hash table structure and clean up memory allocations.
  *
  * This function will not address any memory allocations of the elements
@@ -429,6 +464,13 @@ GCU_Hash32 * gcu_hash32_create(size_t count);
  * @param hashTable The hash table structure to be destroyed.
  */
 void gcu_hash32_destroy(GCU_Hash32 * hashTable);
+
+/**
+ * Destroy a hash table (except for the structure memory allocation).
+ *
+ * @param hashTable The hash table structure to be destroyed.
+ */
+void gcu_hash32_destroy_in_place(GCU_Hash32 * hashTable);
 
 /**
  * Clone a hash table structure.
@@ -615,6 +657,15 @@ typedef struct {
 GCU_Hash16 * gcu_hash16_create(size_t count);
 
 /**
+ * Create a hash table structure in a pre-allocated memory space.
+ *
+ * @param hash The hash table structure to be initialized.
+ * @param count The number of items anticipated to be stored in the hash table.
+ * @return `true` on success, `false` on failure.
+ */
+bool gcu_hash16_create_in_place(GCU_Hash16 * hash, size_t count);
+
+/**
  * Destroy a hash table structure and clean up memory allocations.
  *
  * This function will not address any memory allocations of the elements
@@ -624,6 +675,13 @@ GCU_Hash16 * gcu_hash16_create(size_t count);
  * @param hashTable The hash table structure to be destroyed.
  */
 void gcu_hash16_destroy(GCU_Hash16 * hashTable);
+
+/**
+ * Destroy a hash table (except for the structure memory allocation).
+ *
+ * @param hashTable The hash table structure to be destroyed.
+ */
+void gcu_hash16_destroy_in_place(GCU_Hash16 * hashTable);
 
 /**
  * Clone a hash table structure.
@@ -809,6 +867,15 @@ typedef struct {
 GCU_Hash8 * gcu_hash8_create(size_t count);
 
 /**
+ * Create a hash table structure in a pre-allocated memory space.
+ *
+ * @param hash The hash table structure to be initialized.
+ * @param count The number of items anticipated to be stored in the hash table.
+ * @return `true` on success, `false` on failure.
+ */
+bool gcu_hash8_create_in_place(GCU_Hash8 * hash, size_t count);
+
+/**
  * Destroy a hash table structure and clean up memory allocations.
  *
  * This function will not address any memory allocations of the elements
@@ -818,6 +885,13 @@ GCU_Hash8 * gcu_hash8_create(size_t count);
  * @param hashTable The hash table structure to be destroyed.
  */
 void gcu_hash8_destroy(GCU_Hash8 * hashTable);
+
+/**
+ * Destroy a hash table (except for the structure memory allocation).
+ *
+ * @param hashTable The hash table structure to be destroyed.
+ */
+void gcu_hash8_destroy_in_place(GCU_Hash8 * hashTable);
 
 /**
  * Clone a hash table structure.
