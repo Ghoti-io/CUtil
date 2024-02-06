@@ -1,7 +1,9 @@
 #define TEMPLATE_GCU_VECTOR         GHOTIIO_CUTIL_CONCAT2(GCU_Vector, BITDEPTH)
 #define TEMPLATE_GCU_TYPE_UNION     GHOTIIO_CUTIL_CONCAT3(GCU_Type, BITDEPTH, _Union)
 #define TEMPLATE_GCU_VECTOR_CREATE  GHOTIIO_CUTIL_CONCAT3(gcu_vector, BITDEPTH, _create)
+#define TEMPLATE_GCU_VECTOR_CREATE_IN_PLACE GHOTIIO_CUTIL_CONCAT3(gcu_vector, BITDEPTH, _create_in_place)
 #define TEMPLATE_GCU_VECTOR_DESTROY GHOTIIO_CUTIL_CONCAT3(gcu_vector, BITDEPTH, _destroy)
+#define TEMPLATE_GCU_VECTOR_DESTROY_IN_PLACE GHOTIIO_CUTIL_CONCAT3(gcu_vector, BITDEPTH, _destroy_in_place)
 #define TEMPLATE_GCU_VECTOR_APPEND  GHOTIIO_CUTIL_CONCAT3(gcu_vector, BITDEPTH, _append)
 #define TEMPLATE_GCU_VECTOR_COUNT   GHOTIIO_CUTIL_CONCAT3(gcu_vector, BITDEPTH, _count)
 #define TEMPLATE_GCU_VECTOR_RESERVE GHOTIIO_CUTIL_CONCAT3(gcu_vector, BITDEPTH, _reserve)
@@ -14,6 +16,22 @@ TEMPLATE_GCU_VECTOR * TEMPLATE_GCU_VECTOR_CREATE(size_t count) {
   if (!vector) {
     return 0;
   }
+
+  if (!TEMPLATE_GCU_VECTOR_CREATE_IN_PLACE(vector, count)) {
+    gcu_free(vector);
+    return 0;
+  }
+
+  return vector;
+}
+
+bool TEMPLATE_GCU_VECTOR_CREATE_IN_PLACE(TEMPLATE_GCU_VECTOR * vector, size_t count) {
+  *vector = (TEMPLATE_GCU_VECTOR) {
+    .count = 0,
+    .capacity = 0,
+    .data = 0,
+    .cleanup = 0,
+  };
 
   // Reserve room for the data, if requested..
   if (count) {
@@ -31,14 +49,20 @@ TEMPLATE_GCU_VECTOR * TEMPLATE_GCU_VECTOR_CREATE(size_t count) {
     if (vector->data) {
       gcu_free(vector->data);
     }
-    gcu_free(vector);
-    return 0;
+    return false;
   }
 
-  return vector;
+  return true;
 }
 
 void TEMPLATE_GCU_VECTOR_DESTROY(TEMPLATE_GCU_VECTOR * vector) {
+  if (vector) {
+    TEMPLATE_GCU_VECTOR_DESTROY_IN_PLACE(vector);
+    gcu_free(vector);
+  }
+}
+
+void TEMPLATE_GCU_VECTOR_DESTROY_IN_PLACE(TEMPLATE_GCU_VECTOR * vector) {
   // Verify that the pointer actually points to something.
   if (vector) {
     // Call the `cleanup` function, if it exists.
@@ -53,7 +77,6 @@ void TEMPLATE_GCU_VECTOR_DESTROY(TEMPLATE_GCU_VECTOR * vector) {
     }
 
     GCU_MUTEX_DESTROY(vector->mutex);
-    gcu_free(vector);
   }
 }
 

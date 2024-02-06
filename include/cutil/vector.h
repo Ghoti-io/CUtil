@@ -19,7 +19,9 @@ extern "C" {
 #define GCU_Vector64_Value GHOTIIO_CUTIL(GCU_Vector64_Value)
 #define GCU_Vector64 GHOTIIO_CUTIL(GCU_Vector64)
 #define gcu_vector64_create GHOTIIO_CUTIL(gcu_vector64_create)
+#define gcu_vector64_create_in_place GHOTIIO_CUTIL(gcu_vector64_create_in_place)
 #define gcu_vector64_destroy GHOTIIO_CUTIL(gcu_vector64_destroy)
+#define gcu_vector64_destroy_in_place GHOTIIO_CUTIL(gcu_vector64_destroy_in_place)
 #define gcu_vector64_append GHOTIIO_CUTIL(gcu_vector64_remove)
 #define gcu_vector64_count GHOTIIO_CUTIL(gcu_vector64_count)
 #define gcu_vector64_reserve GHOTIIO_CUTIL(gcu_vector64_reserve)
@@ -28,7 +30,9 @@ extern "C" {
 #define GCU_Vector32_Value GHOTIIO_CUTIL(GCU_Vector32_Value)
 #define GCU_Vector32 GHOTIIO_CUTIL(GCU_Vector32)
 #define gcu_vector32_create GHOTIIO_CUTIL(gcu_vector32_create)
+#define gcu_vector32_create_in_place GHOTIIO_CUTIL(gcu_vector32_create_in_place)
 #define gcu_vector32_destroy GHOTIIO_CUTIL(gcu_vector32_destroy)
+#define gcu_vector32_destroy_in_place GHOTIIO_CUTIL(gcu_vector32_destroy_in_place)
 #define gcu_vector32_append GHOTIIO_CUTIL(gcu_vector32_remove)
 #define gcu_vector32_count GHOTIIO_CUTIL(gcu_vector32_count)
 #define gcu_vector32_reserve GHOTIIO_CUTIL(gcu_vector32_reserve)
@@ -37,7 +41,9 @@ extern "C" {
 #define GCU_Vector16_Value GHOTIIO_CUTIL(GCU_Vector16_Value)
 #define GCU_Vector16 GHOTIIO_CUTIL(GCU_Vector16)
 #define gcu_vector16_create GHOTIIO_CUTIL(gcu_vector16_create)
+#define gcu_vector16_create_in_place GHOTIIO_CUTIL(gcu_vector16_create_in_place)
 #define gcu_vector16_destroy GHOTIIO_CUTIL(gcu_vector16_destroy)
+#define gcu_vector16_destroy_in_place GHOTIIO_CUTIL(gcu_vector16_destroy_in_place)
 #define gcu_vector16_append GHOTIIO_CUTIL(gcu_vector16_remove)
 #define gcu_vector16_count GHOTIIO_CUTIL(gcu_vector16_count)
 #define gcu_vector16_reserve GHOTIIO_CUTIL(gcu_vector16_reserve)
@@ -46,7 +52,9 @@ extern "C" {
 #define GCU_Vector8_Value GHOTIIO_CUTIL(GCU_Vector8_Value)
 #define GCU_Vector8 GHOTIIO_CUTIL(GCU_Vector8)
 #define gcu_vector8_create GHOTIIO_CUTIL(gcu_vector8_create)
+#define gcu_vector8_create_in_place GHOTIIO_CUTIL(gcu_vector8_create_in_place)
 #define gcu_vector8_destroy GHOTIIO_CUTIL(gcu_vector8_destroy)
+#define gcu_vector8_destroy_in_place GHOTIIO_CUTIL(gcu_vector8_destroy_in_place)
 #define gcu_vector8_append GHOTIIO_CUTIL(gcu_vector8_remove)
 #define gcu_vector8_count GHOTIIO_CUTIL(gcu_vector8_count)
 #define gcu_vector8_reserve GHOTIIO_CUTIL(gcu_vector8_reserve)
@@ -140,6 +148,18 @@ typedef struct GCU_Vector64 {
 GCU_Vector64 * gcu_vector64_create(size_t count);
 
 /**
+ * Create a vector structure in place.
+ *
+ * This function uses the provided memory to create the vector.  The memory
+ * must be large enough to hold the vector structure.
+ *
+ * @param vector The memory to use for the vector.
+ * @param count The number of items anticipated to be stored in the vector.
+ * @return `true` on success, `false` otherwise.
+ */
+bool gcu_vector64_create_in_place(GCU_Vector64 * vector, size_t count);
+
+/**
  * Destroy a vector structure and clean up memory allocations.
  *
  * This function will not address any memory allocations of the elements
@@ -149,6 +169,15 @@ GCU_Vector64 * gcu_vector64_create(size_t count);
  * @param vector The vector structure to be destroyed.
  */
 void gcu_vector64_destroy(GCU_Vector64 * vector);
+
+/**
+ * Destroy a vector structure (except for the memory allocation).
+ *
+ * This function will not address the memory allocation of the vector struct.
+ *
+ * @param vector The vector structure to be destroyed.
+ */
+void gcu_vector64_destroy_in_place(GCU_Vector64 * vector);
 
 /**
  * Append an item at the end of the vector.
@@ -223,6 +252,18 @@ typedef struct GCU_Vector32 {
 GCU_Vector32 * gcu_vector32_create(size_t count);
 
 /**
+ * Create a vector structure in place.
+ *
+ * This function uses the provided memory to create the vector.  The memory
+ * must be large enough to hold the vector structure.
+ *
+ * @param vector The memory to use for the vector.
+ * @param count The number of items anticipated to be stored in the vector.
+ * @return `true` on success, `false` otherwise.
+ */
+bool gcu_vector32_create_in_place(GCU_Vector32 * vector, size_t count);
+
+/**
  * Destroy a vector structure and clean up memory allocations.
  *
  * This function will not address any memory allocations of the elements
@@ -232,6 +273,15 @@ GCU_Vector32 * gcu_vector32_create(size_t count);
  * @param vector The vector structure to be destroyed.
  */
 void gcu_vector32_destroy(GCU_Vector32 * vector);
+
+/**
+ * Destroy a vector structure (except for the memory allocation).
+ *
+ * This function will not address the memory allocation of the vector struct.
+ *
+ * @param vector The vector structure to be destroyed.
+ */
+void gcu_vector32_destroy_in_place(GCU_Vector32 * vector);
 
 /**
  * Append an item at the end of the vector.
@@ -306,6 +356,18 @@ typedef struct GCU_Vector16 {
 GCU_Vector16 * gcu_vector16_create(size_t count);
 
 /**
+ * Create a vector structure in place.
+ *
+ * This function uses the provided memory to create the vector.  The memory
+ * must be large enough to hold the vector structure.
+ *
+ * @param vector The memory to use for the vector.
+ * @param count The number of items anticipated to be stored in the vector.
+ * @return `true` on success, `false` otherwise.
+ */
+bool gcu_vector16_create_in_place(GCU_Vector16 * vector, size_t count);
+
+/**
  * Destroy a vector structure and clean up memory allocations.
  *
  * This function will not address any memory allocations of the elements
@@ -315,6 +377,15 @@ GCU_Vector16 * gcu_vector16_create(size_t count);
  * @param vector The vector structure to be destroyed.
  */
 void gcu_vector16_destroy(GCU_Vector16 * vector);
+
+/**
+ * Destroy a vector structure (except for the memory allocation).
+ *
+ * This function will not address the memory allocation of the vector struct.
+ *
+ * @param vector The vector structure to be destroyed.
+ */
+void gcu_vector16_destroy_in_place(GCU_Vector16 * vector);
 
 /**
  * Append an item at the end of the vector.
@@ -389,6 +460,18 @@ typedef struct GCU_Vector8 {
 GCU_Vector8 * gcu_vector8_create(size_t count);
 
 /**
+ * Create a vector structure in place.
+ *
+ * This function uses the provided memory to create the vector.  The memory
+ * must be large enough to hold the vector structure.
+ *
+ * @param vector The memory to use for the vector.
+ * @param count The number of items anticipated to be stored in the vector.
+ * @return `true` on success, `false` otherwise.
+ */
+bool gcu_vector8_create_in_place(GCU_Vector8 * vector, size_t count);
+
+/**
  * Destroy a vector structure and clean up memory allocations.
  *
  * This function will not address any memory allocations of the elements
@@ -398,6 +481,15 @@ GCU_Vector8 * gcu_vector8_create(size_t count);
  * @param vector The vector structure to be destroyed.
  */
 void gcu_vector8_destroy(GCU_Vector8 * vector);
+
+/**
+ * Destroy a vector structure (except for the memory allocation).
+ *
+ * This function will not address the memory allocation of the vector struct.
+ *
+ * @param vector The vector structure to be destroyed.
+ */
+void gcu_vector8_destroy_in_place(GCU_Vector8 * vector);
 
 /**
  * Append an item at the end of the vector.

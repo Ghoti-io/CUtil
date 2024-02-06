@@ -56,6 +56,20 @@ TEST(Vector64, Cleanup) {
   ASSERT_EQ(count, 3);
 }
 
+TEST(Vector64, InPlace64) {
+  GCU_Vector64 v;
+  ASSERT_TRUE(gcu_vector64_create_in_place(&v, 0));
+  ASSERT_EQ(gcu_vector64_count(&v), 0);
+  ASSERT_EQ(v.capacity, 0);
+
+  // Verify insert causes a resize.
+  ASSERT_TRUE(gcu_vector64_append(&v, gcu_type64_ui64(42)));
+  ASSERT_EQ(gcu_vector64_count(&v), 1);
+  ASSERT_EQ(v.capacity, 32);
+
+  gcu_vector64_destroy_in_place(&v);
+}
+
 TEST(Vector32, CreateEmpty) {
   auto v = gcu_vector32_create(0);
   ASSERT_EQ(gcu_vector32_count(v), 0);
@@ -105,6 +119,20 @@ TEST(Vector32, Cleanup) {
   ASSERT_TRUE(gcu_vector32_append(v, gcu_type32_b(true)));
   gcu_vector32_destroy(v);
   ASSERT_EQ(count, 3);
+}
+
+TEST(Vector32, InPlace32) {
+  GCU_Vector32 v;
+  ASSERT_TRUE(gcu_vector32_create_in_place(&v, 0));
+  ASSERT_EQ(gcu_vector32_count(&v), 0);
+  ASSERT_EQ(v.capacity, 0);
+
+  // Verify insert causes a resize.
+  ASSERT_TRUE(gcu_vector32_append(&v, gcu_type32_ui32(42)));
+  ASSERT_EQ(gcu_vector32_count(&v), 1);
+  ASSERT_EQ(v.capacity, 32);
+
+  gcu_vector32_destroy_in_place(&v);
 }
 
 TEST(Vector16, CreateEmpty) {
@@ -158,6 +186,20 @@ TEST(Vector16, Cleanup) {
   ASSERT_EQ(count, 3);
 }
 
+TEST(Vector16, InPlace16) {
+  GCU_Vector16 v;
+  ASSERT_TRUE(gcu_vector16_create_in_place(&v, 0));
+  ASSERT_EQ(gcu_vector16_count(&v), 0);
+  ASSERT_EQ(v.capacity, 0);
+
+  // Verify insert causes a resize.
+  ASSERT_TRUE(gcu_vector16_append(&v, gcu_type16_ui16(42)));
+  ASSERT_EQ(gcu_vector16_count(&v), 1);
+  ASSERT_EQ(v.capacity, 32);
+
+  gcu_vector16_destroy_in_place(&v);
+}
+
 TEST(Vector8, CreateEmpty) {
   auto v = gcu_vector8_create(0);
   ASSERT_EQ(gcu_vector8_count(v), 0);
@@ -207,6 +249,20 @@ TEST(Vector8, Cleanup) {
   ASSERT_TRUE(gcu_vector8_append(v, gcu_type8_b(true)));
   gcu_vector8_destroy(v);
   ASSERT_EQ(count, 3);
+}
+
+TEST(Vector8, InPlace8) {
+  GCU_Vector8 v;
+  ASSERT_TRUE(gcu_vector8_create_in_place(&v, 0));
+  ASSERT_EQ(gcu_vector8_count(&v), 0);
+  ASSERT_EQ(v.capacity, 0);
+
+  // Verify insert causes a resize.
+  ASSERT_TRUE(gcu_vector8_append(&v, gcu_type8_ui8(42)));
+  ASSERT_EQ(gcu_vector8_count(&v), 1);
+  ASSERT_EQ(v.capacity, 32);
+
+  gcu_vector8_destroy_in_place(&v);
 }
 
 int main(int argc, char** argv) {
