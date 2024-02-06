@@ -149,57 +149,57 @@ $(APP_DIR)/$(TARGET): \
 ####################################################################
 
 $(APP_DIR)/test-debug: \
-				test/test-debug.cpp \
-				$(APP_DIR)/$(TARGET)
+		test/test-debug.cpp \
+		$(DEP_DEBUG)
 	@echo "\n### Compiling Debug Test ###"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
 $(APP_DIR)/test-type: \
-				test/test-type.cpp \
-				$(APP_DIR)/$(TARGET)
+		test/test-type.cpp \
+		$(DEP_TYPE)
 	@echo "\n### Compiling Types Test ###"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
 $(APP_DIR)/test-memory: \
-				test/test-memory.cpp \
-				$(APP_DIR)/$(TARGET)
+		test/test-memory.cpp \
+		$(DEP_MEMORY)
 	@echo "\n### Compiling Memory Test ###"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
 $(APP_DIR)/test-hash: \
-				test/test-hash.cpp \
-				$(APP_DIR)/$(TARGET)
+		test/test-hash.cpp \
+		$(DEP_HASH)
 	@echo "\n### Compiling Hash Test ###"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
 $(APP_DIR)/test-semaphore: \
-				test/test-semaphore.cpp \
-				$(APP_DIR)/$(TARGET)
+		test/test-semaphore.cpp \
+		$(DEP_SEMAPHORE)
 	@echo "\n### Compiling Semaphore Test ###"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
 $(APP_DIR)/test-string: \
-				test/test-string.cpp \
-				$(APP_DIR)/$(TARGET)
+		test/test-string.cpp \
+		$(DEP_STRING)
 	@echo "\n### Compiling String Test ###"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
 $(APP_DIR)/test-thread: \
-				test/test-thread.cpp \
-				$(APP_DIR)/$(TARGET)
+		test/test-thread.cpp \
+		$(DEP_THREAD)
 	@echo "\n### Compiling Thread Test ###"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
 $(APP_DIR)/test-vector: \
-				test/test-vector.cpp \
-				$(APP_DIR)/$(TARGET)
+		test/test-vector.cpp \
+		$(DEP_VECTOR)
 	@echo "\n### Compiling Vector Test ###"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
@@ -234,15 +234,15 @@ test-watch: ## Watch the file directory for changes and run the unit tests
 
 test: ## Make and run the Unit tests
 test: \
-				$(APP_DIR)/test-debug \
-				$(APP_DIR)/test-memory \
-				$(APP_DIR)/test-type \
-				$(APP_DIR)/test-semaphore \
-				$(APP_DIR)/test-string \
-				$(APP_DIR)/test-hash \
-				$(APP_DIR)/test-thread \
-				$(APP_DIR)/test-vector \
-				$(APP_DIR/$(TARGET)
+		$(APP_DIR)/$(TARGET) \
+		$(APP_DIR)/test-debug \
+		$(APP_DIR)/test-memory \
+		$(APP_DIR)/test-type \
+		$(APP_DIR)/test-semaphore \
+		$(APP_DIR)/test-string \
+		$(APP_DIR)/test-hash \
+		$(APP_DIR)/test-thread \
+		$(APP_DIR)/test-vector
 	@echo "\033[0;32m"
 	@echo "############################"
 	@echo "### Running normal tests ###"
