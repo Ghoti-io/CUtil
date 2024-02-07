@@ -43,6 +43,8 @@ extern "C" {
 #define gcu_calloc_debug GHOTIIO_CUTIL(gcu_calloc_debug)
 #define gcu_realloc_debug GHOTIIO_CUTIL(gcu_realloc_debug)
 #define gcu_free_debug GHOTIIO_CUTIL(gcu_free_debug)
+#define gcu_get_alloc_count GHOTIIO_CUTIL(gcu_get_alloc_count)
+#define gcu_get_free_count GHOTIIO_CUTIL(gcu_get_free_count)
 /// @endcond
 
 /**
@@ -106,6 +108,41 @@ void * gcu_realloc_debug(void * pointer, size_t size, const char * file, size_t 
  */
 void gcu_free_debug(void * pointer, const char * file, size_t line);
 
+/**
+ * Get the number of times memory has been allocated.
+ *
+ * Calls to gcu_malloc() and gcu_calloc() are counted.  Calls to gcu_realloc()
+ * are not counted.
+ *
+ * @returns The number of times memory has been allocated.
+ */
+size_t gcu_get_alloc_count(void);
+
+/**
+ * Get the number of times memory has been freed.
+ *
+ * Calls to gcu_free() are counted.
+ *
+ * @returns The number of times memory has been freed.
+ */
+size_t gcu_get_free_count(void);
+
+/**
+ * The number of times memory has been allocated.
+ *
+ * Do not access this variable directly.  Use gcu_get_alloc_count() instead.
+ * It appears here simply so that gcu_malloc() and gcu_calloc() can be inlined.
+ */
+extern size_t gcu_memory_alloc_count;
+
+/**
+ * The number of times memory has been freed.
+ *
+ * Do not access this variable directly.  Use gcu_get_free_count() instead.
+ * It appears here simply so that gcu_free() can be inlined.
+ */
+extern size_t gcu_memory_free_count;
+
 #if DOXYGEN
 
 /**
@@ -167,10 +204,12 @@ void gcu_free(void * pointer);
 #ifdef _WIN32 // Windows target
 
 static inline void * gcu_malloc(size_t size) {
+  ++gcu_memory_alloc_count;
   return HeapAlloc(GetProcessHeap(), 0, size);
 }
 
 static inline void * gcu_calloc(size_t nitems, size_t size) {
+  ++gcu_memory_alloc_count;
   return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nitems * size);
 }
 
@@ -179,16 +218,19 @@ static inline void * gcu_realloc(void * pointer, size_t size) {
 }
 
 static inline void gcu_free(void * pointer) {
+  ++gcu_memory_free_count;
   HeapFree(GetProcessHeap(), 0, pointer);
 }
 
 #else // Linux target
 
 static inline void * gcu_malloc(size_t size) {
+  ++gcu_memory_alloc_count;
   return malloc(size);
 }
 
 static inline void * gcu_calloc(size_t nitems, size_t size) {
+  ++gcu_memory_alloc_count;
   return calloc(nitems, size);
 }
 
@@ -197,6 +239,7 @@ static inline void * gcu_realloc(void * pointer, size_t size) {
 }
 
 static inline void gcu_free(void * pointer) {
+  ++gcu_memory_free_count;
   free(pointer);
 }
 

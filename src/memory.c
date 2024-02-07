@@ -4,12 +4,16 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-bool capture = true;
+static bool capture = true;
+
+size_t gcu_memory_alloc_count = 0;
+size_t gcu_memory_free_count = 0;
 
 #include "cutil/memory.h"
 
 /// @cond HIDDEN_SYMBOLS
 void * gcu_malloc_debug(size_t size, const char * file, size_t line) {
+  ++gcu_memory_alloc_count;
   void * result = malloc(size);
   if (capture) {
     fprintf(stderr, "malloc  | %p:%zu | %s(%zu)\n", result, size, file, line);
@@ -18,6 +22,7 @@ void * gcu_malloc_debug(size_t size, const char * file, size_t line) {
 }
 
 void * gcu_calloc_debug(size_t nitems, size_t size, const char * file, size_t line) {
+  ++gcu_memory_alloc_count;
   void * result = calloc(nitems, size);
   if (capture) {
     fprintf(stderr, "calloc  | %p:%zu:%zu | %s(%zu)\n", result, nitems, size, file, line);
@@ -34,6 +39,7 @@ void * gcu_realloc_debug(void * pointer, size_t size, const char * file, size_t 
 }
 
 void gcu_free_debug(void * pointer, const char * file, size_t line) {
+  ++gcu_memory_free_count;
   if (capture) {
     fprintf(stderr, "free    | %p | %s(%zu)\n", pointer, file, line);
   }
@@ -49,3 +55,10 @@ void gcu_mem_stop(void) {
   capture = false;
 }
 
+size_t gcu_get_alloc_count(void) {
+  return gcu_memory_alloc_count;
+}
+
+size_t gcu_get_free_count(void) {
+  return gcu_memory_free_count;
+}

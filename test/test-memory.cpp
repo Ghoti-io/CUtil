@@ -1,6 +1,9 @@
 #include <sstream>
 #include <gtest/gtest.h>
 
+// By defining GHOTIIO_CUTIL_ENABLE_MEMORY_DEBUG, we can intercept memory
+// allocation and deallocation calls and write them to stderr. This is useful
+// for debugging memory leaks and other memory-related issues.
 #define GHOTIIO_CUTIL_ENABLE_MEMORY_DEBUG
 #include "cutil/memory.h"
 
@@ -117,7 +120,10 @@ ParsedFree parseFree(const string & str) {
 
 TEST(Memory, MallocReallocFree) {
   void * buffer;
+  size_t previous_alloc_count = gcu_get_alloc_count();
+  size_t previous_free_count = gcu_get_free_count();
   {
+    // Verify that the malloc is captured.
     testing::internal::CaptureStderr();
     buffer = gcu_malloc(1024);
     auto out = testing::internal::GetCapturedStderr();
@@ -135,7 +141,11 @@ TEST(Memory, MallocReallocFree) {
     ASSERT_EQ(pMalloc.file, expected.file);
     ASSERT_EQ(pMalloc.line, expected.line);
   }
+  // Verify that the counts are correct.
+  ASSERT_EQ(gcu_get_alloc_count(), previous_alloc_count + 1);
+  ASSERT_EQ(gcu_get_free_count(), previous_free_count);
   {
+    // Verify that the realloc is captured.
     testing::internal::CaptureStderr();
     auto newBuffer = gcu_realloc(buffer, 100000);
     auto out = testing::internal::GetCapturedStderr();
@@ -156,7 +166,11 @@ TEST(Memory, MallocReallocFree) {
     ASSERT_EQ(pMalloc.file, expected.file);
     ASSERT_EQ(pMalloc.line, expected.line);
   }
+  // Verify that the counts are correct.
+  ASSERT_EQ(gcu_get_alloc_count(), previous_alloc_count + 1);
+  ASSERT_EQ(gcu_get_free_count(), previous_free_count);
   {
+    // Verify that the free is captured.
     testing::internal::CaptureStderr();
     gcu_free(buffer);
     auto out = testing::internal::GetCapturedStderr();
@@ -172,12 +186,18 @@ TEST(Memory, MallocReallocFree) {
     ASSERT_EQ(pMalloc.file, expected.file);
     ASSERT_EQ(pMalloc.line, expected.line);
   }
+  // Verify that the counts are correct.
+  ASSERT_EQ(gcu_get_alloc_count(), previous_alloc_count + 1);
+  ASSERT_EQ(gcu_get_free_count(), previous_free_count + 1);
 }
 
 
 TEST(Memory, CallocFree) {
   void * buffer;
+  size_t previous_alloc_count = gcu_get_alloc_count();
+  size_t previous_free_count = gcu_get_free_count();
   {
+    // Verify that the calloc is captured.
     testing::internal::CaptureStderr();
     buffer = gcu_calloc(4, 1024);
     auto out = testing::internal::GetCapturedStderr();
@@ -197,7 +217,11 @@ TEST(Memory, CallocFree) {
     ASSERT_EQ(pMalloc.file, expected.file);
     ASSERT_EQ(pMalloc.line, expected.line);
   }
+  // Verify that the counts are correct.
+  ASSERT_EQ(gcu_get_alloc_count(), previous_alloc_count + 1);
+  ASSERT_EQ(gcu_get_free_count(), previous_free_count);
   {
+    // Verify that the free is captured.
     testing::internal::CaptureStderr();
     gcu_free(buffer);
     auto out = testing::internal::GetCapturedStderr();
@@ -213,9 +237,14 @@ TEST(Memory, CallocFree) {
     ASSERT_EQ(pMalloc.file, expected.file);
     ASSERT_EQ(pMalloc.line, expected.line);
   }
+  // Verify that the counts are correct.
+  ASSERT_EQ(gcu_get_alloc_count(), previous_alloc_count + 1);
+  ASSERT_EQ(gcu_get_free_count(), previous_free_count + 1);
 }
 
 TEST(Memory, StopStartCapture) {
+  size_t previous_alloc_count = gcu_get_alloc_count();
+  size_t previous_free_count = gcu_get_free_count();
   {
     // Verify that stderr is being produced.
     testing::internal::CaptureStderr();
@@ -242,6 +271,9 @@ TEST(Memory, StopStartCapture) {
     auto out = testing::internal::GetCapturedStderr();
     ASSERT_NE(out, "");
   }
+  // Verify that the counts are correct.
+  ASSERT_EQ(gcu_get_alloc_count(), previous_alloc_count + 3);
+  ASSERT_EQ(gcu_get_free_count(), previous_free_count + 3);
 }
 
 int main(int argc, char** argv) {
