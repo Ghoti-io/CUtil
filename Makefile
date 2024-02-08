@@ -81,6 +81,7 @@ DEP_STRING = \
 $(APP_DIR)/float_identifier: \
 				src/float_identifier.c \
 				src/float.h.template
+	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $< -o $@
 
 include/$(PROJECT)/float.h: \
