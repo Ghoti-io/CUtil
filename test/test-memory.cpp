@@ -13,6 +13,7 @@ using namespace std;
 struct ParsedMalloc {
   string type;
   void * pointer;
+  size_t count;
   size_t size;
   string file;
   size_t line;
@@ -22,6 +23,7 @@ struct ParsedCalloc {
   string type;
   void * pointer;
   size_t nitems;
+  size_t count;
   size_t size;
   string file;
   size_t line;
@@ -39,6 +41,7 @@ struct ParsedRealloc {
 struct ParsedFree {
   string type;
   void * pointer;
+  size_t count;
   string file;
   size_t line;
 };
@@ -48,6 +51,8 @@ ParsedMalloc parseMalloc(const string & str) {
   stringstream ss{str};
   char ignore;
   ss >> p.type
+    >> ignore
+    >> p.count
     >> ignore
     >> hex >> p.pointer >> dec
     >> ignore
@@ -66,6 +71,8 @@ ParsedCalloc parseCalloc(const string & str) {
   stringstream ss{str};
   char ignore;
   ss >> p.type
+    >> ignore
+    >> p.count
     >> ignore
     >> hex >> p.pointer >> dec
     >> ignore
@@ -107,6 +114,8 @@ ParsedFree parseFree(const string & str) {
   char ignore;
   ss >> p.type
     >> ignore
+    >> p.count
+    >> ignore
     >> hex >> p.pointer >> dec
     >> ignore;
   while (isspace(ss.peek())) {
@@ -130,9 +139,10 @@ TEST(Memory, MallocReallocFree) {
     ParsedMalloc expected {
       .type = "malloc",
       .pointer = buffer,
+      .count = 0, // will be ignored in test
       .size = 1024,
       .file = __FILE__,
-      .line = __LINE__ - 7,
+      .line = __LINE__ - 8,
     };
     auto pMalloc = parseMalloc(out);
     ASSERT_EQ(pMalloc.type, expected.type);
@@ -177,8 +187,9 @@ TEST(Memory, MallocReallocFree) {
     ParsedFree expected {
       .type = "free",
       .pointer = buffer,
+      .count = 0, // will be ignored in test
       .file = __FILE__,
-      .line = __LINE__ - 6,
+      .line = __LINE__ - 7,
     };
     auto pMalloc = parseFree(out);
     ASSERT_EQ(pMalloc.type, expected.type);
@@ -205,9 +216,10 @@ TEST(Memory, CallocFree) {
       .type = "calloc",
       .pointer = buffer,
       .nitems = 4,
+      .count = 0, // will be ignored in test
       .size = 1024,
       .file = __FILE__,
-      .line = __LINE__ - 8,
+      .line = __LINE__ - 9,
     };
     auto pMalloc = parseCalloc(out);
     ASSERT_EQ(pMalloc.type, expected.type);
@@ -228,8 +240,9 @@ TEST(Memory, CallocFree) {
     ParsedFree expected {
       .type = "free",
       .pointer = buffer,
+      .count = 0, // will be ignored in test
       .file = __FILE__,
-      .line = __LINE__ - 6,
+      .line = __LINE__ - 7,
     };
     auto pMalloc = parseFree(out);
     ASSERT_EQ(pMalloc.type, expected.type);

@@ -128,6 +128,11 @@ size_t gcu_get_alloc_count(void);
 size_t gcu_get_free_count(void);
 
 /**
+ * Reset the memory allocation and free counts to zero.
+ */
+void gcu_memory_reset_counts(void);
+
+/**
  * The number of times memory has been allocated.
  *
  * Do not access this variable directly.  Use gcu_get_alloc_count() instead.
