@@ -109,6 +109,14 @@ bool TEMPLATE_GCU_VECTOR_RESERVE(TEMPLATE_GCU_VECTOR * vector, size_t size) {
   }
 
   // Attempt to allocate more memory;
+  if (!vector->data) {
+    vector->data = gcu_calloc(size, sizeof (TEMPLATE_GCU_TYPE_UNION));
+    if (vector->data) {
+      vector->capacity = size;
+      return true;
+    }
+    return false;
+  }
   void * newMem = gcu_realloc(vector->data, size * (sizeof (TEMPLATE_GCU_TYPE_UNION)));
   if (newMem) {
     // Zero out the new memory.
