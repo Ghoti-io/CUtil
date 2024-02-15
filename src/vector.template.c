@@ -105,7 +105,7 @@ bool TEMPLATE_GCU_VECTOR_RESERVE(TEMPLATE_GCU_VECTOR * vector, size_t size) {
 
   // Verify that the requested size is larger than the current capacity.
   if (size < vector->capacity) {
-    return false;
+    return true;
   }
 
   // Attempt to allocate more memory;
