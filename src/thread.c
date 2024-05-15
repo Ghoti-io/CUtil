@@ -111,6 +111,7 @@ static void gcu_thread_hash_cleanup(GCU_Hash64 * hash) {
 
   while (iter.exists) {
     GCU_Thread_Internal * thread = iter.value.p;
+    uint32_t thread_id = thread->id;
 
     if (thread) {
       if (!thread->detached && !thread->joined) {
@@ -120,7 +121,7 @@ static void gcu_thread_hash_cleanup(GCU_Hash64 * hash) {
       iter.value.p = NULL;
     }
 
-    gcu_hash64_remove(hash, thread->id);
+    gcu_hash64_remove(hash, thread_id);
     iter = gcu_hash64_iterator_next(iter);
   }
 
