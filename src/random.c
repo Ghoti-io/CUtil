@@ -5,7 +5,7 @@
 // https://en.wikipedia.org/wiki/Mersenne_Twister
 
 
-void gcu_random_mt32_init(GTU_Random_MT_State * state, uint32_t seed) {
+void gcu_random_mt32_init(GTU_Random_MT32_State * state, uint32_t seed) {
   uint32_t* state_array = (uint32_t*)&state->state_array;
   state_array[0] = seed;
   for (int i = 1; i < GCU_RANDOM_MT_STATE_SIZE32; ++i) {
@@ -20,7 +20,7 @@ void gcu_random_mt32_init(GTU_Random_MT_State * state, uint32_t seed) {
 }
 
 
-uint32_t gcu_random_mt32_next(GTU_Random_MT_State * state) {
+uint32_t gcu_random_mt32_next(GTU_Random_MT32_State * state) {
   // 32-bit Mersenne Twister by Matsumoto and Nishimura, 1998
   // Values taken from https://en.cppreference.com/w/cpp/numeric/random/mersenne_twister_engine
   const uint32_t upper_mask = (~(uint32_t)0) << 31; // 0x80000000

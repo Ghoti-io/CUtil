@@ -28,7 +28,7 @@ extern "C" {
 /**
  * The state structure for the 32-bit Mersenne Twister.
  */
-typedef struct GTU_Random_MT_State {
+typedef struct GTU_Random_MT32_State {
   /**
    * The state array for the Mersenne Twister.
    */
@@ -40,7 +40,7 @@ typedef struct GTU_Random_MT_State {
    * This value is always in the range [0, n-1].
    */
   size_t state_index;
-} GTU_Random_MT_State;
+} GTU_Random_MT32_State;
 
 /**
  * Initialize the 32-bit Mersenne Twister state with the given seed.
@@ -48,7 +48,7 @@ typedef struct GTU_Random_MT_State {
  * @param state A pointer to the state structure to be initialized.
  * @param seed A seed value with which to initialize the state.
  */
-void gcu_random_mt32_init(GTU_Random_MT_State * state, uint32_t seed);
+void gcu_random_mt32_init(GTU_Random_MT32_State * state, uint32_t seed);
 
 /**
  * Generate the next random number from the 32-bit Mersenne Twister state.
@@ -57,7 +57,7 @@ void gcu_random_mt32_init(GTU_Random_MT_State * state, uint32_t seed);
  * random number.
  * @return The next random number in the sequence.
  */
-uint32_t gcu_random_mt32_next(GTU_Random_MT_State * state);
+uint32_t gcu_random_mt32_next(GTU_Random_MT32_State * state);
 
 #ifdef __cplusplus
 }

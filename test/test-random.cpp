@@ -8,7 +8,7 @@ using namespace std;
 TEST(Random, MT) {
   {
     // Known seed value.
-    GTU_Random_MT_State state;
+    GTU_Random_MT32_State state;
     gcu_random_mt32_init(&state, 0x12345678);
     mt19937 mt(0x12345678);
     for (int i = 0; i < GCU_RANDOM_MT_STATE_SIZE32 * 2; ++i) {
