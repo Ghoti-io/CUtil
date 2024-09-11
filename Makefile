@@ -22,6 +22,7 @@ INCLUDE := -I include/
 LIBOBJECTS := $(OBJ_DIR)/debug.o \
 							$(OBJ_DIR)/hash.o \
 							$(OBJ_DIR)/memory.o \
+							$(OBJ_DIR)/random.o \
 							$(OBJ_DIR)/semaphore.o \
 							$(OBJ_DIR)/string.o \
 							$(OBJ_DIR)/thread.o \
@@ -63,6 +64,9 @@ DEP_HASH= \
 	$(DEP_MEMORY) \
 	$(DEP_MUTEX) \
 	include/$(PROJECT)/hash.h
+DEP_RANDOM = \
+	$(DEP_LIBVER) \
+	include/$(PROJECT)/random.h
 DEP_THREAD = \
 	$(DEP_LIBVER) \
 	$(DEP_HASH) \
@@ -112,6 +116,10 @@ $(OBJ_DIR)/hash.o: \
 $(OBJ_DIR)/memory.o: \
 				src/memory.c \
 				$(DEP_MEMORY)
+
+$(OBJ_DIR)/random.o: \
+				src/random.c \
+				$(DEP_RANDOM)
 
 $(OBJ_DIR)/semaphore.o: \
 				src/semaphore.c \
@@ -178,6 +186,13 @@ $(APP_DIR)/test-hash: \
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
+$(APP_DIR)/test-random: \
+		test/test-random.cpp \
+		$(DEP_RANDOM)
+	@echo "\n### Compiling Random Test ###"
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+
 $(APP_DIR)/test-semaphore: \
 		test/test-semaphore.cpp \
 		$(DEP_SEMAPHORE)
@@ -240,6 +255,7 @@ test: \
 		$(APP_DIR)/test-debug \
 		$(APP_DIR)/test-memory \
 		$(APP_DIR)/test-type \
+		$(APP_DIR)/test-random \
 		$(APP_DIR)/test-semaphore \
 		$(APP_DIR)/test-string \
 		$(APP_DIR)/test-hash \
@@ -254,6 +270,7 @@ test: \
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-memory --gtest_brief=1
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-thread --gtest_brief=1
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-type --gtest_brief=1
+	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-random --gtest_brief=1
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-semaphore --gtest_brief=1
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-string --gtest_brief=1
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-hash --gtest_brief=1

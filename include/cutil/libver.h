@@ -133,5 +133,44 @@
 #error "Could not determine GCU_WCHAR_WIDTH"
 #endif // GCU_WCHAR_WIDTH
 
+
+//-----------------------------------------------------------------------------
+// Macros for declaring functions to be run before/after main.
+//-----------------------------------------------------------------------------
+#ifdef _MSC_VER  // If using Visual Studio
+
+#include <windows.h>
+
+// Define the startup macro for Visual Studio
+#define GTA_INIT_FUNCTION(function_name) \
+    __pragma(section(".CRT$XCU", read)) \
+    __declspec(allocate(".CRT$XCU")) void (*function_name##_init)(void) = function_name; \
+    static void function_name(void)
+
+// Define the cleanup macro for Visual Studio
+#define GTA_CLEANUP_FUNCTION(function_name) \
+    __pragma(section(".CRT$XTU", read)) \
+    __declspec(allocate(".CRT$XTU")) void (*function_name##_cleanup)(void) = function_name; \
+    static void function_name(void)
+
+#elif defined(__GNUC__) || defined(__clang__)  // If using GCC/Clang
+
+// Define the startup macro for GCC/Clang
+#define GTA_INIT_FUNCTION(function_name) \
+    __attribute__((constructor)) static void function_name(void)
+
+// Define the cleanup macro for GCC/Clang
+#define GTA_CLEANUP_FUNCTION(function_name) \
+    __attribute__((destructor)) static void function_name(void)
+
+#else  // Other compilers (add more cases as needed)
+
+// Default no-op macros for unsupported compilers
+#define GTA_INIT_FUNCTION(function_name)
+#define GTA_CLEANUP_FUNCTION(function_name)
+
+#endif
+
+//-----------------------------------------------------------------------------
+
 #endif // GHOTIIO_CUTIL_LIBVER_H
- 
