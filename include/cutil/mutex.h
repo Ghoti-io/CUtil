@@ -60,7 +60,7 @@ typedef void* GCU_MUTEX_TYPE;
 #include <windows.h>
 
 #define GCU_MUTEX_T          HANDLE
-#define GCU_MUTEX_CREATE(x)  (x) = CreateMutex(NULL, FALSE, NULL)
+#define GCU_MUTEX_CREATE(x)  ((x) = CreateMutex(NULL, FALSE, NULL))
 #define GCU_MUTEX_DESTROY(x) CloseHandle(x)
 #define GCU_MUTEX_LOCK(x)    WaitForSingleObject((x), INFINITE)
 #define GCU_MUTEX_UNLOCK(x)  ReleaseMutex(x)

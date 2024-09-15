@@ -51,7 +51,10 @@ int gcu_semaphore_trywait(GCU_Semaphore * semaphore) {
 
 int gcu_semaphore_getvalue(GCU_Semaphore * semaphore, int * value) {
 #ifdef _WIN32
-  return ReleaseSemaphore(*semaphore, 0, value);
+  LONG lvalue = *value;
+  int result = ReleaseSemaphore(*semaphore, 0, &lvalue);
+  *value = lvalue;
+  return result;
 #else
   return sem_getvalue(semaphore, value);
 #endif

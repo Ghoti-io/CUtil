@@ -118,20 +118,42 @@
  * Indicate the size of the `wchar` type.
  */
 #define GCU_WCHAR_WIDTH
+
+/**
+ * Indicate whether the `wchar` type is signed in this implementation.
+ */
+#define GCU_WCHAR_SIGNED
 #endif // DOXYGEN
 
-#if WCHAR_MAX == 0x7FFFFFFFFFFFFFFF
+// Define helper macros for signed and unsigned max values
+#define MAX_UINT64 0xFFFFFFFFFFFFFFFF
+#define MAX_UINT32 0xFFFFFFFF
+#define MAX_UINT16 0xFFFF
+
+#define MAX_INT64  0x7FFFFFFFFFFFFFFF
+#define MAX_INT32  0x7FFFFFFF
+#define MAX_INT16  0x7FFF
+
+
+#if (WCHAR_MAX == MAX_UINT64) || (WCHAR_MAX == MAX_INT64)
 // 64-bit signed
 #define GCU_WCHAR_WIDTH 8
-#elif WCHAR_MAX == 0x7FFFFFFF
+#define GCU_WCHAR_SIGNED (WCHAR_MAX == MAX_INT64)
+
+#elif (WCHAR_MAX == MAX_UINT32) || (WCHAR_MAX == MAX_INT32)
 // 32-bit signed
 #define GCU_WCHAR_WIDTH 4
-#elif WCHAR_MAX == 0x7FFF
+#define GCU_WCHAR_SIGNED (WCHAR_MAX == MAX_INT32)
+
+#elif (WCHAR_MAX == MAX_UINT16) || (WCHAR_MAX == MAX_INT16)
 // 16-bit signed
 #define GCU_WCHAR_WIDTH 2
+#define GCU_WCHAR_SIGNED (WCHAR_MAX == MAX_INT16)
+
 #else
-#error "Could not determine GCU_WCHAR_WIDTH"
-#endif // GCU_WCHAR_WIDTH
+#error "Could not determine GCU_WCHAR_WIDTH and GCU_WCHAR_SIGNED"
+
+#endif // GCU_WCHAR_WIDTH and GCU_WCHAR_SIGNED
 
 
 //-----------------------------------------------------------------------------

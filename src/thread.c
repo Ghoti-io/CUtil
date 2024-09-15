@@ -335,7 +335,7 @@ int gcu_thread_detach(GCU_Thread thread) {
   // Detach the thread.
   int failed;
 #ifdef _WIN32
-  failed = CloseHandle(thread);
+  failed = !CloseHandle(thread_internal->handle);
 #else
   failed = pthread_detach(thread);
 #endif
@@ -533,7 +533,16 @@ int gcu_thread_set_name(GCU_Thread thread, const char * name) {
   GCU_Thread_Internal * thread_internal = hash_value.value.p;
 
 #ifdef _WIN32
-  return SetThreadDescription(thread_internal->handle, name) == 0;
+  PWSTR wname = (PWSTR)gcu_calloc(sizeof(WCHAR), strlen(name) + 1);
+  if (!wname) {
+    return 1;
+  }
+  HRESULT result = MultiByteToWideChar(CP_UTF8, 0, name, -1, wname, strlen(name) + 1);
+  if (SUCCEEDED(result)) {
+    result = SetThreadDescription(thread_internal->handle, wname);
+  }
+  gcu_free(wname);
+  return result;
 #else
   return pthread_setname_np(thread_internal->handle, name);
 #endif
@@ -554,7 +563,14 @@ int gcu_thread_get_name(GCU_Thread thread, char * name, size_t size) {
   GCU_Thread_Internal * thread_internal = hash_value.value.p;
 
 #ifdef _WIN32
-  return GetThreadDescription(thread_internal->handle, name, size) == 0;
+  PWSTR threadname = NULL;
+  HRESULT result = GetThreadDescription(thread_internal->handle, &threadname) == 0;
+  if (SUCCEEDED(result)) {
+    // Convert the thread name to UTF-8.
+    result = WideCharToMultiByte(CP_UTF8, 0, threadname, -1, name, size, NULL, NULL);
+    LocalFree(threadname);
+  }
+  return result;
 #else
   return pthread_getname_np(thread_internal->handle, name, size);
 #endif
