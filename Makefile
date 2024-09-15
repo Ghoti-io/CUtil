@@ -12,11 +12,53 @@ APP_DIR := $(BUILD)/apps
 SUITE := ghoti.io
 PROJECT := cutil
 BRANCH := -dev
-BASE_NAME := lib$(SUITE)-$(PROJECT)$(BRANCH).so
+BASE_NAME_PREFIX := lib$(SUITE)-$(PROJECT)$(BRANCH)
+BASE_NAME := $(BASE_NAME_PREFIX).so
 MAJOR_VERSION := 0
 MINOR_VERSION := 0.0
 SO_NAME := $(BASE_NAME).$(MAJOR_VERSION)
-TARGET := $(SO_NAME).$(MINOR_VERSION)
+
+
+# Detect OS
+UNAME_S := $(shell uname -s)
+
+ifeq ($(UNAME_S), Linux)
+    OS_NAME := Linux
+    LIB_EXTENSION := so
+    OS_SPECIFIC_CXX_FLAGS := -shared -fPIC
+    OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,-soname,$(SO_NAME)
+		TARGET := $(SO_NAME).$(MINOR_VERSION)
+    # Additional Linux-specific variables
+
+else ifeq ($(UNAME_S), Darwin)
+    OS_NAME := Mac
+    LIB_EXTENSION := dylib
+    OS_SPECIFIC_CXX_FLAGS := -shared
+    OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,-install_name,$(BASE_NAME_PREFIX).dylib
+		TARGET := $(BASE_NAME_PREFIX).dylib
+    # Additional macOS-specific variables
+
+else ifeq (,$(findstring MINGW32_NT,$(UNAME_S)))  # 32-bit Windows
+    OS_NAME := Windows
+    LIB_EXTENSION := dll
+    OS_SPECIFIC_CXX_FLAGS := -shared
+    OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,--out-implib,$(BASE_NAME_PREFIX).dll.a
+		TARGET := $(BASE_NAME_PREFIX).dll
+    # Additional Windows-specific variables
+
+else ifeq (,$(findstring MINGW64_NT,$(UNAME_S)))  # 64-bit Windows
+    OS_NAME := Windows
+    LIB_EXTENSION := dll
+    OS_SPECIFIC_CXX_FLAGS := -shared
+    OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,--out-implib,$(BASE_NAME_PREFIX).dll.a
+		TARGET := $(BASE_NAME_PREFIX).dll
+    # Additional Windows-specific variables
+
+else
+    $(error Unsupported OS: $(UNAME_S))
+
+endif
+
 
 INCLUDE := -I include/
 LIBOBJECTS := $(OBJ_DIR)/debug.o \
@@ -92,7 +134,6 @@ $(APP_DIR)/float_identifier: \
 include/$(PROJECT)/float.h: \
 				src/float.h.template \
 				$(APP_DIR)/float_identifier
-	$(APP_DIR)/float_identifier 16
 	cat src/float.h.template | sed "s/FLOAT32/$(shell $(APP_DIR)/float_identifier 32)/; s/FLOAT64/$(shell $(APP_DIR)/float_identifier 64)/" > include/$(PROJECT)/float.h
 
 ####################################################################
@@ -102,7 +143,7 @@ include/$(PROJECT)/float.h: \
 $(LIBOBJECTS) :
 	@printf "\n### Compiling $@ ###\n"
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $(INCLUDE) -c $< -MMD -o $@ -fPIC
+	$(CC) $(CFLAGS) $(INCLUDE) -c $< -MMD -o $@ $(OS_SPECIFIC_CXX_FLAGS)
 
 $(OBJ_DIR)/debug.o: \
 				src/debug.c \
@@ -147,10 +188,10 @@ $(OBJ_DIR)/vector.o: \
 ####################################################################
 
 $(APP_DIR)/$(TARGET): \
-				$(LIBOBJECTS)
+		$(LIBOBJECTS)
 	@printf "\n### Compiling Ghoti.io CUtil Shared Library ###\n"
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) -shared -o $@ $^ $(LDFLAGS) -Wl,-soname,$(SO_NAME)
+	$(CC) $(CFLAGS) $(OS_SPECIFIC_CXX_FLAGS) -o $@ $^ $(LDFLAGS) $(OS_SPECIFIC_LIBRARY_NAME_FLAG)
 	@ln -f -s $(TARGET) $(APP_DIR)/$(SO_NAME)
 	@ln -f -s $(SO_NAME) $(APP_DIR)/$(BASE_NAME)
 
