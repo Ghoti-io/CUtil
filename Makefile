@@ -100,7 +100,7 @@ include/$(PROJECT)/float.h: \
 ####################################################################
 
 $(LIBOBJECTS) :
-	@echo "\n### Compiling $@ ###"
+	@printf "\n### Compiling $@ ###\n"
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(INCLUDE) -c $< -MMD -o $@ -fPIC
 
@@ -148,7 +148,7 @@ $(OBJ_DIR)/vector.o: \
 
 $(APP_DIR)/$(TARGET): \
 				$(LIBOBJECTS)
-	@echo "\n### Compiling Ghoti.io CUtil Shared Library ###"
+	@printf "\n### Compiling Ghoti.io CUtil Shared Library ###\n"
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -shared -o $@ $^ $(LDFLAGS) -Wl,-soname,$(SO_NAME)
 	@ln -f -s $(TARGET) $(APP_DIR)/$(SO_NAME)
@@ -161,63 +161,63 @@ $(APP_DIR)/$(TARGET): \
 $(APP_DIR)/test-debug: \
 		test/test-debug.cpp \
 		$(DEP_DEBUG)
-	@echo "\n### Compiling Debug Test ###"
+	@printf "\n### Compiling Debug Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
 $(APP_DIR)/test-type: \
 		test/test-type.cpp \
 		$(DEP_TYPE)
-	@echo "\n### Compiling Types Test ###"
+	@printf "\n### Compiling Types Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
 $(APP_DIR)/test-memory: \
 		test/test-memory.cpp \
 		$(DEP_MEMORY)
-	@echo "\n### Compiling Memory Test ###"
+	@printf "\n### Compiling Memory Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
 $(APP_DIR)/test-hash: \
 		test/test-hash.cpp \
 		$(DEP_HASH)
-	@echo "\n### Compiling Hash Test ###"
+	@printf "\n### Compiling Hash Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
 $(APP_DIR)/test-random: \
 		test/test-random.cpp \
 		$(DEP_RANDOM)
-	@echo "\n### Compiling Random Test ###"
+	@printf "\n### Compiling Random Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
 $(APP_DIR)/test-semaphore: \
 		test/test-semaphore.cpp \
 		$(DEP_SEMAPHORE)
-	@echo "\n### Compiling Semaphore Test ###"
+	@printf "\n### Compiling Semaphore Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
 $(APP_DIR)/test-string: \
 		test/test-string.cpp \
 		$(DEP_STRING)
-	@echo "\n### Compiling String Test ###"
+	@printf "\n### Compiling String Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
 $(APP_DIR)/test-thread: \
 		test/test-thread.cpp \
 		$(DEP_THREAD)
-	@echo "\n### Compiling Thread Test ###"
+	@printf "\n### Compiling Thread Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
 $(APP_DIR)/test-vector: \
 		test/test-vector.cpp \
 		$(DEP_VECTOR)
-	@echo "\n### Compiling Vector Test ###"
+	@printf "\n### Compiling Vector Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
