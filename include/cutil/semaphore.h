@@ -27,7 +27,7 @@ typedef void GCU_Semaphore;
 #define gcu_semaphore_wait GHOTIIO_CUTIL(gcu_semaphore_wait)
 #define gcu_semaphore_signal GHOTIIO_CUTIL(gcu_semaphore_signal)
 #define gcu_semaphore_trywait GHOTIIO_CUTIL(gcu_semaphore_trywait)
-#define gcu_semaphore_getvalue GHOTIIO_CUTIL(sgcu_emaphore_getvalue)
+#define gcu_semaphore_getvalue GHOTIIO_CUTIL(gcu_semaphore_getvalue)
 #define gcu_semaphore_timedwait GHOTIIO_CUTIL(gcu_semaphore_timedwait)
 /// @endcond
 
