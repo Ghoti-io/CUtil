@@ -12,7 +12,7 @@ struct thread_status {
   bool run;
 };
 
-void * loop(void * status) {
+GCU_THREAD_FUNC_RETURN_T GCU_THREAD_FUNC_CALLING_CONVENTION loop(GCU_THREAD_FUNC_ARG_T status) {
   volatile bool & run = ((thread_status *)status)->run;
   bool & is_running = ((thread_status *)status)->is_running;
   is_running = true;
@@ -20,14 +20,14 @@ void * loop(void * status) {
     gcu_thread_yield();
   };
   is_running = false;
-  return NULL;
+  return GCU_THREAD_FUNC_RETURN_T{};
 };
 
-void * doNothing([[maybe_unused]] void * arg) {
+GCU_THREAD_FUNC_RETURN_T GCU_THREAD_FUNC_CALLING_CONVENTION doNothing([[maybe_unused]] GCU_THREAD_FUNC_ARG_T arg) {
   if (arg != NULL) {
     *((GCU_Thread *)arg) = gcu_thread_get_current_id();
   }
-  return NULL;
+  return GCU_THREAD_FUNC_RETURN_T{};
 }
 
 TEST(Thread, NonexistentThreads) {
