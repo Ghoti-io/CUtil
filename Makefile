@@ -23,36 +23,40 @@ SO_NAME := $(BASE_NAME).$(MAJOR_VERSION)
 UNAME_S := $(shell uname -s)
 
 ifeq ($(UNAME_S), Linux)
-    OS_NAME := Linux
-    LIB_EXTENSION := so
-    OS_SPECIFIC_CXX_FLAGS := -shared -fPIC
-    OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,-soname,$(SO_NAME)
-		TARGET := $(SO_NAME).$(MINOR_VERSION)
-    # Additional Linux-specific variables
+	OS_NAME := Linux
+	LIB_EXTENSION := so
+	OS_SPECIFIC_CXX_FLAGS := -shared -fPIC
+	OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,-soname,$(SO_NAME)
+	TARGET := $(SO_NAME).$(MINOR_VERSION)
+	EXE_EXTENSION :=
+	# Additional Linux-specific variables
 
 else ifeq ($(UNAME_S), Darwin)
-    OS_NAME := Mac
-    LIB_EXTENSION := dylib
-    OS_SPECIFIC_CXX_FLAGS := -shared
-    OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,-install_name,$(BASE_NAME_PREFIX).dylib
-		TARGET := $(BASE_NAME_PREFIX).dylib
-    # Additional macOS-specific variables
+	OS_NAME := Mac
+	LIB_EXTENSION := dylib
+	OS_SPECIFIC_CXX_FLAGS := -shared
+	OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,-install_name,$(BASE_NAME_PREFIX).dylib
+	TARGET := $(BASE_NAME_PREFIX).dylib
+	EXE_EXTENSION :=
+	# Additional macOS-specific variables
 
 else ifeq (,$(findstring MINGW32_NT,$(UNAME_S)))  # 32-bit Windows
-    OS_NAME := Windows
-    LIB_EXTENSION := dll
-    OS_SPECIFIC_CXX_FLAGS := -shared
-    OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,--out-implib,$(APP_DIR)/$(BASE_NAME_PREFIX).dll.a
-		TARGET := $(BASE_NAME_PREFIX).dll
-    # Additional Windows-specific variables
+	OS_NAME := Windows
+	LIB_EXTENSION := dll
+	OS_SPECIFIC_CXX_FLAGS := -shared
+	OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,--out-implib,$(APP_DIR)/$(BASE_NAME_PREFIX).dll.a
+	TARGET := $(BASE_NAME_PREFIX).dll
+	EXE_EXTENSION := .exe
+	# Additional Windows-specific variables
 
 else ifeq (,$(findstring MINGW64_NT,$(UNAME_S)))  # 64-bit Windows
-    OS_NAME := Windows
-    LIB_EXTENSION := dll
-    OS_SPECIFIC_CXX_FLAGS := -shared
-    OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,--out-implib,$(BASE_NAME_PREFIX).dll.a
-		TARGET := $(BASE_NAME_PREFIX).dll
-    # Additional Windows-specific variables
+	OS_NAME := Windows
+	LIB_EXTENSION := dll
+	OS_SPECIFIC_CXX_FLAGS := -shared
+	OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,--out-implib,$(BASE_NAME_PREFIX).dll.a
+	TARGET := $(BASE_NAME_PREFIX).dll
+	EXE_EXTENSION := .exe
+	# Additional Windows-specific variables
 
 else
     $(error Unsupported OS: $(UNAME_S))
@@ -61,15 +65,16 @@ endif
 
 
 INCLUDE := -I include/
-LIBOBJECTS := $(OBJ_DIR)/debug.o \
-							$(OBJ_DIR)/hash.o \
-							$(OBJ_DIR)/memory.o \
-							$(OBJ_DIR)/random.o \
-							$(OBJ_DIR)/semaphore.o \
-							$(OBJ_DIR)/string.o \
-							$(OBJ_DIR)/thread.o \
-							$(OBJ_DIR)/type.o \
-							$(OBJ_DIR)/vector.o
+LIBOBJECTS := \
+  $(OBJ_DIR)/debug.o \
+	$(OBJ_DIR)/hash.o \
+	$(OBJ_DIR)/memory.o \
+	$(OBJ_DIR)/random.o \
+	$(OBJ_DIR)/semaphore.o \
+	$(OBJ_DIR)/string.o \
+	$(OBJ_DIR)/thread.o \
+	$(OBJ_DIR)/type.o \
+	$(OBJ_DIR)/vector.o
 
 TESTFLAGS := `pkg-config --libs --cflags gtest`
 
@@ -125,16 +130,17 @@ DEP_STRING = \
 ####################################################################
 # Floating Point Type Identification
 ####################################################################
-$(APP_DIR)/float_identifier: \
-				src/float_identifier.c \
-				src/float.h.template
+FLOAT_IDENTIFIER := $(APP_DIR)/float_identifier$(EXE_EXTENSION)
+$(FLOAT_IDENTIFIER): \
+		src/float_identifier.c \
+		src/float.h.template
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $< -o $@
 
 include/$(PROJECT)/float.h: \
-				src/float.h.template \
-				$(APP_DIR)/float_identifier
-	cat src/float.h.template | sed "s/FLOAT32/$(shell $(APP_DIR)/float_identifier 32)/; s/FLOAT64/$(shell $(APP_DIR)/float_identifier 64)/" > include/$(PROJECT)/float.h
+		src/float.h.template \
+		$(FLOAT_IDENTIFIER)
+	cat src/float.h.template | sed "s/FLOAT32/$(shell $(FLOAT_IDENTIFIER) 32)/; s/FLOAT64/$(shell $(FLOAT_IDENTIFIER) 64)/" > $@
 
 ####################################################################
 # Object Files
@@ -146,42 +152,42 @@ $(LIBOBJECTS) :
 	$(CC) $(CFLAGS) $(INCLUDE) -c $< -MMD -o $@ $(OS_SPECIFIC_CXX_FLAGS)
 
 $(OBJ_DIR)/debug.o: \
-				src/debug.c \
-				$(DEP_DEBUG)
+	src/debug.c \
+	$(DEP_DEBUG)
 
 $(OBJ_DIR)/hash.o: \
-				src/hash.c \
-				src/hash.template.c \
-				$(DEP_HASH)
+	src/hash.c \
+	src/hash.template.c \
+	$(DEP_HASH)
 
 $(OBJ_DIR)/memory.o: \
-				src/memory.c \
-				$(DEP_MEMORY)
+	src/memory.c \
+	$(DEP_MEMORY)
 
 $(OBJ_DIR)/random.o: \
-				src/random.c \
-				$(DEP_RANDOM)
+	src/random.c \
+	$(DEP_RANDOM)
 
 $(OBJ_DIR)/semaphore.o: \
-				src/semaphore.c \
-				$(DEP_SEMAPHORE)
+	src/semaphore.c \
+	$(DEP_SEMAPHORE)
 
 $(OBJ_DIR)/string.o: \
-				src/string.c \
-				$(DEP_STRING)
+	src/string.c \
+	$(DEP_STRING)
 
 $(OBJ_DIR)/thread.o: \
-				src/thread.c \
-				$(DEP_THREAD)
+	src/thread.c \
+	$(DEP_THREAD)
 
 $(OBJ_DIR)/type.o: \
-				src/type.c \
-				$(DEP_TYPE)
+	src/type.c \
+	$(DEP_TYPE)
 
 $(OBJ_DIR)/vector.o: \
-				src/vector.c \
-				src/vector.template.c \
-				$(DEP_VECTOR)
+	src/vector.c \
+	src/vector.template.c \
+	$(DEP_VECTOR)
 
 ####################################################################
 # Shared Library
@@ -273,25 +279,25 @@ $(APP_DIR)/test-vector: \
 
 watch: ## Watch the file directory for changes and compile the target
 	@while true; do \
-					make all; \
-					echo "\033[0;32m"; \
-					echo "#########################"; \
-					echo "# Waiting for changes.. #"; \
-					echo "#########################"; \
-					echo "\033[0m"; \
-					inotifywait -qr -e modify -e create -e delete -e move src include test Makefile --exclude '/\.'; \
-					done
+		make all; \
+		echo "\033[0;32m"; \
+		echo "#########################"; \
+		echo "# Waiting for changes.. #"; \
+		echo "#########################"; \
+		echo "\033[0m"; \
+		inotifywait -qr -e modify -e create -e delete -e move src include test Makefile --exclude '/\.'; \
+		done
 
 test-watch: ## Watch the file directory for changes and run the unit tests
 	@while true; do \
-					make test; \
-					echo "\033[0;32m"; \
-					echo "#########################"; \
-					echo "# Waiting for changes.. #"; \
-					echo "#########################"; \
-					echo "\033[0m"; \
-					inotifywait -qr -e modify -e create -e delete -e move src include test Makefile --exclude '/\.'; \
-					done
+		make test; \
+		echo "\033[0;32m"; \
+		echo "#########################"; \
+		echo "# Waiting for changes.. #"; \
+		echo "#########################"; \
+		echo "\033[0m"; \
+		inotifywait -qr -e modify -e create -e delete -e move src include test Makefile --exclude '/\.'; \
+		done
 
 test: ## Make and run the Unit tests
 test: \
