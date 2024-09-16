@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include "cutil/memory.h"
 #include "cutil/thread.h"
 #include "cutil/hash.h"
@@ -539,16 +540,31 @@ int gcu_thread_set_name(GCU_Thread thread, const char * name) {
   GCU_Thread_Internal * thread_internal = hash_value.value.p;
 
 #ifdef _WIN32
-  PWSTR wname = (PWSTR)gcu_calloc(sizeof(WCHAR), strlen(name) + 1);
+  size_t wname_len = MultiByteToWideChar(CP_UTF8, 0, name, -1, NULL, 0);
+  if (!wname_len) {
+    // The conversion failed.
+    return -1;
+  }
+
+  PWSTR wname = (PWSTR)gcu_calloc(sizeof(WCHAR), wname_len + 1);
   if (!wname) {
-    return 1;
+    // Memory allocation failed.
+    return -1;
   }
-  HRESULT result = MultiByteToWideChar(CP_UTF8, 0, name, -1, wname, strlen(name) + 1);
-  if (SUCCEEDED(result)) {
-    result = SetThreadDescription(thread_internal->handle, wname);
+
+  // Actually convert the name.
+  if (!MultiByteToWideChar(CP_UTF8, 0, name, -1, wname, wname_len + 1)) {
+    // The conversion failed.
+    gcu_free(wname);
+    return -1;
   }
+
+  // Set the thread name.
+  HRESULT result = SetThreadDescription(thread_internal->handle, wname);
   gcu_free(wname);
-  return result;
+  return SUCCEEDED(result)
+    ? 0   // The thread name was set successfully.
+    : -1; // The thread name could not be set.
 #else
   return pthread_setname_np(thread_internal->handle, name);
 #endif
@@ -571,12 +587,24 @@ int gcu_thread_get_name(GCU_Thread thread, char * name, size_t size) {
 #ifdef _WIN32
   PWSTR threadname = NULL;
   HRESULT result = GetThreadDescription(thread_internal->handle, &threadname) == 0;
-  if (SUCCEEDED(result)) {
+
+  if (SUCCEEDED(result) && threadname) {
     // Convert the thread name to UTF-8.
-    result = WideCharToMultiByte(CP_UTF8, 0, threadname, -1, name, size, NULL, NULL);
+    int conversion_result = WideCharToMultiByte(CP_UTF8, 0, threadname, -1, name, size, NULL, NULL);
     LocalFree(threadname);
+
+    if (conversion_result == 0) {
+      // The conversion failed.
+      return -1;
+    }
+
+    // Everything went well.
+    return 0;
   }
-  return result;
+
+  // The thread name could not be retrieved.
+  return -1;
+
 #else
   return pthread_getname_np(thread_internal->handle, name, size);
 #endif
