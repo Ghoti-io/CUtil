@@ -212,63 +212,63 @@ endif
 # Unit Tests
 ####################################################################
 
-$(APP_DIR)/test-debug: \
+$(APP_DIR)/test-debug$(EXE_EXTENSION): \
 		test/test-debug.cpp \
 		$(DEP_DEBUG)
 	@printf "\n### Compiling Debug Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-type: \
+$(APP_DIR)/test-type$(EXE_EXTENSION): \
 		test/test-type.cpp \
 		$(DEP_TYPE)
 	@printf "\n### Compiling Types Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-memory: \
+$(APP_DIR)/test-memory$(EXE_EXTENSION): \
 		test/test-memory.cpp \
 		$(DEP_MEMORY)
 	@printf "\n### Compiling Memory Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-hash: \
+$(APP_DIR)/test-hash$(EXE_EXTENSION): \
 		test/test-hash.cpp \
 		$(DEP_HASH)
 	@printf "\n### Compiling Hash Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-random: \
+$(APP_DIR)/test-random$(EXE_EXTENSION): \
 		test/test-random.cpp \
 		$(DEP_RANDOM)
 	@printf "\n### Compiling Random Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-semaphore: \
+$(APP_DIR)/test-semaphore$(EXE_EXTENSION): \
 		test/test-semaphore.cpp \
 		$(DEP_SEMAPHORE)
 	@printf "\n### Compiling Semaphore Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-string: \
+$(APP_DIR)/test-string$(EXE_EXTENSION): \
 		test/test-string.cpp \
 		$(DEP_STRING)
 	@printf "\n### Compiling String Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-thread: \
+$(APP_DIR)/test-thread$(EXE_EXTENSION): \
 		test/test-thread.cpp \
 		$(DEP_THREAD)
 	@printf "\n### Compiling Thread Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-vector: \
+$(APP_DIR)/test-vector$(EXE_EXTENSION): \
 		test/test-vector.cpp \
 		$(DEP_VECTOR)
 	@printf "\n### Compiling Vector Test ###\n"
@@ -306,15 +306,15 @@ test-watch: ## Watch the file directory for changes and run the unit tests
 test: ## Make and run the Unit tests
 test: \
 		$(APP_DIR)/$(TARGET) \
-		$(APP_DIR)/test-debug \
-		$(APP_DIR)/test-memory \
-		$(APP_DIR)/test-type \
-		$(APP_DIR)/test-random \
-		$(APP_DIR)/test-semaphore \
-		$(APP_DIR)/test-string \
-		$(APP_DIR)/test-hash \
-		$(APP_DIR)/test-thread \
-		$(APP_DIR)/test-vector
+		$(APP_DIR)/test-debug$(EXE_EXTENSION) \
+		$(APP_DIR)/test-memory$(EXE_EXTENSION) \
+		$(APP_DIR)/test-type$(EXE_EXTENSION) \
+		$(APP_DIR)/test-random$(EXE_EXTENSION) \
+		$(APP_DIR)/test-semaphore$(EXE_EXTENSION) \
+		$(APP_DIR)/test-string$(EXE_EXTENSION) \
+		$(APP_DIR)/test-hash$(EXE_EXTENSION) \
+		$(APP_DIR)/test-thread$(EXE_EXTENSION) \
+		$(APP_DIR)/test-vector$(EXE_EXTENSION)
 	@echo "\033[0;32m"
 	@echo "############################"
 	@echo "### Running normal tests ###"
