@@ -40,7 +40,7 @@ else ifeq ($(UNAME_S), Darwin)
 	EXE_EXTENSION :=
 	# Additional macOS-specific variables
 
-else ifeq (,$(findstring MINGW32_NT,$(UNAME_S)))  # 32-bit Windows
+else ifeq ($(findstring MINGW32_NT,$(UNAME_S)),MINGW32_NT)  # 32-bit Windows
 	OS_NAME := Windows
 	LIB_EXTENSION := dll
 	OS_SPECIFIC_CXX_FLAGS := -shared
@@ -48,8 +48,10 @@ else ifeq (,$(findstring MINGW32_NT,$(UNAME_S)))  # 32-bit Windows
 	TARGET := $(BASE_NAME_PREFIX).dll
 	EXE_EXTENSION := .exe
 	# Additional Windows-specific variables
+	# This is the path to the pkg-config files on MSYS2
+	PKG_CONFIG_PATH := /mingw32/lib/pkgconfig
 
-else ifeq (,$(findstring MINGW64_NT,$(UNAME_S)))  # 64-bit Windows
+else ifeq ($(findstring MINGW64_NT,$(UNAME_S)),MINGW64_NT)  # 64-bit Windows
 	OS_NAME := Windows
 	LIB_EXTENSION := dll
 	OS_SPECIFIC_CXX_FLAGS := -shared
@@ -57,6 +59,8 @@ else ifeq (,$(findstring MINGW64_NT,$(UNAME_S)))  # 64-bit Windows
 	TARGET := $(BASE_NAME_PREFIX).dll
 	EXE_EXTENSION := .exe
 	# Additional Windows-specific variables
+	# This is the path to the pkg-config files on MSYS2
+	PKG_CONFIG_PATH := /mingw64/lib/pkgconfig
 
 else
     $(error Unsupported OS: $(UNAME_S))
@@ -76,7 +80,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/type.o \
 	$(OBJ_DIR)/vector.o
 
-TESTFLAGS := `pkg-config --libs --cflags gtest`
+TESTFLAGS := `PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs --cflags gtest`
 
 
 CUTILLIBRARY := -L $(APP_DIR) -l$(SUITE)-$(PROJECT)$(BRANCH)
