@@ -54,7 +54,8 @@ bool TEMPLATE_GCU_HASH_CREATE_IN_PLACE(TEMPLATE_GCU_HASH * hashTable, size_t cou
   }
 
   // Allocate the mutex.
-  bool failure = GCU_MUTEX_CREATE(hashTable->mutex);
+  GCU_MUTEX_CREATE(hashTable->mutex);
+  bool failure = !hashTable->mutex;
 
   // If the allocation failed, clean up and return null.
   if (failure) {
