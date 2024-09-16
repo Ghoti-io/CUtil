@@ -284,22 +284,22 @@ $(APP_DIR)/test-vector$(EXE_EXTENSION): \
 watch: ## Watch the file directory for changes and compile the target
 	@while true; do \
 		make all; \
-		echo "\033[0;32m"; \
-		echo "#########################"; \
-		echo "# Waiting for changes.. #"; \
-		echo "#########################"; \
-		echo "\033[0m"; \
+		printf "\033[0;32m"; \
+		printf "#########################\n"; \
+		printf "# Waiting for changes.. #\n"; \
+		printf "#########################\n"; \
+		printf "\033[0m"; \
 		inotifywait -qr -e modify -e create -e delete -e move src include test Makefile --exclude '/\.'; \
 		done
 
 test-watch: ## Watch the file directory for changes and run the unit tests
 	@while true; do \
 		make test; \
-		echo "\033[0;32m"; \
-		echo "#########################"; \
-		echo "# Waiting for changes.. #"; \
-		echo "#########################"; \
-		echo "\033[0m"; \
+		printf "\033[0;32m"; \
+		printf "#########################\n"; \
+		printf "# Waiting for changes.. #\n"; \
+		printf "#########################\n"; \
+		printf "\033[0m"; \
 		inotifywait -qr -e modify -e create -e delete -e move src include test Makefile --exclude '/\.'; \
 		done
 
@@ -315,11 +315,11 @@ test: \
 		$(APP_DIR)/test-hash$(EXE_EXTENSION) \
 		$(APP_DIR)/test-thread$(EXE_EXTENSION) \
 		$(APP_DIR)/test-vector$(EXE_EXTENSION)
-	@echo "\033[0;32m"
-	@echo "############################"
-	@echo "### Running normal tests ###"
-	@echo "############################"
-	@echo "\033[0m"
+	@printf "\033[0;32m"
+	@printf "############################\n"
+	@printf "### Running normal tests ###\n"
+	@printf "############################\n"
+	@printf "\033[0m"
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-debug --gtest_brief=1
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-memory --gtest_brief=1
 	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-thread --gtest_brief=1
