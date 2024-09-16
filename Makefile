@@ -42,7 +42,7 @@ else ifeq (,$(findstring MINGW32_NT,$(UNAME_S)))  # 32-bit Windows
     OS_NAME := Windows
     LIB_EXTENSION := dll
     OS_SPECIFIC_CXX_FLAGS := -shared
-    OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,--out-implib,$(BASE_NAME_PREFIX).dll.a
+    OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,--out-implib,$(APP_DIR)/$(BASE_NAME_PREFIX).dll.a
 		TARGET := $(BASE_NAME_PREFIX).dll
     # Additional Windows-specific variables
 
@@ -192,8 +192,11 @@ $(APP_DIR)/$(TARGET): \
 	@printf "\n### Compiling Ghoti.io CUtil Shared Library ###\n"
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(OS_SPECIFIC_CXX_FLAGS) -o $@ $^ $(LDFLAGS) $(OS_SPECIFIC_LIBRARY_NAME_FLAG)
+
+ifeq ($(OS_NAME), Linux)
 	@ln -f -s $(TARGET) $(APP_DIR)/$(SO_NAME)
 	@ln -f -s $(SO_NAME) $(APP_DIR)/$(BASE_NAME)
+endif
 
 ####################################################################
 # Unit Tests
