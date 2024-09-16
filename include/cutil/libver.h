@@ -164,32 +164,30 @@
 #include <windows.h>
 
 // Define the startup macro for Visual Studio
-#define GTA_INIT_FUNCTION(function_name) \
+#define GCU_INIT_FUNCTION(function_name) \
     __pragma(section(".CRT$XCU", read)) \
     __declspec(allocate(".CRT$XCU")) void (*function_name##_init)(void) = function_name; \
     static void function_name(void)
 
 // Define the cleanup macro for Visual Studio
-#define GTA_CLEANUP_FUNCTION(function_name) \
+#define GCU_CLEANUP_FUNCTION(function_name) \
     __pragma(section(".CRT$XTU", read)) \
     __declspec(allocate(".CRT$XTU")) void (*function_name##_cleanup)(void) = function_name; \
     static void function_name(void)
 
-#elif defined(__GNUC__) || defined(__clang__)  // If using GCC/Clang
+#elif defined(__GNUC__) || defined(__clang__) || defined(__MINGW32__) || defined(__MINGW64__)  // If using GCC/Clang/MinGW
 
-// Define the startup macro for GCC/Clang
-#define GTA_INIT_FUNCTION(function_name) \
+// Define the startup macro for GCC/Clang/MinGW
+#define GCU_INIT_FUNCTION(function_name) \
     __attribute__((constructor)) static void function_name(void)
 
-// Define the cleanup macro for GCC/Clang
-#define GTA_CLEANUP_FUNCTION(function_name) \
+// Define the cleanup macro for GCC/Clang/MinGW
+#define GCU_CLEANUP_FUNCTION(function_name) \
     __attribute__((destructor)) static void function_name(void)
 
 #else  // Other compilers (add more cases as needed)
 
-// Default no-op macros for unsupported compilers
-#define GTA_INIT_FUNCTION(function_name)
-#define GTA_CLEANUP_FUNCTION(function_name)
+#error "Unsupported compiler"
 
 #endif
 

@@ -129,11 +129,14 @@ static void gcu_thread_hash_cleanup(GCU_Hash64 * hash) {
   GCU_MUTEX_UNLOCK(hash->mutex);
 }
 
-//
-// This will be called before `main()` is called, in order to set up the `gcu_thread_hash`
-// variable.
-//
-void gcu_thread_constructor() {
+/**
+ * Constructor for the thread module.
+ *
+ * This is called automatically when the module is loaded.  It will initialize
+ * the module and prepare it for use, including allocating any memory needed by
+ * the module.
+ */
+GCU_INIT_FUNCTION(gcu_thread_constructor) {
   gcu_thread_hash = gcu_hash64_create(gcu_thread_get_num_processors() * 3);
 
   // Verify that the thread hash table has been successfully allocated.
@@ -172,11 +175,14 @@ void gcu_thread_constructor() {
   }
 }
 
-//
-// This will be called after `main()` is called, in order to clean up the `gcu_thread_hash`
-// variable.
-//
-void gcu_thread_destructor() {
+/**
+ * Destructor for the thread module.
+ *
+ * This is called automatically when the module is unloaded.  It will wait for
+ * all threads to finish before returning and it will clean up the memory
+ * allocated by the module.
+ */
+GCU_CLEANUP_FUNCTION(gcu_thread_destructor) {
   // Verify that gcu_thread_hash has been initialized.
   if (!gcu_thread_hash) {
     return;

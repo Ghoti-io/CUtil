@@ -6,6 +6,7 @@ using namespace std;
 
 TEST(Hash64, CreateEmpty) {
   auto t = gcu_hash64_create(0);
+  ASSERT_NE(t, nullptr);
   ASSERT_EQ(gcu_hash64_count(t), 0);
   ASSERT_EQ(t->capacity, 0);
   gcu_hash64_destroy(t);

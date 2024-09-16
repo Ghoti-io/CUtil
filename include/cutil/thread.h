@@ -94,24 +94,6 @@ typedef GCU_THREAD_FUNC_RETURN_T (GCU_THREAD_FUNC_CALLING_CONVENTION *GCU_THREAD
 typedef uint32_t GCU_Thread;
 
 /**
- * Constructor for the thread module.
- *
- * This is called automatically when the module is loaded.  It will initialize
- * the module and prepare it for use, including allocating any memory needed by
- * the module.
- */
-void gcu_thread_constructor() __attribute__((constructor));
-
-/**
- * Destructor for the thread module.
- *
- * This is called automatically when the module is unloaded.  It will wait for
- * all threads to finish before returning and it will clean up the memory
- * allocated by the module.
- */
-void gcu_thread_destructor() __attribute__((destructor));
-
-/**
  * Create a new thread.
  *
  * This will create a new thread and start it running.  Because we must wait for
