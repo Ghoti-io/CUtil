@@ -30,6 +30,9 @@ ifeq ($(UNAME_S), Linux)
 	TARGET := $(SO_NAME).$(MINOR_VERSION)
 	EXE_EXTENSION :=
 	# Additional Linux-specific variables
+	PKG_CONFIG_PATH := /usr/local/share/pkgconfig
+	INCLUDE_INSTALL_PATH := /usr/local/include
+	LIB_INSTALL_PATH := /usr/local/lib
 
 else ifeq ($(UNAME_S), Darwin)
 	OS_NAME := Mac
@@ -50,6 +53,9 @@ else ifeq ($(findstring MINGW32_NT,$(UNAME_S)),MINGW32_NT)  # 32-bit Windows
 	# Additional Windows-specific variables
 	# This is the path to the pkg-config files on MSYS2
 	PKG_CONFIG_PATH := /mingw32/lib/pkgconfig
+	INCLUDE_INSTALL_PATH := /mingw32/include
+	LIB_INSTALL_PATH := /mingw32/lib
+	BIN_INSTALL_PATH := /mingw32/bin
 
 else ifeq ($(findstring MINGW64_NT,$(UNAME_S)),MINGW64_NT)  # 64-bit Windows
 	OS_NAME := Windows
@@ -61,6 +67,9 @@ else ifeq ($(findstring MINGW64_NT,$(UNAME_S)),MINGW64_NT)  # 64-bit Windows
 	# Additional Windows-specific variables
 	# This is the path to the pkg-config files on MSYS2
 	PKG_CONFIG_PATH := /mingw64/lib/pkgconfig
+	INCLUDE_INSTALL_PATH := /mingw64/include
+	LIB_INSTALL_PATH := /mingw64/lib
+	BIN_INSTALL_PATH := /mingw64/bin
 
 else
     $(error Unsupported OS: $(UNAME_S))
@@ -350,35 +359,54 @@ clean: ## Remove all contents of the build directories.
 install: ## Install the library globally, requires sudo
 install: all
 	# Installing the shared library.
-	@mkdir -p /usr/local/lib/$(SUITE)
-	@cp $(APP_DIR)/$(TARGET) /usr/local/lib/$(SUITE)/
-	@ln -f -s $(TARGET) /usr/local/lib/$(SUITE)/$(SO_NAME)
-	@ln -f -s $(SO_NAME) /usr/local/lib/$(SUITE)/$(BASE_NAME)
+	@mkdir -p $(LIB_INSTALL_PATH)/$(SUITE)
+ifeq ($(OS_NAME), Linux)
+# Install the .so file
+	@cp $(APP_DIR)/$(TARGET) $(LIB_INSTALL_PATH)/$(SUITE)/
+	@ln -f -s $(TARGET) $(LIB_INSTALL_PATH)/$(SUITE)/$(SO_NAME)
+	@ln -f -s $(SO_NAME) $(LIB_INSTALL_PATH)/$(SUITE)/$(BASE_NAME)
 	@echo "/usr/local/lib/$(SUITE)" > /etc/ld.so.conf.d/$(SUITE)-$(PROJECT)$(BRANCH).conf
+endif
+ifeq ($(OS_NAME), Windows)
+# The .dll file and the .dll.a file
+	@mkdir -p $(BIN_INSTALL_PATH)/$(SUITE)
+	@cp $(APP_DIR)/$(TARGET).a $(LIB_INSTALL_PATH)
+	@cp $(APP_DIR)/$(TARGET) $(BIN_INSTALL_PATH)
+endif
 	# Installing the headers.
-	@mkdir -p /usr/local/include/$(SUITE)/$(PROJECT)$(BRANCH)
-	@cd include &&	find . -name "*.h" -exec cp --parents '{}' /usr/local/include/$(SUITE)/$(PROJECT)$(BRANCH)/ \;
+	@mkdir -p $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH)
+	@cd include &&	find . -name "*.h" -exec cp --parents '{}' $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH)/ \;
 	# Installing the pkg-config files.
-	@mkdir -p /usr/local/share/pkgconfig
-	@cat pkgconfig/$(SUITE)-$(PROJECT).pc | sed 's/(SUITE)/$(SUITE)/g; s/(PROJECT)/$(PROJECT)/g; s/(BRANCH)/$(BRANCH)/g; s/(VERSION)/$(VERSION)/g' > /usr/local/share/pkgconfig/$(SUITE)-$(PROJECT)$(BRANCH).pc
+	@mkdir -p $(PKG_CONFIG_PATH)
+	@cat pkgconfig/$(SUITE)-$(PROJECT).pc | sed 's/(SUITE)/$(SUITE)/g; s/(PROJECT)/$(PROJECT)/g; s/(BRANCH)/$(BRANCH)/g; s/(VERSION)/$(VERSION)/g; s|(LIB)|$(LIB_INSTALL_PATH)|g; s|(INCLUDE)|$(INCLUDE_INSTALL_PATH)|g' > $(PKG_CONFIG_PATH)/$(SUITE)-$(PROJECT)$(BRANCH).pc
+ifeq ($(OS_NAME), Linux)
 	# Running ldconfig.
 	@ldconfig >> /dev/null 2>&1
+endif
 	@echo "Ghoti.io $(PROJECT)$(BRANCH) installed"
 
 uninstall: ## Delete the globally-installed files.  Requires sudo.
 	# Deleting the shared library.
-	@rm -f /usr/local/lib/$(SUITE)/$(BASE_NAME)*
+ifeq ($(OS_NAME), Linux)
+	@rm -f $(LIB_INSTALL_PATH)/$(SUITE)/$(BASE_NAME)*
 	# Deleting the ld configuration file.
 	@rm -f /etc/ld.so.conf.d/$(SUITE)-$(PROJECT)$(BRANCH).conf
+endif
+ifeq ($(OS_NAME), Windows)
+	@rm -f $(LIB_INSTALL_PATH)/$(TARGET).a
+	@rm -f $(BIN_INSTALL_PATH)/$(TARGET)
+endif
 	# Deleting the headers.
-	@rm -rf /usr/local/include/$(SUITE)/$(PROJECT)$(BRANCH)
+	@rm -rf $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH)
 	# Deleting the pkg-config files.
-	@rm -f /usr/local/share/pkgconfig/$(SUITE)-$(PROJECT)$(BRANCH).pc
+	@rm -f $(PKG_CONFIG_PATH)/$(SUITE)-$(PROJECT)$(BRANCH).pc
 	# Cleaning up (potentially) no longer needed directories.
-	@rmdir --ignore-fail-on-non-empty /usr/local/include/$(SUITE)
-	@rmdir --ignore-fail-on-non-empty /usr/local/lib/$(SUITE)
+	@rmdir --ignore-fail-on-non-empty $(INCLUDE_INSTALL_PATH)/$(SUITE)
+	@rmdir --ignore-fail-on-non-empty $(LIB_INSTALL_PATH)/$(SUITE)
+ifeq ($(OS_NAME), Linux)
 	# Running ldconfig.
 	@ldconfig >> /dev/null 2>&1
+endif
 	@echo "Ghoti.io $(PROJECT)$(BRANCH) has been uninstalled"
 
 docs: ## Generate the documentation in the ./docs subdirectory
