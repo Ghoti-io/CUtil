@@ -130,8 +130,9 @@ TEST(Thread, NameFunctions) {
 
   // Verify that the parent and child thread have the same name.
   EXPECT_EQ(0, gcu_thread_get_current_name(parent_buffer, sizeof(parent_buffer)));
-  EXPECT_NE(string(parent_buffer), string());
-  EXPECT_NE(0, gcu_thread_get_name(child_thread, smallBuffer, sizeof(smallBuffer)));
+  // NOTE: The following is commented out because the parent thread name is not
+  // set by default on all platforms (e.g. Windows).
+  // EXPECT_NE(string(parent_buffer), string());
   EXPECT_EQ(0, gcu_thread_get_name(child_thread, child_buffer, sizeof(child_buffer)));
   EXPECT_EQ(string(parent_buffer), string(child_buffer));
 
@@ -139,6 +140,9 @@ TEST(Thread, NameFunctions) {
   EXPECT_EQ(0, gcu_thread_set_name(child_thread, new_name));
   EXPECT_EQ(0, gcu_thread_get_name(child_thread, child_buffer, sizeof(child_buffer)));
   EXPECT_EQ(string(new_name), string(child_buffer));
+
+  // Verify that there is an error when the buffer is too small.
+  EXPECT_NE(0, gcu_thread_get_name(child_thread, smallBuffer, sizeof(smallBuffer)));
 
   status.run = false;
   gcu_thread_join(child_thread);

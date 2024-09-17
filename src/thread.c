@@ -106,6 +106,8 @@ static void gcu_thread_hash_cleanup(GCU_Hash64 * hash) {
   // Lock the hash table.
   GCU_MUTEX_LOCK(hash->mutex);
 
+  uint32_t current_id = gcu_thread_get_current_id();
+
   // Iterate over the hash table, and join any threads that have not been
   // detached or joined.
   GCU_Hash64_Iterator iter = gcu_hash64_iterator_get(hash);
@@ -116,7 +118,10 @@ static void gcu_thread_hash_cleanup(GCU_Hash64 * hash) {
 
     if (thread) {
       if (!thread->detached && !thread->joined) {
-        gcu_thread_join(thread->id);
+        if (thread_id != current_id) {
+          // We cannot join the current thread, into itself.
+          gcu_thread_join(thread->id);
+        }
       }
       gcu_free(thread);
       iter.value.p = NULL;
@@ -302,17 +307,22 @@ int gcu_thread_join(GCU_Thread thread_id) {
   }
 
   // Join the thread.
-  bool failed;
+  int failed;
 #ifdef _WIN32
-  failed = WaitForSingleObject(thread_internal->handle, INFINITE);
+  DWORD wait_result = WaitForSingleObject(thread_internal->handle, INFINITE);
+  failed = wait_result != WAIT_OBJECT_0;
 #else
   failed = pthread_join(thread_internal->handle, NULL);
 #endif
 
-  // Set the joined flag.
-  thread_internal->joined = !failed;
+  // Set the joined flag if the join was successful.
+  if (!failed) {
+    thread_internal->joined = true;
+  }
 
-  return failed;
+  return failed
+    ? -1 // The thread could not be joined.
+    : 0; // The thread was joined successfully.
 }
 
 
