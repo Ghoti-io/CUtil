@@ -69,6 +69,7 @@ void gcu_random_mt64_init(GCU_Random_MT64_State * state, uint64_t seed) {
     uint64_t x = state_array[i - 1];
     state_array[i] = ((x ^ (x >> 62)) * 6364136223846793005ULL) + i; 
   }
+  state->state_index = 0;
 }
 
 
