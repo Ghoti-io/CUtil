@@ -54,7 +54,7 @@
 #define GHOTIIO_CUTIL_RENAME(a,b) GHOTIIO_CUTIL_RENAME_INNER(a,b)
 
 /**
- * Helper macro to concatenate the identifiers.  It reuires two levels of
+ * Helper macro to concatenate the identifiers.  It requires two levels of
  * processing.
  *
  * This macro should not be called directly.  It should only be called by
