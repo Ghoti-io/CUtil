@@ -423,7 +423,7 @@ ifeq ($(OS_NAME), Linux)
 endif
 	@echo "Ghoti.io $(PROJECT)$(BRANCH) has been uninstalled"
 
-all-debug: ## Build the shared library in DEBUG mode
+debug: ## Build the shared library in DEBUG mode
 	make all BUILD=debug
 
 watch-debug: ## Watch the file directory for changes and compile the target in DEBUG mode
