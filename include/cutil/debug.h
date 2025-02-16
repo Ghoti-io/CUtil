@@ -6,7 +6,7 @@
 #ifndef GHOTIIO_CUTIL_DEBUG_H
 #define GHOTIIO_CUTIL_DEBUG_H
 
-#include "cutil/libver.h"
+#include <cutil/libver.h>
 
 #ifdef __cplusplus
 extern "C" {

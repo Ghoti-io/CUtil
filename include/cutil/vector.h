@@ -7,8 +7,8 @@
 #define GHOTIIO_CUTIL_VECTOR_H
 
 #include <stddef.h>
-#include "cutil/type.h"
-#include "cutil/mutex.h"
+#include <cutil/type.h>
+#include <cutil/mutex.h>
 
 #ifdef __cplusplus
 extern "C" {

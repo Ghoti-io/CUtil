@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "cutil/thread.h"
+#include <cutil/thread.h>
 
 #include <iostream>
 

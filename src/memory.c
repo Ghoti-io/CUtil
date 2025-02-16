@@ -9,7 +9,7 @@ static bool capture = true;
 size_t gcu_memory_alloc_count = 0;
 size_t gcu_memory_free_count = 0;
 
-#include "cutil/memory.h"
+#include <cutil/memory.h>
 
 /// @cond HIDDEN_SYMBOLS
 void * gcu_malloc_debug(size_t size, const char * file, size_t line) {

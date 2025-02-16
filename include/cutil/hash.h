@@ -8,8 +8,8 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "cutil/type.h"
-#include "cutil/mutex.h"
+#include <cutil/type.h>
+#include <cutil/mutex.h>
 
 #ifdef __cplusplus
 extern "C" {

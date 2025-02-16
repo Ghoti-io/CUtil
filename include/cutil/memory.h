@@ -30,7 +30,7 @@
 #include <stdlib.h>
 #endif
 
-#include "cutil/libver.h"
+#include <cutil/libver.h>
 
 #ifdef __cplusplus
 extern "C" {

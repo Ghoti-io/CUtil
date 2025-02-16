@@ -5,7 +5,7 @@
 // allocation and deallocation calls and write them to stderr. This is useful
 // for debugging memory leaks and other memory-related issues.
 #define GHOTIIO_CUTIL_ENABLE_MEMORY_DEBUG
-#include "cutil/memory.h"
+#include <cutil/memory.h>
 
 using namespace std;
 

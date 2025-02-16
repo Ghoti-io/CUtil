@@ -11,9 +11,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "cutil/memory.h"
-#include "cutil/thread.h"
-#include "cutil/hash.h"
+#include <cutil/memory.h>
+#include <cutil/thread.h>
+#include <cutil/hash.h>
 
 #ifdef _WIN32
 #else
