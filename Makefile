@@ -357,7 +357,6 @@ test: \
 
 clean: ## Remove all contents of the build directories.
 	-@rm -rvf ./build
-	-@rm include/$(PROJECT)/float.h
 
 # Files will be as follows:
 # /usr/local/lib/(SUITE)/
