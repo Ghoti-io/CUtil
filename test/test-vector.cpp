@@ -1,6 +1,6 @@
 #include <sstream>
 #include <gtest/gtest.h>
-#include "cutil/vector.h"
+#include <cutil/vector.h>
 #include <stdio.h>
 
 using namespace std;

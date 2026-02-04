@@ -1,6 +1,6 @@
 #include <sstream>
 #include <gtest/gtest.h>
-#include "cutil/type.h"
+#include <cutil/type.h>
 
 using namespace std;
 

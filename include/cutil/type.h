@@ -8,8 +8,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "cutil/libver.h"
-#include "cutil/float.h"
+#include <cutil/libver.h>
+#include <cutil/float.h>
 
 #ifdef __cplusplus
 extern "C" {

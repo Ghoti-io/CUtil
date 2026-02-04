@@ -7,7 +7,13 @@ LDFLAGS := -L /usr/lib -lstdc++ -lm
 
 SUITE := ghoti.io
 PROJECT := cutil
+
 BRANCH := -dev
+# If BUILD is debug, append -debug
+ifeq ($(BUILD),debug)
+    BRANCH := $(BRANCH)-debug
+endif
+
 BASE_NAME_PREFIX := lib$(SUITE)-$(PROJECT)$(BRANCH)
 BASE_NAME := $(BASE_NAME_PREFIX).so
 MAJOR_VERSION := 0
@@ -90,7 +96,7 @@ OBJ_DIR := $(BUILD)/objects
 GEN_DIR := $(BUILD)/generated
 APP_DIR := $(BUILD)/apps
 
-INCLUDE := -I include/
+INCLUDE := -I include/ -I $(BUILD_DIR)/include/
 LIBOBJECTS := \
   $(OBJ_DIR)/debug.o \
 	$(OBJ_DIR)/hash.o \
@@ -129,9 +135,13 @@ $(FLOAT_IDENTIFIER): \
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $< -o $@
 
-include/$(PROJECT)/float.h: \
+$(BUILD_DIR)/include/$(PROJECT):
+	@mkdir -p $@
+
+$(BUILD_DIR)/include/$(PROJECT)/float.h: \
 		src/float.h.template \
-		$(FLOAT_IDENTIFIER)
+		$(FLOAT_IDENTIFIER) \
+		$(BUILD_DIR)/include/$(PROJECT)
 	cat src/float.h.template | sed "s/FLOAT32/$(shell $(FLOAT_IDENTIFIER) 32)/; s/FLOAT64/$(shell $(FLOAT_IDENTIFIER) 64)/" > $@
 
 ####################################################################
@@ -218,11 +228,16 @@ $(APP_DIR)/test-vector$(EXE_EXTENSION): test/test-vector.cpp | $(APP_DIR)/$(TARG
 # Commands
 ####################################################################
 
-.PHONY: all clean cloc docs docs-pdf install test test-watch watch
+# General commands
+.PHONY: clean cloc docs docs-pdf
+# Release build commands
+.PHONY: all install test test-watch uninstall watch
+# Debug build commands
+.PHONY: all-debug install-debug test-debug test-watch-debug uninstall-debug watch-debug
 
 watch: ## Watch the file directory for changes and compile the target
 	@while true; do \
-		make all; \
+		make all BUILD=$(BUILD); \
 		printf "\033[0;32m"; \
 		printf "#########################\n"; \
 		printf "# Waiting for changes.. #\n"; \
@@ -233,7 +248,7 @@ watch: ## Watch the file directory for changes and compile the target
 
 test-watch: ## Watch the file directory for changes and run the unit tests
 	@while true; do \
-		make test; \
+		make test BUILD=$(BUILD); \
 		printf "\033[0;32m"; \
 		printf "#########################\n"; \
 		printf "# Waiting for changes.. #\n"; \
@@ -306,6 +321,7 @@ endif
 	# Installing the headers.
 	@mkdir -p $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH)
 	@cd include &&	find . -name "*.h" -exec cp --parents '{}' $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH)/ \;
+	@cd $(BUILD_DIR)/include &&	find . -name "*.h" -exec cp --parents '{}' $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH)/ \;
 	# Installing the pkg-config files.
 	@mkdir -p $(PKG_CONFIG_PATH)
 	@cat pkgconfig/$(SUITE)-$(PROJECT).pc | sed 's/(SUITE)/$(SUITE)/g; s/(PROJECT)/$(PROJECT)/g; s/(BRANCH)/$(BRANCH)/g; s/(VERSION)/$(VERSION)/g; s|(PC_LIB_DIR)|$(PC_LIB_DIR)|g; s|(PC_INCLUDE_DIR)|$(PC_INCLUDE_DIR)|g' > $(PKG_CONFIG_PATH)/$(SUITE)-$(PROJECT)$(BRANCH).pc
@@ -339,6 +355,24 @@ ifeq ($(OS_NAME), Linux)
 	@ldconfig >> /dev/null 2>&1
 endif
 	@echo "Ghoti.io $(PROJECT)$(BRANCH) has been uninstalled"
+
+debug: ## Build the shared library in DEBUG mode
+	make all BUILD=debug
+
+watch-debug: ## Watch the file directory for changes and compile the target in DEBUG mode
+	make watch BUILD=debug
+
+test-watch-debug: ## Watch the file directory for changes and run the unit tests in DEBUG mode
+	make test-watch BUILD=debug
+
+test-debug: ## Make and run the Unit tests in DEBUG mode
+	make test BUILD=debug
+
+install-debug: ## Install the DEBUG library globally, requires sudo
+	make install BUILD=debug
+
+uninstall-debug: ## Delete the DEBUG globally-installed files.  Requires sudo.
+	make uninstall BUILD=debug
 
 docs: ## Generate the documentation in the ./docs subdirectory
 	doxygen

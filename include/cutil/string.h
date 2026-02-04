@@ -7,7 +7,7 @@
 #define GHOTIIO_CUTIL_STRING_H
 
 #include <stddef.h>
-#include "cutil/type.h"
+#include <cutil/type.h>
 
 #ifdef __cplusplus
 extern "C" {

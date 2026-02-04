@@ -7,7 +7,7 @@
 #ifndef G_CUTIL_SEMAPHORE_H
 #define G_CUTIL_SEMAPHORE_H
 
-#include "cutil/libver.h"
+#include <cutil/libver.h>
 
 #ifdef __cplusplus
 extern "C" {
