@@ -4,10 +4,6 @@ CC := cc
 CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c17 -O3 -g
 # -DGHOTIIO_CUTIL_ENABLE_MEMORY_DEBUG
 LDFLAGS := -L /usr/lib -lstdc++ -lm
-BUILD := ./build
-OBJ_DIR := $(BUILD)/objects
-GEN_DIR := $(BUILD)/generated
-APP_DIR := $(BUILD)/apps
 
 SUITE := ghoti.io
 PROJECT := cutil
@@ -24,6 +20,7 @@ UNAME_S := $(shell uname -s)
 
 ifeq ($(UNAME_S), Linux)
 	OS_NAME := Linux
+	BUILD := ./build/linux
 	LIB_EXTENSION := so
 	OS_SPECIFIC_CXX_FLAGS := -shared -fPIC
 	OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,-soname,$(SO_NAME)
@@ -33,21 +30,27 @@ ifeq ($(UNAME_S), Linux)
 	PKG_CONFIG_PATH := /usr/local/share/pkgconfig
 	INCLUDE_INSTALL_PATH := /usr/local/include
 	LIB_INSTALL_PATH := /usr/local/lib
+	PC_INCLUDE_DIR := $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH)
+	PC_LIB_DIR := $(LIB_INSTALL_PATH)/$(SUITE)
 
 else ifeq ($(UNAME_S), Darwin)
 	OS_NAME := Mac
+	BUILD := ./build/mac
 	LIB_EXTENSION := dylib
 	OS_SPECIFIC_CXX_FLAGS := -shared
 	OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,-install_name,$(BASE_NAME_PREFIX).dylib
 	TARGET := $(BASE_NAME_PREFIX).dylib
 	EXE_EXTENSION :=
 	# Additional macOS-specific variables
+	PC_INCLUDE_DIR := $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH)
+	PC_LIB_DIR := $(LIB_INSTALL_PATH)/$(SUITE)
 
 else ifeq ($(findstring MINGW32_NT,$(UNAME_S)),MINGW32_NT)  # 32-bit Windows
 	OS_NAME := Windows
+	BUILD := ./build/win32
 	LIB_EXTENSION := dll
 	OS_SPECIFIC_CXX_FLAGS := -shared
-	OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,--out-implib,$(APP_DIR)/$(BASE_NAME_PREFIX).dll.a
+	OS_SPECIFIC_LIBRARY_NAME_FLAG = -Wl,--out-implib,$(APP_DIR)/$(BASE_NAME_PREFIX).dll.a
 	TARGET := $(BASE_NAME_PREFIX).dll
 	EXE_EXTENSION := .exe
 	# Additional Windows-specific variables
@@ -56,12 +59,16 @@ else ifeq ($(findstring MINGW32_NT,$(UNAME_S)),MINGW32_NT)  # 32-bit Windows
 	INCLUDE_INSTALL_PATH := /mingw32/include
 	LIB_INSTALL_PATH := /mingw32/lib
 	BIN_INSTALL_PATH := /mingw32/bin
+	# Windows paths for .pc so gcc invoked by mingw32-make can resolve -I/-L (lazy: only when install runs)
+	PC_INCLUDE_DIR = $(shell cygpath -m $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH))
+	PC_LIB_DIR = $(shell cygpath -m $(LIB_INSTALL_PATH)/$(SUITE))
 
 else ifeq ($(findstring MINGW64_NT,$(UNAME_S)),MINGW64_NT)  # 64-bit Windows
 	OS_NAME := Windows
+	BUILD := ./build/win64
 	LIB_EXTENSION := dll
 	OS_SPECIFIC_CXX_FLAGS := -shared
-	OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,--out-implib,$(APP_DIR)/$(BASE_NAME_PREFIX).dll.a
+	OS_SPECIFIC_LIBRARY_NAME_FLAG = -Wl,--out-implib,$(APP_DIR)/$(BASE_NAME_PREFIX).dll.a
 	TARGET := $(BASE_NAME_PREFIX).dll
 	EXE_EXTENSION := .exe
 	# Additional Windows-specific variables
@@ -70,12 +77,18 @@ else ifeq ($(findstring MINGW64_NT,$(UNAME_S)),MINGW64_NT)  # 64-bit Windows
 	INCLUDE_INSTALL_PATH := /mingw64/include
 	LIB_INSTALL_PATH := /mingw64/lib
 	BIN_INSTALL_PATH := /mingw64/bin
+	# Windows paths for .pc so gcc invoked by mingw32-make can resolve -I/-L (lazy: only when install runs)
+	PC_INCLUDE_DIR = $(shell cygpath -m $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH))
+	PC_LIB_DIR = $(shell cygpath -m $(LIB_INSTALL_PATH)/$(SUITE))
 
 else
     $(error Unsupported OS: $(UNAME_S))
 
 endif
 
+OBJ_DIR := $(BUILD)/objects
+GEN_DIR := $(BUILD)/generated
+APP_DIR := $(BUILD)/apps
 
 INCLUDE := -I include/
 LIBOBJECTS := \
@@ -98,47 +111,13 @@ CUTILLIBRARY := -L $(APP_DIR) -l$(SUITE)-$(PROJECT)$(BRANCH)
 all: $(APP_DIR)/$(TARGET) ## Build the shared library
 
 ####################################################################
-# Dependency Variables
+# Dependency Inclusion
 ####################################################################
-DEP_LIBVER = \
-  include/$(PROJECT)/libver.h
-DEP_MUTEX = \
-	include/$(PROJECT)/mutex.h
-DEP_SEMAPHORE = \
-	$(DEP_LIBVER) \
-	include/$(PROJECT)/semaphore.h
-DEP_DEBUG = \
-	$(DEP_LIBVER) \
-	include/$(PROJECT)/debug.h
-DEP_MEMORY = \
-	$(DEP_LIBVER) \
-	include/$(PROJECT)/memory.h
-DEP_FLOAT = \
-	$(DEP_LIBVER) \
-	include/$(PROJECT)/float.h
-DEP_TYPE = \
-	$(DEP_FLOAT) \
-	include/$(PROJECT)/type.h
-DEP_HASH= \
-	$(DEP_TYPE) \
-	$(DEP_MEMORY) \
-	$(DEP_MUTEX) \
-	include/$(PROJECT)/hash.h
-DEP_RANDOM = \
-	$(DEP_LIBVER) \
-	include/$(PROJECT)/random.h
-DEP_THREAD = \
-	$(DEP_LIBVER) \
-	$(DEP_HASH) \
-	include/$(PROJECT)/thread.h
-DEP_VECTOR= \
-	$(DEP_TYPE) \
-	$(DEP_MEMORY) \
-	$(DEP_MUTEX) \
-	include/$(PROJECT)/vector.h
-DEP_STRING = \
-	$(DEP_LIBVER) \
-	include/$(PROJECT)/string.h
+# Compiler-generated .d files (see -MMD -MP -MF in compile commands).
+TEST_NAMES := test-debug test-type test-memory test-hash test-random test-semaphore test-string test-thread test-vector
+TEST_DEPFILES := $(addprefix $(APP_DIR)/,$(TEST_NAMES:%=%.d))
+DEPFILES := $(LIBOBJECTS:.o=.d) $(TEST_DEPFILES)
+-include $(DEPFILES)
 
 ####################################################################
 # Floating Point Type Identification
@@ -159,48 +138,16 @@ include/$(PROJECT)/float.h: \
 # Object Files
 ####################################################################
 
-$(LIBOBJECTS) :
+# Pattern rule: compile .c to .o and generate dependency file (compiler tracks headers).
+# float.h is generated; ensure it exists before compiling any .c that may include it (e.g. type.h).
+$(OBJ_DIR)/%.o: src/%.c | include/$(PROJECT)/float.h
 	@printf "\n### Compiling $@ ###\n"
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $(INCLUDE) -c $< -MMD -o $@ $(OS_SPECIFIC_CXX_FLAGS)
+	$(CC) $(CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@ $(OS_SPECIFIC_CXX_FLAGS)
 
-$(OBJ_DIR)/debug.o: \
-	src/debug.c \
-	$(DEP_DEBUG)
-
-$(OBJ_DIR)/hash.o: \
-	src/hash.c \
-	src/hash.template.c \
-	$(DEP_HASH)
-
-$(OBJ_DIR)/memory.o: \
-	src/memory.c \
-	$(DEP_MEMORY)
-
-$(OBJ_DIR)/random.o: \
-	src/random.c \
-	$(DEP_RANDOM)
-
-$(OBJ_DIR)/semaphore.o: \
-	src/semaphore.c \
-	$(DEP_SEMAPHORE)
-
-$(OBJ_DIR)/string.o: \
-	src/string.c \
-	$(DEP_STRING)
-
-$(OBJ_DIR)/thread.o: \
-	src/thread.c \
-	$(DEP_THREAD)
-
-$(OBJ_DIR)/type.o: \
-	src/type.c \
-	$(DEP_TYPE)
-
-$(OBJ_DIR)/vector.o: \
-	src/vector.c \
-	src/vector.template.c \
-	$(DEP_VECTOR)
+# Extra source dependencies not seen by the compiler (included via macros).
+$(OBJ_DIR)/hash.o: src/hash.template.c
+$(OBJ_DIR)/vector.o: src/vector.template.c
 
 ####################################################################
 # Shared Library
@@ -221,68 +168,51 @@ endif
 # Unit Tests
 ####################################################################
 
-$(APP_DIR)/test-debug$(EXE_EXTENSION): \
-		test/test-debug.cpp \
-		$(DEP_DEBUG)
+# Test executables: compile with -MMD -MP -MF so dependency files are generated and -included.
+$(APP_DIR)/test-debug$(EXE_EXTENSION): test/test-debug.cpp | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Debug Test ###\n"
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-debug.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-type$(EXE_EXTENSION): \
-		test/test-type.cpp \
-		$(DEP_TYPE)
+$(APP_DIR)/test-type$(EXE_EXTENSION): test/test-type.cpp | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Types Test ###\n"
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-type.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-memory$(EXE_EXTENSION): \
-		test/test-memory.cpp \
-		$(DEP_MEMORY)
+$(APP_DIR)/test-memory$(EXE_EXTENSION): test/test-memory.cpp | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Memory Test ###\n"
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-memory.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-hash$(EXE_EXTENSION): \
-		test/test-hash.cpp \
-		$(DEP_HASH)
+$(APP_DIR)/test-hash$(EXE_EXTENSION): test/test-hash.cpp | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Hash Test ###\n"
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-hash.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-random$(EXE_EXTENSION): \
-		test/test-random.cpp \
-		$(DEP_RANDOM)
+$(APP_DIR)/test-random$(EXE_EXTENSION): test/test-random.cpp | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Random Test ###\n"
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-random.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-semaphore$(EXE_EXTENSION): \
-		test/test-semaphore.cpp \
-		$(DEP_SEMAPHORE)
+$(APP_DIR)/test-semaphore$(EXE_EXTENSION): test/test-semaphore.cpp | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Semaphore Test ###\n"
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-semaphore.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-string$(EXE_EXTENSION): \
-		test/test-string.cpp \
-		$(DEP_STRING)
+$(APP_DIR)/test-string$(EXE_EXTENSION): test/test-string.cpp | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling String Test ###\n"
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-string.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-thread$(EXE_EXTENSION): \
-		test/test-thread.cpp \
-		$(DEP_THREAD)
+$(APP_DIR)/test-thread$(EXE_EXTENSION): test/test-thread.cpp | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Thread Test ###\n"
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-thread.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-vector$(EXE_EXTENSION): \
-		test/test-vector.cpp \
-		$(DEP_VECTOR)
+$(APP_DIR)/test-vector$(EXE_EXTENSION): test/test-vector.cpp | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Vector Test ###\n"
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-vector.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
 ####################################################################
 # Commands
@@ -343,7 +273,7 @@ clean: ## Remove all contents of the build directories.
 	-@rm -rvf $(OBJ_DIR)/*
 	-@rm -rvf $(APP_DIR)/*
 	-@rm -rvf $(GEN_DIR)/*
-	-@rm include/$(PROJECT)/float.h
+	-@rm -f include/$(PROJECT)/float.h
 
 # Files will be as follows:
 # /usr/local/lib/(SUITE)/
@@ -378,7 +308,8 @@ endif
 	@cd include &&	find . -name "*.h" -exec cp --parents '{}' $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH)/ \;
 	# Installing the pkg-config files.
 	@mkdir -p $(PKG_CONFIG_PATH)
-	@cat pkgconfig/$(SUITE)-$(PROJECT).pc | sed 's/(SUITE)/$(SUITE)/g; s/(PROJECT)/$(PROJECT)/g; s/(BRANCH)/$(BRANCH)/g; s/(VERSION)/$(VERSION)/g; s|(LIB)|$(LIB_INSTALL_PATH)|g; s|(INCLUDE)|$(INCLUDE_INSTALL_PATH)|g' > $(PKG_CONFIG_PATH)/$(SUITE)-$(PROJECT)$(BRANCH).pc
+	@cat pkgconfig/$(SUITE)-$(PROJECT).pc | sed 's/(SUITE)/$(SUITE)/g; s/(PROJECT)/$(PROJECT)/g; s/(BRANCH)/$(BRANCH)/g; s/(VERSION)/$(VERSION)/g; s|(PC_LIB_DIR)|$(PC_LIB_DIR)|g; s|(PC_INCLUDE_DIR)|$(PC_INCLUDE_DIR)|g' > $(PKG_CONFIG_PATH)/$(SUITE)-$(PROJECT)$(BRANCH).pc
+	@echo "  pkg-config name: $(SUITE)-$(PROJECT)$(BRANCH)  (use: pkg-config --cflags --libs $(SUITE)-$(PROJECT)$(BRANCH))"
 ifeq ($(OS_NAME), Linux)
 	# Running ldconfig.
 	@ldconfig >> /dev/null 2>&1
