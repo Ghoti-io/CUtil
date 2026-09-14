@@ -14,6 +14,7 @@ ifeq ($(BUILD),debug)
     BRANCH := $(BRANCH)-debug
 endif
 
+BUILD_DIR = $(BUILD)
 BASE_NAME_PREFIX := lib$(SUITE)-$(PROJECT)$(BRANCH)
 BASE_NAME := $(BASE_NAME_PREFIX).so
 MAJOR_VERSION := 0
@@ -150,7 +151,7 @@ $(BUILD_DIR)/include/$(PROJECT)/float.h: \
 
 # Pattern rule: compile .c to .o and generate dependency file (compiler tracks headers).
 # float.h is generated; ensure it exists before compiling any .c that may include it (e.g. type.h).
-$(OBJ_DIR)/%.o: src/%.c | include/$(PROJECT)/float.h
+$(OBJ_DIR)/%.o: src/%.c | $(BUILD_DIR)/include/$(PROJECT)/float.h
 	@printf "\n### Compiling $@ ###\n"
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@ $(OS_SPECIFIC_CXX_FLAGS)
