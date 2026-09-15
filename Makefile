@@ -99,7 +99,9 @@ APP_DIR := $(BUILD)/apps
 
 INCLUDE := -I include/ -I $(BUILD_DIR)/include/
 LIBOBJECTS := \
-  $(OBJ_DIR)/debug.o \
+  $(OBJ_DIR)/allocator.o \
+	$(OBJ_DIR)/array.o \
+	$(OBJ_DIR)/debug.o \
 	$(OBJ_DIR)/hash.o \
 	$(OBJ_DIR)/memory.o \
 	$(OBJ_DIR)/random.o \
@@ -121,7 +123,8 @@ all: $(APP_DIR)/$(TARGET) ## Build the shared library
 # Dependency Inclusion
 ####################################################################
 # Compiler-generated .d files (see -MMD -MP -MF in compile commands).
-TEST_NAMES := test-debug test-type test-memory test-hash test-random test-semaphore test-string test-thread test-vector
+TEST_NAMES := test-debug test-type test-memory test-hash test-random test-semaphore test-string test-thread test-vector test-array test-allocator test-safemath
+TEST_BINARIES := $(foreach t,$(TEST_NAMES),$(APP_DIR)/$(t)$(EXE_EXTENSION))
 TEST_DEPFILES := $(addprefix $(APP_DIR)/,$(TEST_NAMES:%=%.d))
 DEPFILES := $(LIBOBJECTS:.o=.d) $(TEST_DEPFILES)
 -include $(DEPFILES)
@@ -225,6 +228,21 @@ $(APP_DIR)/test-vector$(EXE_EXTENSION): test/test-vector.cpp | $(APP_DIR)/$(TARG
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-vector.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
+$(APP_DIR)/test-array$(EXE_EXTENSION): test/test-array.cpp | $(APP_DIR)/$(TARGET)
+	@printf "\n### Compiling Array Test ###\n"
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-array.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+
+$(APP_DIR)/test-allocator$(EXE_EXTENSION): test/test-allocator.cpp | $(APP_DIR)/$(TARGET)
+	@printf "\n### Compiling Allocator Test ###\n"
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-allocator.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+
+$(APP_DIR)/test-safemath$(EXE_EXTENSION): test/test-safemath.cpp | $(APP_DIR)/$(TARGET)
+	@printf "\n### Compiling Safe Math Test ###\n"
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-safemath.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+
 ####################################################################
 # Commands
 ####################################################################
@@ -259,31 +277,20 @@ test-watch: ## Watch the file directory for changes and run the unit tests
 		done
 
 test: ## Make and run the Unit tests
-test: \
-		$(APP_DIR)/$(TARGET) \
-		$(APP_DIR)/test-debug$(EXE_EXTENSION) \
-		$(APP_DIR)/test-memory$(EXE_EXTENSION) \
-		$(APP_DIR)/test-type$(EXE_EXTENSION) \
-		$(APP_DIR)/test-random$(EXE_EXTENSION) \
-		$(APP_DIR)/test-semaphore$(EXE_EXTENSION) \
-		$(APP_DIR)/test-string$(EXE_EXTENSION) \
-		$(APP_DIR)/test-hash$(EXE_EXTENSION) \
-		$(APP_DIR)/test-thread$(EXE_EXTENSION) \
-		$(APP_DIR)/test-vector$(EXE_EXTENSION)
+# Both the prerequisites and the run lines are derived from TEST_NAMES, so
+# adding a test to that list is all it takes to have it built and executed.
+# They used to be hand-maintained in parallel, which made it possible to add a
+# test that was compiled but never run.
+test: $(APP_DIR)/$(TARGET) $(TEST_BINARIES)
 	@printf "\033[0;32m"
 	@printf "############################\n"
 	@printf "### Running normal tests ###\n"
 	@printf "############################\n"
 	@printf "\033[0m"
-	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-debug --gtest_brief=1
-	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-memory --gtest_brief=1
-	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-semaphore --gtest_brief=1
-	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-hash --gtest_brief=1
-	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-thread --gtest_brief=1
-	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-type --gtest_brief=1
-	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-random --gtest_brief=1
-	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-string --gtest_brief=1
-	env LD_LIBRARY_PATH="$(APP_DIR)" $(APP_DIR)/test-vector --gtest_brief=1
+	@for t in $(TEST_BINARIES); do \
+		printf "\n--- $$t ---\n"; \
+		env LD_LIBRARY_PATH="$(APP_DIR)" $$t --gtest_brief=1 || exit 1; \
+	done
 
 clean: ## Remove all contents of the build directories.
 	-@rm -rvf $(OBJ_DIR)/*
