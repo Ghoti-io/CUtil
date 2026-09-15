@@ -10,7 +10,10 @@
 
 static void * default_malloc(void * ctx, size_t size) {
   (void)ctx;
-  return malloc(size);
+  // A zero-size request is allowed to return NULL, which a caller cannot tell
+  // apart from running out of memory.  That ambiguity has already produced a
+  // real bug in this suite, so hand back one byte instead.
+  return malloc(size ? size : 1);
 }
 
 static void * default_calloc(void * ctx, size_t nitems, size_t size) {
@@ -21,7 +24,9 @@ static void * default_calloc(void * ctx, size_t nitems, size_t size) {
   if (!gcu_safe_mul_size(nitems, size, &total)) {
     return NULL;
   }
-  return calloc(nitems, size);
+  // As above, and zeroed rather than merely allocated: a caller asking for
+  // zero zeroed items should not receive uninitialized memory.
+  return calloc(1, total ? total : 1);
 }
 
 static void * default_realloc(void * ctx, void * ptr, size_t size) {

@@ -37,9 +37,13 @@ extern "C" {
  * pointer from this struct as its first argument, so a single allocator
  * implementation can serve many independent pools.
  *
- * The semantics match the C standard library equivalents, with one addition:
- * `calloc_fn` must treat overflow of `nitems * size` as an allocation
- * failure and return `NULL` rather than allocating a truncated block.
+ * The semantics match the C standard library equivalents, with two additions:
+ * `calloc_fn` must treat overflow of `nitems * size` as an allocation failure
+ * and return `NULL` rather than allocating a truncated block, and a zero-size
+ * request should return a usable non-`NULL` pointer rather than `NULL`, so
+ * that `NULL` always means failure.  The default allocator does both; a
+ * custom one is expected to as well, because callers check for `NULL` and
+ * nothing else.
  */
 typedef struct GCU_Allocator {
   void * ctx;                                            ///< User-defined, passed to each call.
@@ -53,7 +57,8 @@ typedef struct GCU_Allocator {
  * Get the default, stdlib-backed allocator.
  *
  * The returned pointer is to a process-global constant and never needs to be
- * freed.  Its `calloc_fn` returns `NULL` on multiplication overflow.
+ * freed.  Its `calloc_fn` returns `NULL` on multiplication overflow, and
+ * neither it nor `malloc_fn` returns `NULL` for a zero-size request.
  *
  * @return A pointer to the default allocator.
  */

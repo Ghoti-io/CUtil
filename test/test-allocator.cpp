@@ -41,6 +41,38 @@ TEST(Default, CallocZeroes) {
   a->free_fn(a->ctx, p);
 }
 
+TEST(Default, ZeroSizeRequestsAreNotNull) {
+  // A NULL return has to mean failure and nothing else; malloc(0) returning
+  // NULL is indistinguishable from running out of memory at the call site.
+  const GCU_Allocator * a = gcu_allocator_default();
+
+  void * p = a->malloc_fn(a->ctx, 0);
+  EXPECT_NE(p, nullptr);
+  a->free_fn(a->ctx, p);
+
+  void * z = a->calloc_fn(a->ctx, 0, 16);
+  EXPECT_NE(z, nullptr);
+  a->free_fn(a->ctx, z);
+
+  z = a->calloc_fn(a->ctx, 16, 0);
+  EXPECT_NE(z, nullptr);
+  a->free_fn(a->ctx, z);
+
+  z = a->calloc_fn(a->ctx, 0, 0);
+  EXPECT_NE(z, nullptr);
+  a->free_fn(a->ctx, z);
+}
+
+TEST(Default, ZeroSizeCallocIsStillZeroed) {
+  // Satisfying the non-NULL guarantee with a plain malloc would hand back
+  // uninitialized memory from a function whose whole contract is zeroing.
+  const GCU_Allocator * a = gcu_allocator_default();
+  unsigned char * p = (unsigned char *)a->calloc_fn(a->ctx, 0, 0);
+  ASSERT_NE(p, nullptr);
+  EXPECT_EQ(p[0], 0u);
+  a->free_fn(a->ctx, p);
+}
+
 TEST(Default, CallocRejectsOverflow) {
   const GCU_Allocator * a = gcu_allocator_default();
   // The product wraps; the contract requires NULL rather than a short block.

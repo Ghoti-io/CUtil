@@ -89,6 +89,79 @@ TEST(MulAdd, DetectsOverflowInEitherStep) {
   EXPECT_EQ(r, 12345u);
 }
 
+TEST(Add3, NormalCase) {
+  size_t r = 0;
+  EXPECT_TRUE(gcu_safe_add3_size(1, 2, 3, &r));
+  EXPECT_EQ(r, 6u);
+}
+
+TEST(Add3, DetectsOverflowInEitherStep) {
+  size_t r = 12345;
+  // The first addition overflows.
+  EXPECT_FALSE(gcu_safe_add3_size(SIZE_MAX, 1, 0, &r));
+  EXPECT_EQ(r, 12345u);
+  // The first fits exactly; the second is what overflows.
+  EXPECT_FALSE(gcu_safe_add3_size(SIZE_MAX - 1, 1, 1, &r));
+  EXPECT_EQ(r, 12345u);
+}
+
+//
+// Fixed-width variants. size_t is 64-bit here, so the 32-bit helpers are the
+// only ones whose boundary differs from the size_t versions above; both are
+// checked at their own limits rather than the platform's.
+//
+
+TEST(AddU64, NormalAndOverflow) {
+  uint64_t r = 999;
+  EXPECT_TRUE(gcu_safe_add_u64(2, 3, &r));
+  EXPECT_EQ(r, 5u);
+  EXPECT_TRUE(gcu_safe_add_u64(UINT64_MAX - 1, 1, &r));
+  EXPECT_EQ(r, UINT64_MAX);
+
+  r = 12345;
+  EXPECT_FALSE(gcu_safe_add_u64(UINT64_MAX, 1, &r));
+  EXPECT_EQ(r, 12345u);
+}
+
+TEST(MulU64, NormalAndOverflow) {
+  uint64_t r = 999;
+  EXPECT_TRUE(gcu_safe_mul_u64(0, UINT64_MAX, &r));
+  EXPECT_EQ(r, 0u);
+  EXPECT_TRUE(gcu_safe_mul_u64(6, 7, &r));
+  EXPECT_EQ(r, 42u);
+  EXPECT_TRUE(gcu_safe_mul_u64(UINT64_MAX, 1, &r));
+  EXPECT_EQ(r, UINT64_MAX);
+
+  r = 12345;
+  EXPECT_FALSE(gcu_safe_mul_u64(UINT64_MAX, 2, &r));
+  EXPECT_EQ(r, 12345u);
+}
+
+TEST(AddU32, OverflowsAtItsOwnWidth) {
+  uint32_t r = 999;
+  EXPECT_TRUE(gcu_safe_add_u32(UINT32_MAX - 1, 1, &r));
+  EXPECT_EQ(r, UINT32_MAX);
+
+  // Would fit comfortably in a size_t; must still be rejected.
+  r = 12345;
+  EXPECT_FALSE(gcu_safe_add_u32(UINT32_MAX, 1, &r));
+  EXPECT_EQ(r, 12345u);
+}
+
+TEST(MulU32, OverflowsAtItsOwnWidth) {
+  uint32_t r = 999;
+  EXPECT_TRUE(gcu_safe_mul_u32(0, UINT32_MAX, &r));
+  EXPECT_EQ(r, 0u);
+  EXPECT_TRUE(gcu_safe_mul_u32(65535, 65535, &r));
+  EXPECT_EQ(r, 4294836225u);
+
+  r = 12345;
+  EXPECT_FALSE(gcu_safe_mul_u32(65536, 65536, &r));
+  EXPECT_EQ(r, 12345u);
+  EXPECT_FALSE(gcu_safe_mul_u32(UINT32_MAX, 2, &r));
+  EXPECT_EQ(r, 12345u);
+}
+
 int main(int argc, char ** argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
