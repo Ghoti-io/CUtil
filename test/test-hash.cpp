@@ -1,3 +1,4 @@
+#include <chrono>
 #include <sstream>
 #include <gtest/gtest.h>
 #include <cutil/hash.h>
@@ -879,6 +880,115 @@ TEST(Hash8, InPlaceCleanup) {
   gcu_hash8_set(&t, 2, gcu_type8_b(true));
   gcu_hash8_destroy_in_place(&t);
   ASSERT_EQ(count, 3);
+}
+
+//
+// Lookup cost
+//
+
+TEST(Hash64, LookupDoesNotScanTheWholeTable) {
+  // get() and contains() used to walk every cell from the start of the table
+  // rather than probing from the key's own bucket, which made a lookup
+  // O(capacity) - worse than a linear scan of a plain array, because capacity
+  // is always more than twice the entry count and the empty cells were
+  // visited too.
+  //
+  // Correctness cannot catch that; only cost can. The per-lookup time is
+  // measured in a small table and a table 1000 times larger: with bucket
+  // probing the two are within noise of each other, while a full scan makes
+  // the large one roughly three orders of magnitude slower. The threshold is
+  // deliberately far from both, so ordinary timing jitter - or running the
+  // whole suite under Valgrind, which slows both sides equally - cannot
+  // reach it.
+  const size_t small_entries = 100;
+  const size_t large_entries = 100000;
+  const size_t lookups = 200000;
+
+  auto fill = [](size_t entries) {
+    GCU_Hash64 * t = gcu_hash64_create(entries);
+    for (size_t i = 0; i < entries; i++) {
+      gcu_hash64_set(t, i * 2654435761u, gcu_type64_ui64(i));
+    }
+    return t;
+  };
+
+  auto time_lookups = [&](GCU_Hash64 * t, size_t entries) {
+    auto start = std::chrono::steady_clock::now();
+    uint64_t sink = 0;
+    for (size_t i = 0; i < lookups; i++) {
+      GCU_Hash64_Value v =
+          gcu_hash64_get(t, (i % entries) * 2654435761u);
+      sink += v.value.ui64;
+    }
+    auto elapsed = std::chrono::steady_clock::now() - start;
+    // Keep the loop from being optimized away entirely.
+    EXPECT_GT(sink, 0u);
+    return std::chrono::duration<double>(elapsed).count();
+  };
+
+  GCU_Hash64 * small = fill(small_entries);
+  GCU_Hash64 * large = fill(large_entries);
+  ASSERT_EQ(gcu_hash64_count(large), large_entries);
+
+  double small_time = time_lookups(small, small_entries);
+  double large_time = time_lookups(large, large_entries);
+
+  gcu_hash64_destroy(small);
+  gcu_hash64_destroy(large);
+
+  ASSERT_GT(small_time, 0.0);
+  double ratio = large_time / small_time;
+  EXPECT_LT(ratio, 25.0)
+      << "lookups in a table " << (large_entries / small_entries)
+      << "x larger took " << ratio
+      << "x as long; that is a scan of the table, not a probe";
+}
+
+TEST(Hash64, RemoveOnATableThatNeverAllocatedIsSafe) {
+  // A table created with a count of zero has no cells until its first
+  // insertion. remove() computed hash % capacity before checking, so this
+  // divided by zero.
+  GCU_Hash64 * t = gcu_hash64_create(0);
+  ASSERT_NE(t, nullptr);
+  ASSERT_EQ(t->capacity, 0u);
+
+  EXPECT_FALSE(gcu_hash64_remove(t, 12345));
+  EXPECT_FALSE(gcu_hash64_contains(t, 12345));
+  EXPECT_FALSE(gcu_hash64_get(t, 12345).exists);
+
+  // Still usable afterwards.
+  EXPECT_TRUE(gcu_hash64_set(t, 12345, gcu_type64_ui64(7)));
+  EXPECT_TRUE(gcu_hash64_get(t, 12345).exists);
+  gcu_hash64_destroy(t);
+}
+
+TEST(Hash64, LookupFindsEntriesPastATombstone) {
+  // Probing has to walk past removed cells rather than stopping at them, or
+  // an entry that collided with something since deleted becomes unreachable.
+  GCU_Hash64 * t = gcu_hash64_create(8);
+  ASSERT_NE(t, nullptr);
+  size_t capacity = t->capacity;
+
+  // Three keys that land in the same bucket, so they form a probe run.
+  size_t a = 5;
+  size_t b = 5 + capacity;
+  size_t c = 5 + (2 * capacity);
+  ASSERT_TRUE(gcu_hash64_set(t, a, gcu_type64_ui64(1)));
+  ASSERT_TRUE(gcu_hash64_set(t, b, gcu_type64_ui64(2)));
+  ASSERT_TRUE(gcu_hash64_set(t, c, gcu_type64_ui64(3)));
+
+  // Remove the middle of the run; the one after it must still be found.
+  ASSERT_TRUE(gcu_hash64_remove(t, b));
+  EXPECT_FALSE(gcu_hash64_get(t, b).exists);
+  EXPECT_EQ(gcu_hash64_get(t, a).value.ui64, 1u);
+  EXPECT_EQ(gcu_hash64_get(t, c).value.ui64, 3u)
+      << "entry after a tombstone must remain reachable";
+
+  // And the first of the run, too.
+  ASSERT_TRUE(gcu_hash64_remove(t, a));
+  EXPECT_EQ(gcu_hash64_get(t, c).value.ui64, 3u);
+
+  gcu_hash64_destroy(t);
 }
 
 int main(int argc, char** argv) {

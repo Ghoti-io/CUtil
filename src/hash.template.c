@@ -239,19 +239,33 @@ bool TEMPLATE_GCU_HASH_SET(TEMPLATE_GCU_HASH * hashTable, size_t hash, TEMPLATE_
 
 TEMPLATE_GCU_HASH_VALUE TEMPLATE_GCU_HASH_GET(TEMPLATE_GCU_HASH * hashTable, size_t hash) {
   // Verify that the pointer actually points to something.
-  if (hashTable) {
-    TEMPLATE_GCU_HASH_CELL * cursor = hashTable->data;
-    TEMPLATE_GCU_HASH_CELL * end = &hashTable->data[hashTable->capacity];
+  if (hashTable && hashTable->capacity) {
+    // Probe from the entry's own bucket, the way set and remove do.  This
+    // used to walk the table from the beginning, comparing every cell, which
+    // made a lookup cost O(capacity) - slower than the linear scan of a plain
+    // array, since capacity is always more than twice the entry count and the
+    // scan visited the empty cells too.
+    size_t capacity = hashTable->capacity;
+    size_t location = hash % capacity;
+    TEMPLATE_GCU_HASH_CELL * cursor = &hashTable->data[location];
 
-    // Find the entry, if it exists.
-    while (cursor != end) {
-      if (cursor->occupied && !cursor->removed && (cursor->hash == hash)) {
+    // An unoccupied cell means the entry is not present: set() would have put
+    // it here or earlier in this run.  The table always keeps at least one
+    // unoccupied cell (it grows once capacity drops below twice the occupied
+    // count, tombstones included), so the walk terminates.
+    while (cursor->occupied) {
+      if (!cursor->removed && (cursor->hash == hash)) {
         return (TEMPLATE_GCU_HASH_VALUE) {
           .exists = true,
           .value = cursor->data,
         };
       }
+      ++location;
       ++cursor;
+      if (location == capacity) {
+        location = 0;
+        cursor = hashTable->data;
+      }
     }
   }
   return (TEMPLATE_GCU_HASH_VALUE) {
@@ -262,24 +276,33 @@ TEMPLATE_GCU_HASH_VALUE TEMPLATE_GCU_HASH_GET(TEMPLATE_GCU_HASH * hashTable, siz
 
 bool TEMPLATE_GCU_HASH_CONTAINS(TEMPLATE_GCU_HASH * hashTable, size_t hash) {
   // Verify that the pointer actually points to something.
-  if (hashTable) {
-    TEMPLATE_GCU_HASH_CELL * cursor = hashTable->data;
-    TEMPLATE_GCU_HASH_CELL * end = &hashTable->data[hashTable->capacity];
+  if (hashTable && hashTable->capacity) {
+    // Probe from the entry's own bucket; see the note in the get function
+    // above for why this is not a walk of the whole table.
+    size_t capacity = hashTable->capacity;
+    size_t location = hash % capacity;
+    TEMPLATE_GCU_HASH_CELL * cursor = &hashTable->data[location];
 
-    // Find the entry, if it exists.
-    while (cursor != end) {
-      if (cursor->occupied && !cursor->removed && (cursor->hash == hash)) {
+    while (cursor->occupied) {
+      if (!cursor->removed && (cursor->hash == hash)) {
         return true;
       }
+      ++location;
       ++cursor;
+      if (location == capacity) {
+        location = 0;
+        cursor = hashTable->data;
+      }
     }
   }
   return false;
 }
 
 bool TEMPLATE_GCU_HASH_REMOVE(TEMPLATE_GCU_HASH * hashTable, size_t hash) {
-  // Verify that the pointer actually points to something.
-  if (hashTable) {
+  // Verify that the pointer actually points to something, and that there is
+  // something to probe: a table created with a count of zero has no cells
+  // until its first insertion, and the modulus below would divide by zero.
+  if (hashTable && hashTable->capacity) {
     TEMPLATE_GCU_HASH_CELL * cursor = &hashTable->data[hash % hashTable->capacity];
     TEMPLATE_GCU_HASH_CELL * end = &hashTable->data[hashTable->capacity];
 
