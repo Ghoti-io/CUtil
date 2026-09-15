@@ -1007,6 +1007,32 @@ TEST(Hash64, LookupDoesNotScanTheWholeTable) {
       << "x as long; that is a scan of the table, not a probe";
 }
 
+TEST(Hash64, GrowsPastTheFractionalGrowthThreshold) {
+  // Growth steps to 32, then doubles, and past 1024 switches to multiplying
+  // by GROWTH_FACTOR - a double, so the new size is computed in floating
+  // point and converted back. No test had ever taken a table past 1024, so
+  // that third branch had never run; a factor that rounded down to the
+  // current capacity would leave the table unable to grow at all.
+  GCU_Hash64 * t = gcu_hash64_create(4);
+  ASSERT_NE(t, nullptr);
+
+  const size_t entries = 4000;
+  for (size_t i = 0; i < entries; i++) {
+    ASSERT_TRUE(gcu_hash64_set(t, i * 2654435761u, gcu_type64_ui64(i)))
+        << "insert " << i;
+  }
+  ASSERT_GT(t->capacity, 1024u) << "the fractional branch was not reached";
+  EXPECT_EQ(gcu_hash64_count(t), entries);
+
+  for (size_t i = 0; i < entries; i++) {
+    GCU_Hash64_Value v = gcu_hash64_get(t, i * 2654435761u);
+    ASSERT_TRUE(v.exists) << "entry " << i << " lost";
+    EXPECT_EQ(v.value.ui64, i) << "entry " << i;
+  }
+
+  gcu_hash64_destroy(t);
+}
+
 TEST(Hash64, RemoveOnATableThatNeverAllocatedIsSafe) {
   // A table created with a count of zero has no cells until its first
   // insertion. remove() computed hash % capacity before checking, so this
