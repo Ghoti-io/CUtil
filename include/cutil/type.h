@@ -23,6 +23,8 @@ extern "C" {
 
 #define gcu_type64_p GHOTIIO_CUTIL(gcu_type64_p)
 #define gcu_type64_ui64 GHOTIIO_CUTIL(gcu_type64_ui64)
+#define gcu_type64_f64 GHOTIIO_CUTIL(gcu_type64_f64)
+#define gcu_type64_f32 GHOTIIO_CUTIL(gcu_type64_f32)
 #define gcu_type64_ui32 GHOTIIO_CUTIL(gcu_type64_ui32)
 #define gcu_type64_ui16 GHOTIIO_CUTIL(gcu_type64_ui16)
 #define gcu_type64_ui8 GHOTIIO_CUTIL(gcu_type64_ui8)
@@ -35,6 +37,7 @@ extern "C" {
 #define gcu_type64_b GHOTIIO_CUTIL(gcu_type64_b)
 
 #define gcu_type32_ui32 GHOTIIO_CUTIL(gcu_type32_ui32)
+#define gcu_type32_f32 GHOTIIO_CUTIL(gcu_type32_f32)
 #define gcu_type32_ui16 GHOTIIO_CUTIL(gcu_type32_ui16)
 #define gcu_type32_ui8 GHOTIIO_CUTIL(gcu_type32_ui8)
 #define gcu_type32_i32 GHOTIIO_CUTIL(gcu_type32_i32)

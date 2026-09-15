@@ -45,6 +45,9 @@ extern "C" {
 #define gcu_free_debug GHOTIIO_CUTIL(gcu_free_debug)
 #define gcu_get_alloc_count GHOTIIO_CUTIL(gcu_get_alloc_count)
 #define gcu_get_free_count GHOTIIO_CUTIL(gcu_get_free_count)
+#define gcu_memory_reset_counts GHOTIIO_CUTIL(gcu_memory_reset_counts)
+#define gcu_memory_alloc_count GHOTIIO_CUTIL(gcu_memory_alloc_count)
+#define gcu_memory_free_count GHOTIIO_CUTIL(gcu_memory_free_count)
 /// @endcond
 
 /**

@@ -23,6 +23,8 @@ extern "C" {
 #define gcu_thread_join GHOTIIO_CUTIL(gcu_thread_join)
 #define gcu_thread_detach GHOTIIO_CUTIL(gcu_thread_detach)
 #define gcu_thread_is_running GHOTIIO_CUTIL(gcu_thread_is_running)
+#define gcu_thread_is_joined GHOTIIO_CUTIL(gcu_thread_is_joined)
+#define gcu_thread_is_detached GHOTIIO_CUTIL(gcu_thread_is_detached)
 #define gcu_thread_cancel GHOTIIO_CUTIL(gcu_thread_cancel)
 #define gcu_thread_sleep GHOTIIO_CUTIL(gcu_thread_sleep)
 #define gcu_thread_yield GHOTIIO_CUTIL(gcu_thread_yield)

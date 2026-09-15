@@ -10,16 +10,12 @@
 #include <wchar.h>
 
 /**
- * Used in conjunction with the GHOTIIO_CUTIL... macros to produce a namespaced
- * function name for use by all exported functions in this library.
+ * GHOTIIO_CUTIL_NAME and GHOTIIO_CUTIL_VERSION come from here.  They are
+ * generated at build time from the Makefile's BRANCH, so that the token inside
+ * every exported symbol is the same one that names the .pc file, the install
+ * directory and the shared library.  See CONVENTIONS.md section 4.
  */
-#define GHOTIIO_CUTIL_NAME ghotiio_cutil_dev
-
-/**
- * String representation of the version, provided as a convenience to the
- * programmer.
- */
-#define GHOTIIO_CUTIL_VERSION "dev"
+#include <cutil/libver_gen.h>
 
 /**
  * Macro to generate a "namespaced" version of an identifier.

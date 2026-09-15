@@ -25,6 +25,15 @@ extern "C" {
  */
 #define GCU_RANDOM_MT_STATE_SIZE64 312
 
+/// @cond HIDDEN_SYMBOLS
+#define GCU_Random_MT32_State GHOTIIO_CUTIL(GCU_Random_MT32_State)
+#define GCU_Random_MT64_State GHOTIIO_CUTIL(GCU_Random_MT64_State)
+#define gcu_random_mt32_init GHOTIIO_CUTIL(gcu_random_mt32_init)
+#define gcu_random_mt32_next GHOTIIO_CUTIL(gcu_random_mt32_next)
+#define gcu_random_mt64_init GHOTIIO_CUTIL(gcu_random_mt64_init)
+#define gcu_random_mt64_next GHOTIIO_CUTIL(gcu_random_mt64_next)
+/// @endcond
+
 /**
  * The state structure for the 32-bit Mersenne Twister.
  */

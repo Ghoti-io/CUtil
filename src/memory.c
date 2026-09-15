@@ -6,10 +6,14 @@
 
 static bool capture = true;
 
+#include <cutil/memory.h>
+
+// Defined after the include on purpose: memory.h renames these two into the
+// library's version namespace, and a definition placed above it would not be
+// renamed, leaving the header's extern declaration referring to a different
+// object than this definition creates.
 size_t gcu_memory_alloc_count = 0;
 size_t gcu_memory_free_count = 0;
-
-#include <cutil/memory.h>
 
 /// @cond HIDDEN_SYMBOLS
 void * gcu_malloc_debug(size_t size, const char * file, size_t line) {
