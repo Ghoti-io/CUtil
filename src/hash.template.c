@@ -153,9 +153,24 @@ static bool TEMPLATE_GROW_HASH(TEMPLATE_GCU_HASH * hashTable, size_t size) {
     ++cursor;
   }
 
-  // Swap the data.
+  // Swap the data, keeping the caller's cleanup hook and its supplementary
+  // data with the table that survives.
+  //
+  // The swap alone used to move both onto the temporary, which had two
+  // consequences. The surviving table lost its cleanup hook, so whatever the
+  // caller was relying on it to release never was. And the temporary, holding
+  // the *old* cells, ran that hook on destruction - over entries whose values
+  // had just been moved into the new table, not discarded - so the caller
+  // freed values its table was still holding, and the next read of one was a
+  // use-after-free.
   TEMPLATE_GCU_HASH temp = *newTable;
+  temp.cleanup = hashTable->cleanup;
+  temp.supplementary_data = hashTable->supplementary_data;
+
   *newTable = *hashTable;
+  newTable->cleanup = 0;
+  newTable->supplementary_data = 0;
+
   *hashTable = temp;
 
   TEMPLATE_GCU_HASH_DESTROY(newTable);

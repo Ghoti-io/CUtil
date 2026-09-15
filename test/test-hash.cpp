@@ -883,6 +883,69 @@ TEST(Hash8, InPlaceCleanup) {
 }
 
 //
+// Growth and the cleanup callback
+//
+
+namespace {
+
+/** Records how many times the table's cleanup callback ran. */
+void count_cleanup(GCU_Hash64 * table) {
+  ++*(size_t *)table->supplementary_data;
+}
+
+} // namespace
+
+TEST(Hash64, GrowthDoesNotRunTheCleanupCallback) {
+  // Growing moves the entries into a larger table; it does not discard them.
+  // Running the caller's cleanup over them frees values the table is still
+  // holding, which is a use-after-free the moment one is read back.
+  size_t cleanups = 0;
+  GCU_Hash64 * t = gcu_hash64_create(4);
+  ASSERT_NE(t, nullptr);
+  t->supplementary_data = &cleanups;
+  t->cleanup = count_cleanup;
+
+  size_t capacity_before = t->capacity;
+  for (size_t i = 0; i < 200; i++) {
+    ASSERT_TRUE(gcu_hash64_set(t, i, gcu_type64_ui64(i)));
+  }
+  ASSERT_GT(t->capacity, capacity_before) << "the table must have grown";
+  EXPECT_EQ(cleanups, 0u) << "cleanup ran while the table was growing";
+
+  // Every entry must still be readable: if cleanup had freed them, this is
+  // where a real consumer would read released memory.
+  for (size_t i = 0; i < 200; i++) {
+    GCU_Hash64_Value v = gcu_hash64_get(t, i);
+    ASSERT_TRUE(v.exists) << "entry " << i << " lost during growth";
+    EXPECT_EQ(v.value.ui64, i);
+  }
+
+  gcu_hash64_destroy(t);
+  EXPECT_EQ(cleanups, 1u) << "cleanup should run exactly once, at destruction";
+}
+
+TEST(Hash64, CleanupSurvivesGrowth) {
+  // The growth path swaps the old and new tables before destroying the
+  // temporary, which used to leave the surviving table without the cleanup
+  // callback - so it never ran and whatever it was responsible for leaked.
+  size_t cleanups = 0;
+  GCU_Hash64 t;
+  ASSERT_TRUE(gcu_hash64_create_in_place(&t, 4));
+  t.supplementary_data = &cleanups;
+  t.cleanup = count_cleanup;
+
+  for (size_t i = 0; i < 200; i++) {
+    ASSERT_TRUE(gcu_hash64_set(&t, i, gcu_type64_ui64(i)));
+  }
+  EXPECT_NE(t.cleanup, nullptr) << "growth dropped the cleanup callback";
+  EXPECT_EQ(t.supplementary_data, &cleanups)
+      << "growth dropped the supplementary data the callback needs";
+
+  gcu_hash64_destroy_in_place(&t);
+  EXPECT_EQ(cleanups, 1u);
+}
+
+//
 // Lookup cost
 //
 
