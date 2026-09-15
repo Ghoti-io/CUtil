@@ -78,6 +78,22 @@ static GCU_THREAD_T gcu_thread_get_current_handle() {
 
 
 //
+// This is a helper function to determine whether a stored handle refers to the
+// calling thread.  Thread ids cannot be used for this: a process that forks
+// gets a new id for the thread that survives into the child, while the handle
+// stays meaningful, so an id comparison stops recognising the main thread as
+// the current one the moment fork() is called.
+//
+static bool gcu_thread_handle_is_current(GCU_THREAD_T handle) {
+#ifdef _WIN32
+  return GetThreadId(handle) == GetThreadId(GetCurrentThread());
+#else
+  return pthread_equal(handle, pthread_self()) != 0;
+#endif
+}
+
+
+//
 // This is a helper function that will "wrap" the thread function, so that we
 // can set the `running` flag to true before the thread function is called, and
 // set it to false after the thread function returns.
@@ -106,8 +122,6 @@ static void gcu_thread_hash_cleanup(GCU_Hash64 * hash) {
   // Lock the hash table.
   GCU_MUTEX_LOCK(hash->mutex);
 
-  uint32_t current_id = gcu_thread_get_current_id();
-
   // Iterate over the hash table, and join any threads that have not been
   // detached or joined.
   GCU_Hash64_Iterator iter = gcu_hash64_iterator_get(hash);
@@ -118,7 +132,7 @@ static void gcu_thread_hash_cleanup(GCU_Hash64 * hash) {
 
     if (thread) {
       if (!thread->detached && !thread->joined) {
-        if (thread_id != current_id) {
+        if (!gcu_thread_handle_is_current(thread->handle)) {
           // We cannot join the current thread, into itself.
           gcu_thread_join(thread->id);
         }
@@ -134,6 +148,42 @@ static void gcu_thread_hash_cleanup(GCU_Hash64 * hash) {
   // Unlock the hash table.
   GCU_MUTEX_UNLOCK(hash->mutex);
 }
+
+#ifndef _WIN32
+//
+// This runs in the child of a fork().
+//
+// Only the calling thread survives a fork.  Every other record in the hash
+// names a thread that does not exist in this process, so the join that the
+// module's destructor would otherwise perform at exit is undefined behaviour -
+// AddressSanitizer reports it as joining an already joined thread.  Marking
+// them detached leaves the records to be freed without being joined.
+//
+// The records are not rekeyed even though the surviving thread's id has
+// changed, because that would mean allocating while the child holds whatever
+// locks were held at the moment of the fork.  The cleanup path identifies the
+// current thread by its handle instead, which survives the fork intact.
+//
+static void gcu_thread_atfork_child(void) {
+  if (!gcu_thread_hash) {
+    return;
+  }
+
+  // The mutex may have been held by a thread that did not survive the fork.
+  GCU_MUTEX_CREATE(gcu_thread_hash->mutex);
+
+  GCU_Hash64_Iterator iter = gcu_hash64_iterator_get(gcu_thread_hash);
+  while (iter.exists) {
+    GCU_Thread_Internal * thread = iter.value.p;
+    if (thread && !gcu_thread_handle_is_current(thread->handle)) {
+      thread->detached = true;
+      thread->running = false;
+    }
+    iter = gcu_hash64_iterator_next(iter);
+  }
+}
+#endif // _WIN32
+
 
 /**
  * Constructor for the thread module.
@@ -178,7 +228,13 @@ GCU_INIT_FUNCTION(gcu_thread_constructor) {
     gcu_free(thread);
     gcu_hash64_destroy(gcu_thread_hash);
     gcu_thread_hash = NULL;
+    return;
   }
+
+#ifndef _WIN32
+  // Keep the bookkeeping honest across fork().
+  pthread_atfork(NULL, NULL, gcu_thread_atfork_child);
+#endif // _WIN32
 }
 
 /**

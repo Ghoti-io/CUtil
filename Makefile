@@ -146,7 +146,15 @@ $(BUILD_DIR)/include/$(PROJECT)/float.h: \
 		src/float.h.template \
 		$(FLOAT_IDENTIFIER) \
 		$(BUILD_DIR)/include/$(PROJECT)
-	cat src/float.h.template | sed "s/FLOAT32/$(shell $(FLOAT_IDENTIFIER) 32)/; s/FLOAT64/$(shell $(FLOAT_IDENTIFIER) 64)/" > $@
+	@f32="$$($(FLOAT_IDENTIFIER) 32)"; f64="$$($(FLOAT_IDENTIFIER) 64)"; \
+	if [ -z "$$f32" ] || [ -z "$$f64" ]; then \
+		printf "### $(FLOAT_IDENTIFIER) produced no type name ###\n" >&2; \
+		printf "Without it float.h defines GCU_float32_t/GCU_float64_t as nothing,\n" >&2; \
+		printf "and the first file to include type.h fails with a syntax error that\n" >&2; \
+		printf "says nothing about this step. Delete $(FLOAT_IDENTIFIER) and rebuild.\n" >&2; \
+		exit 1; \
+	fi; \
+	sed "s/FLOAT32/$$f32/; s/FLOAT64/$$f64/" src/float.h.template > $@
 
 ####################################################################
 # Object Files

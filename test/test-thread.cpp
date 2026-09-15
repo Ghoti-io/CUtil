@@ -3,6 +3,11 @@
 
 #include <iostream>
 
+#ifndef _WIN32
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
+
 using namespace std;
 
 #define SLEEP_MS 10
@@ -147,6 +152,58 @@ TEST(Thread, NameFunctions) {
   status.run = false;
   gcu_thread_join(child_thread);
 }
+
+#ifndef _WIN32
+//
+// The thread module registers the main thread at load time and joins whatever
+// it still holds at exit. Both halves are keyed on the thread id, which fork()
+// changes: in the child, the surviving thread no longer matched its own record
+// and the module's destructor tried to join the process's own main thread,
+// while records for threads that did not survive the fork were joined as
+// though they had. Both are undefined behaviour and AddressSanitizer aborts on
+// them, so these tests only fail loudly in a sanitized build; they are here so
+// that the fork paths are at least exercised on every run.
+//
+static void expect_clean_child_exit(pid_t pid) {
+  int status = 0;
+  ASSERT_EQ(pid, waitpid(pid, &status, 0));
+  EXPECT_FALSE(WIFSIGNALED(status))
+      << "child died from signal " << WTERMSIG(status);
+  ASSERT_TRUE(WIFEXITED(status));
+  EXPECT_EQ(0, WEXITSTATUS(status));
+}
+
+TEST(Fork, ChildExitDoesNotJoinItsOwnMainThread) {
+  pid_t pid = fork();
+  ASSERT_NE(-1, pid);
+  if (pid == 0) {
+    // Nothing to do: the bug was in what ran on the way out.
+    _exit(0);
+  }
+  expect_clean_child_exit(pid);
+}
+
+TEST(Fork, ChildExitDoesNotJoinThreadsThatDidNotSurvive) {
+  thread_status status{false, true};
+  GCU_Thread worker;
+  ASSERT_EQ(0, gcu_thread_create(&worker, loop, &status));
+  while (!status.is_running) {
+    gcu_thread_yield();
+  }
+
+  // Fork with the worker still running, so the child inherits a record for a
+  // thread that does not exist in it.
+  pid_t pid = fork();
+  ASSERT_NE(-1, pid);
+  if (pid == 0) {
+    _exit(0);
+  }
+  expect_clean_child_exit(pid);
+
+  status.run = false;
+  gcu_thread_join(worker);
+}
+#endif // _WIN32
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
