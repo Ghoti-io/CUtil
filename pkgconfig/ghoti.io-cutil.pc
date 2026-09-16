@@ -3,5 +3,5 @@ Description: C library providing generic, non-OS-specific classes for the Ghoti 
 Version: (VERSION)
 URL: htts://github.com/Ghoti-io/CUtil
 Libs: -L(PC_LIB_DIR) -l(SUITE)-(PROJECT)(BRANCH)
-CFlags: -I (PC_INCLUDE_DIR)
+CFlags: -I(PC_INCLUDE_DIR)
 

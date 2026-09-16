@@ -5,6 +5,7 @@ CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfa
 # -DGHOTIIO_CUTIL_ENABLE_MEMORY_DEBUG
 LDFLAGS := -L /usr/lib -lstdc++ -lm $(EXTRA_LDFLAGS)
 
+
 SUITE := ghoti.io
 PROJECT := cutil
 
@@ -26,6 +27,9 @@ BASE_NAME_PREFIX := lib$(SUITE)-$(PROJECT)$(BRANCH)
 BASE_NAME := $(BASE_NAME_PREFIX).so
 MAJOR_VERSION := 0
 MINOR_VERSION := 0.0
+# Substituted into the .pc file; an empty Version: field makes every
+# pkg-config version constraint fail.
+VERSION := $(MAJOR_VERSION).$(MINOR_VERSION)
 SO_NAME := $(BASE_NAME).$(MAJOR_VERSION)
 
 
@@ -99,6 +103,41 @@ else
     $(error Unsupported OS: $(UNAME_S))
 
 endif
+
+# ---------------------------------------------------------------------------
+# Installation prefix
+#
+# Defaults to the system location chosen above. Override it to install
+# somewhere else - the suite's bootstrap installs every library into a local
+# prefix so that each build resolves its dependencies through pkg-config,
+# exactly as a consumer would, rather than through a second code path that
+# only in-tree builds exercise. See CONVENTIONS.md section 1.
+#
+#     make install PREFIX=/path/to/prefix
+# ---------------------------------------------------------------------------
+ifdef PREFIX
+INCLUDE_INSTALL_PATH := $(PREFIX)/include
+LIB_INSTALL_PATH := $(PREFIX)/lib
+BIN_INSTALL_PATH := $(PREFIX)/bin
+PKG_CONFIG_PATH := $(PREFIX)/share/pkgconfig
+ifeq ($(OS_NAME), Windows)
+PC_INCLUDE_DIR = $(shell cygpath -m $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH))
+PC_LIB_DIR = $(shell cygpath -m $(LIB_INSTALL_PATH)/$(SUITE))
+else
+PC_INCLUDE_DIR := $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH)
+PC_LIB_DIR := $(LIB_INSTALL_PATH)/$(SUITE)
+endif
+# A non-system prefix has no /etc/ld.so.conf.d, and writing to it would need
+# root anyway. Everything built here carries an rpath to the prefix instead.
+LDCONF_INSTALL_PATH :=
+endif
+
+ifdef PREFIX
+# So that a library, a test or an example finds its Ghoti.io dependencies in the
+# prefix at run time without LD_LIBRARY_PATH.
+LDFLAGS += -Wl,-rpath,$(LIB_INSTALL_PATH)/$(SUITE)
+endif
+
 
 OBJ_DIR := $(BUILD)/objects
 GEN_DIR := $(BUILD)/generated
@@ -400,8 +439,8 @@ ifeq ($(OS_NAME), Linux)
 	@cp $(APP_DIR)/$(TARGET) $(LIB_INSTALL_PATH)/$(SUITE)/
 	@ln -f -s $(TARGET) $(LIB_INSTALL_PATH)/$(SUITE)/$(SO_NAME)
 	@ln -f -s $(SO_NAME) $(LIB_INSTALL_PATH)/$(SUITE)/$(BASE_NAME)
-	@mkdir -p $(LDCONF_INSTALL_PATH)
-	@echo "$(LIB_INSTALL_PATH)/$(SUITE)" > $(LDCONF_INSTALL_PATH)/$(SUITE)-$(PROJECT)$(BRANCH).conf
+	@if [ -n "$(LDCONF_INSTALL_PATH)" ]; then mkdir -p $(LDCONF_INSTALL_PATH); fi
+	@if [ -n "$(LDCONF_INSTALL_PATH)" ]; then echo "$(LIB_INSTALL_PATH)/$(SUITE)" > $(LDCONF_INSTALL_PATH)/$(SUITE)-$(PROJECT)$(BRANCH).conf; fi
 endif
 ifeq ($(OS_NAME), Windows)
 # The .dll file and the .dll.a file
@@ -419,7 +458,7 @@ endif
 	@echo "  pkg-config name: $(SUITE)-$(PROJECT)$(BRANCH)  (use: pkg-config --cflags --libs $(SUITE)-$(PROJECT)$(BRANCH))"
 ifeq ($(OS_NAME), Linux)
 	# Running ldconfig.
-	@ldconfig >> /dev/null 2>&1
+	@if [ -n "$(LDCONF_INSTALL_PATH)" ]; then ldconfig >> /dev/null 2>&1; fi
 endif
 	@echo "Ghoti.io $(PROJECT)$(BRANCH) installed"
 
@@ -443,7 +482,7 @@ endif
 	@rmdir --ignore-fail-on-non-empty $(LIB_INSTALL_PATH)/$(SUITE)
 ifeq ($(OS_NAME), Linux)
 	# Running ldconfig.
-	@ldconfig >> /dev/null 2>&1
+	@if [ -n "$(LDCONF_INSTALL_PATH)" ]; then ldconfig >> /dev/null 2>&1; fi
 endif
 	@echo "Ghoti.io $(PROJECT)$(BRANCH) has been uninstalled"
 
