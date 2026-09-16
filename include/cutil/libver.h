@@ -28,6 +28,24 @@
 #define GHOTIIO_CUTIL(NAME) GHOTIIO_CUTIL_RENAME(GHOTIIO_CUTIL_NAME, _ ## NAME)
 
 /**
+ * Marks a declaration as part of the public API.
+ *
+ * The library is built with -fvisibility=hidden, so a symbol without this is
+ * not exported at all: it cannot collide with another version of this library,
+ * and it does not appear in the dynamic symbol table.  See CONVENTIONS.md
+ * section 4.
+ */
+#if defined(_WIN32) || defined(__CYGWIN__)
+#ifdef GHOTIIO_CUTIL_BUILD
+#define GCU_API __declspec(dllexport)
+#else
+#define GCU_API __declspec(dllimport)
+#endif
+#else
+#define GCU_API __attribute__((visibility("default")))
+#endif
+
+/**
  * Helper macro to concatenate the `#define`s properly.  It requires two levels
  * of processing.
  *

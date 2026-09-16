@@ -1,7 +1,7 @@
 CXX := g++
 CXXFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c++20 -O1 -g $(EXTRA_CXXFLAGS)
 CC := cc
-CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c17 -O3 -g $(EXTRA_CFLAGS)
+CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c17 -O3 -g -fvisibility=hidden -DGHOTIIO_CUTIL_BUILD $(EXTRA_CFLAGS)
 # -DGHOTIIO_CUTIL_ENABLE_MEMORY_DEBUG
 LDFLAGS := -L /usr/lib -lstdc++ -lm $(EXTRA_LDFLAGS)
 
@@ -333,7 +333,17 @@ ifeq ($(OS_NAME), Linux)
 		printf "loaded into the same process. See CONVENTIONS.md section 4.\n" >&2; \
 		exit 1; \
 	fi
+	@unexported=$$(awk '/^#if DOXYGEN/{d=1} d==0 && /^[a-z_][A-Za-z0-9_ ]*\**[[:space:]]*gcu_[a-z0-9_]+[[:space:]]*\(/{print FILENAME": "$$0} /^#endif/{d=0}' \
+		include/$(PROJECT)/*.h | grep -vE 'typedef|static inline' || true); \
+	if [ -n "$$unexported" ]; then \
+		printf "\033[0;31m\n### Public declarations without GCU_API ###\033[0m\n" >&2; \
+		printf "%s\n" "$$unexported" >&2; \
+		printf "\nThe library builds with -fvisibility=hidden, so these are not exported\n" >&2; \
+		printf "and a consumer linking the .so gets an undefined reference.\n" >&2; \
+		exit 1; \
+	fi
 	@printf "\033[0;32mEvery exported symbol carries the $(LIBVER_SYMBOL)_ namespace.\033[0m\n"
+	@printf "\033[0;32mEvery public declaration carries GCU_API.\033[0m\n"
 else
 	@printf "check-symbols: skipped (Linux only)\n"
 endif

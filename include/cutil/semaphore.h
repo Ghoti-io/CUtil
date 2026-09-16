@@ -46,7 +46,7 @@ typedef sem_t GCU_Semaphore;
  * @param value Initial value of semaphore.
  * @return 0 on success, -1 on failure.
  */
-int gcu_semaphore_create(GCU_Semaphore * semaphore, int value);
+GCU_API int gcu_semaphore_create(GCU_Semaphore * semaphore, int value);
 
 
 /**
@@ -55,7 +55,7 @@ int gcu_semaphore_create(GCU_Semaphore * semaphore, int value);
  * @param semaphore Semaphore to destroy.
  * @return 0 on success, -1 on failure.
  */
-int gcu_semaphore_destroy(GCU_Semaphore * semaphore);
+GCU_API int gcu_semaphore_destroy(GCU_Semaphore * semaphore);
 
 /**
  * Wait on a semaphore.
@@ -63,7 +63,7 @@ int gcu_semaphore_destroy(GCU_Semaphore * semaphore);
  * @param semaphore Semaphore to wait on.
  * @return 0 on success, -1 on failure.
  */
-int gcu_semaphore_wait(GCU_Semaphore * semaphore);
+GCU_API int gcu_semaphore_wait(GCU_Semaphore * semaphore);
 
 /**
  * Signal (post/release) a semaphore.
@@ -71,7 +71,7 @@ int gcu_semaphore_wait(GCU_Semaphore * semaphore);
  * @param semaphore Semaphore to post.
  * @return 0 on success, -1 on failure.
  */
-int gcu_semaphore_signal(GCU_Semaphore * semaphore);
+GCU_API int gcu_semaphore_signal(GCU_Semaphore * semaphore);
 
 /**
  * Try to wait on a semaphore.
@@ -79,7 +79,7 @@ int gcu_semaphore_signal(GCU_Semaphore * semaphore);
  * @param semaphore Semaphore to wait on.
  * @return 0 on success, -1 on failure.
  */
-int gcu_semaphore_trywait(GCU_Semaphore * semaphore);
+GCU_API int gcu_semaphore_trywait(GCU_Semaphore * semaphore);
 
 /**
  * Get the value of a semaphore.
@@ -88,7 +88,7 @@ int gcu_semaphore_trywait(GCU_Semaphore * semaphore);
  * @param value Pointer to value to set.
  * @return 0 on success, -1 on failure.
  */
-int gcu_semaphore_getvalue(GCU_Semaphore * semaphore, int * value);
+GCU_API int gcu_semaphore_getvalue(GCU_Semaphore * semaphore, int * value);
 
 /**
  * Wait on a semaphore for a specified time.
@@ -97,7 +97,7 @@ int gcu_semaphore_getvalue(GCU_Semaphore * semaphore, int * value);
  * @param timeout Timeout in milliseconds.
  * @return 0 on success, -1 on failure.
  */
-int gcu_semaphore_timedwait(GCU_Semaphore * semaphore, int timeout);
+GCU_API int gcu_semaphore_timedwait(GCU_Semaphore * semaphore, int timeout);
 
 #ifdef __cplusplus
 }

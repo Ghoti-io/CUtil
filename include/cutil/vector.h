@@ -145,7 +145,7 @@ typedef struct GCU_Vector64 {
  * @param count The number of items anticipated to be stored in the vector.
  * @return A struct containing the vector information.
  */
-GCU_Vector64 * gcu_vector64_create(size_t count);
+GCU_API GCU_Vector64 * gcu_vector64_create(size_t count);
 
 /**
  * Create a vector structure in place.
@@ -157,7 +157,7 @@ GCU_Vector64 * gcu_vector64_create(size_t count);
  * @param count The number of items anticipated to be stored in the vector.
  * @return `true` on success, `false` otherwise.
  */
-bool gcu_vector64_create_in_place(GCU_Vector64 * vector, size_t count);
+GCU_API bool gcu_vector64_create_in_place(GCU_Vector64 * vector, size_t count);
 
 /**
  * Destroy a vector structure and clean up memory allocations.
@@ -168,7 +168,7 @@ bool gcu_vector64_create_in_place(GCU_Vector64 * vector, size_t count);
  *
  * @param vector The vector structure to be destroyed.
  */
-void gcu_vector64_destroy(GCU_Vector64 * vector);
+GCU_API void gcu_vector64_destroy(GCU_Vector64 * vector);
 
 /**
  * Destroy a vector structure (except for the memory allocation).
@@ -177,7 +177,7 @@ void gcu_vector64_destroy(GCU_Vector64 * vector);
  *
  * @param vector The vector structure to be destroyed.
  */
-void gcu_vector64_destroy_in_place(GCU_Vector64 * vector);
+GCU_API void gcu_vector64_destroy_in_place(GCU_Vector64 * vector);
 
 /**
  * Append an item at the end of the vector.
@@ -190,7 +190,7 @@ void gcu_vector64_destroy_in_place(GCU_Vector64 * vector);
  * @param value The item to append to the end of the vector.
  * @return `true` on success, `false` otherwise.
  */
-bool gcu_vector64_append(GCU_Vector64 * vector, GCU_Type64_Union value);
+GCU_API bool gcu_vector64_append(GCU_Vector64 * vector, GCU_Type64_Union value);
 
 /**
  * Get a count of entries in the vector.
@@ -198,7 +198,7 @@ bool gcu_vector64_append(GCU_Vector64 * vector, GCU_Type64_Union value);
  * @param vector The vector structure on which to operate.
  * @return The count of entries in the vector.
  */
-size_t gcu_vector64_count(GCU_Vector64 * vector);
+GCU_API size_t gcu_vector64_count(GCU_Vector64 * vector);
 
 /**
  * Reserve space in the vector.
@@ -211,7 +211,7 @@ size_t gcu_vector64_count(GCU_Vector64 * vector);
  * @param count The number of items to reserve.
  * @return `true` on success, `false` otherwise.
  */
-bool gcu_vector64_reserve(GCU_Vector64 * vector, size_t count);
+GCU_API bool gcu_vector64_reserve(GCU_Vector64 * vector, size_t count);
 
 /**
  * Container holding the information of the 32-bit vector.
@@ -249,7 +249,7 @@ typedef struct GCU_Vector32 {
  * @param count The number of items anticipated to be stored in the vector.
  * @return A struct containing the vector information.
  */
-GCU_Vector32 * gcu_vector32_create(size_t count);
+GCU_API GCU_Vector32 * gcu_vector32_create(size_t count);
 
 /**
  * Create a vector structure in place.
@@ -261,7 +261,7 @@ GCU_Vector32 * gcu_vector32_create(size_t count);
  * @param count The number of items anticipated to be stored in the vector.
  * @return `true` on success, `false` otherwise.
  */
-bool gcu_vector32_create_in_place(GCU_Vector32 * vector, size_t count);
+GCU_API bool gcu_vector32_create_in_place(GCU_Vector32 * vector, size_t count);
 
 /**
  * Destroy a vector structure and clean up memory allocations.
@@ -272,7 +272,7 @@ bool gcu_vector32_create_in_place(GCU_Vector32 * vector, size_t count);
  *
  * @param vector The vector structure to be destroyed.
  */
-void gcu_vector32_destroy(GCU_Vector32 * vector);
+GCU_API void gcu_vector32_destroy(GCU_Vector32 * vector);
 
 /**
  * Destroy a vector structure (except for the memory allocation).
@@ -281,7 +281,7 @@ void gcu_vector32_destroy(GCU_Vector32 * vector);
  *
  * @param vector The vector structure to be destroyed.
  */
-void gcu_vector32_destroy_in_place(GCU_Vector32 * vector);
+GCU_API void gcu_vector32_destroy_in_place(GCU_Vector32 * vector);
 
 /**
  * Append an item at the end of the vector.
@@ -294,7 +294,7 @@ void gcu_vector32_destroy_in_place(GCU_Vector32 * vector);
  * @param value The item to append to the end of the vector.
  * @return `true` on success, `false` otherwise.
  */
-bool gcu_vector32_append(GCU_Vector32 * vector, GCU_Type32_Union value);
+GCU_API bool gcu_vector32_append(GCU_Vector32 * vector, GCU_Type32_Union value);
 
 /**
  * Get a count of entries in the vector.
@@ -302,7 +302,7 @@ bool gcu_vector32_append(GCU_Vector32 * vector, GCU_Type32_Union value);
  * @param vector The vector structure on which to operate.
  * @return The count of entries in the vector.
  */
-size_t gcu_vector32_count(GCU_Vector32 * vector);
+GCU_API size_t gcu_vector32_count(GCU_Vector32 * vector);
 
 /**
  * Reserve space in the vector.
@@ -315,7 +315,7 @@ size_t gcu_vector32_count(GCU_Vector32 * vector);
  * @param count The number of items to reserve.
  * @return `true` on success, `false` otherwise.
  */
-bool gcu_vector32_reserve(GCU_Vector32 * vector, size_t count);
+GCU_API bool gcu_vector32_reserve(GCU_Vector32 * vector, size_t count);
 
 /**
  * Container holding the information of the 16-bit vector.
@@ -353,7 +353,7 @@ typedef struct GCU_Vector16 {
  * @param count The number of items anticipated to be stored in the vector.
  * @return A struct containing the vector information.
  */
-GCU_Vector16 * gcu_vector16_create(size_t count);
+GCU_API GCU_Vector16 * gcu_vector16_create(size_t count);
 
 /**
  * Create a vector structure in place.
@@ -365,7 +365,7 @@ GCU_Vector16 * gcu_vector16_create(size_t count);
  * @param count The number of items anticipated to be stored in the vector.
  * @return `true` on success, `false` otherwise.
  */
-bool gcu_vector16_create_in_place(GCU_Vector16 * vector, size_t count);
+GCU_API bool gcu_vector16_create_in_place(GCU_Vector16 * vector, size_t count);
 
 /**
  * Destroy a vector structure and clean up memory allocations.
@@ -376,7 +376,7 @@ bool gcu_vector16_create_in_place(GCU_Vector16 * vector, size_t count);
  *
  * @param vector The vector structure to be destroyed.
  */
-void gcu_vector16_destroy(GCU_Vector16 * vector);
+GCU_API void gcu_vector16_destroy(GCU_Vector16 * vector);
 
 /**
  * Destroy a vector structure (except for the memory allocation).
@@ -385,7 +385,7 @@ void gcu_vector16_destroy(GCU_Vector16 * vector);
  *
  * @param vector The vector structure to be destroyed.
  */
-void gcu_vector16_destroy_in_place(GCU_Vector16 * vector);
+GCU_API void gcu_vector16_destroy_in_place(GCU_Vector16 * vector);
 
 /**
  * Append an item at the end of the vector.
@@ -398,7 +398,7 @@ void gcu_vector16_destroy_in_place(GCU_Vector16 * vector);
  * @param value The item to append to the end of the vector.
  * @return `true` on success, `false` otherwise.
  */
-bool gcu_vector16_append(GCU_Vector16 * vector, GCU_Type16_Union value);
+GCU_API bool gcu_vector16_append(GCU_Vector16 * vector, GCU_Type16_Union value);
 
 /**
  * Get a count of entries in the vector.
@@ -406,7 +406,7 @@ bool gcu_vector16_append(GCU_Vector16 * vector, GCU_Type16_Union value);
  * @param vector The vector structure on which to operate.
  * @return The count of entries in the vector.
  */
-size_t gcu_vector16_count(GCU_Vector16 * vector);
+GCU_API size_t gcu_vector16_count(GCU_Vector16 * vector);
 
 /**
  * Reserve space in the vector.
@@ -419,7 +419,7 @@ size_t gcu_vector16_count(GCU_Vector16 * vector);
  * @param count The number of items to reserve.
  * @return `true` on success, `false` otherwise.
  */
-bool gcu_vector16_reserve(GCU_Vector16 * vector, size_t count);
+GCU_API bool gcu_vector16_reserve(GCU_Vector16 * vector, size_t count);
 
 /**
  * Container holding the information of the 8-bit vector.
@@ -457,7 +457,7 @@ typedef struct GCU_Vector8 {
  * @param count The number of items anticipated to be stored in the vector.
  * @return A struct containing the vector information.
  */
-GCU_Vector8 * gcu_vector8_create(size_t count);
+GCU_API GCU_Vector8 * gcu_vector8_create(size_t count);
 
 /**
  * Create a vector structure in place.
@@ -469,7 +469,7 @@ GCU_Vector8 * gcu_vector8_create(size_t count);
  * @param count The number of items anticipated to be stored in the vector.
  * @return `true` on success, `false` otherwise.
  */
-bool gcu_vector8_create_in_place(GCU_Vector8 * vector, size_t count);
+GCU_API bool gcu_vector8_create_in_place(GCU_Vector8 * vector, size_t count);
 
 /**
  * Destroy a vector structure and clean up memory allocations.
@@ -480,7 +480,7 @@ bool gcu_vector8_create_in_place(GCU_Vector8 * vector, size_t count);
  *
  * @param vector The vector structure to be destroyed.
  */
-void gcu_vector8_destroy(GCU_Vector8 * vector);
+GCU_API void gcu_vector8_destroy(GCU_Vector8 * vector);
 
 /**
  * Destroy a vector structure (except for the memory allocation).
@@ -489,7 +489,7 @@ void gcu_vector8_destroy(GCU_Vector8 * vector);
  *
  * @param vector The vector structure to be destroyed.
  */
-void gcu_vector8_destroy_in_place(GCU_Vector8 * vector);
+GCU_API void gcu_vector8_destroy_in_place(GCU_Vector8 * vector);
 
 /**
  * Append an item at the end of the vector.
@@ -502,7 +502,7 @@ void gcu_vector8_destroy_in_place(GCU_Vector8 * vector);
  * @param value The item to append to the end of the vector.
  * @return `true` on success, `false` otherwise.
  */
-bool gcu_vector8_append(GCU_Vector8 * vector, GCU_Type8_Union value);
+GCU_API bool gcu_vector8_append(GCU_Vector8 * vector, GCU_Type8_Union value);
 
 /**
  * Get a count of entries in the vector.
@@ -510,7 +510,7 @@ bool gcu_vector8_append(GCU_Vector8 * vector, GCU_Type8_Union value);
  * @param vector The vector structure on which to operate.
  * @return The count of entries in the vector.
  */
-size_t gcu_vector8_count(GCU_Vector8 * vector);
+GCU_API size_t gcu_vector8_count(GCU_Vector8 * vector);
 
 /**
  * Reserve space in the vector.
@@ -523,7 +523,7 @@ size_t gcu_vector8_count(GCU_Vector8 * vector);
  * @param count The number of items to reserve.
  * @return `true` on success, `false` otherwise.
  */
-bool gcu_vector8_reserve(GCU_Vector8 * vector, size_t count);
+GCU_API bool gcu_vector8_reserve(GCU_Vector8 * vector, size_t count);
 
 #ifdef __cplusplus
 }

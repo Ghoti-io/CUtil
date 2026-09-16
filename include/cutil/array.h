@@ -97,7 +97,7 @@ struct GCU_Array {
  *   outlive the array.
  * @return The new array, or `NULL` on failure.
  */
-GCU_Array * gcu_array_create(
+GCU_API GCU_Array * gcu_array_create(
   size_t element_size, size_t count, const GCU_Allocator * allocator);
 
 /**
@@ -114,7 +114,7 @@ GCU_Array * gcu_array_create(
  * @return `true` on success.  On failure the array is left zeroed and safe to
  *   pass to gcu_array_destroy_in_place().
  */
-bool gcu_array_create_in_place(GCU_Array * array, size_t element_size,
+GCU_API bool gcu_array_create_in_place(GCU_Array * array, size_t element_size,
   size_t count, const GCU_Allocator * allocator);
 
 /**
@@ -124,7 +124,7 @@ bool gcu_array_create_in_place(GCU_Array * array, size_t element_size,
  *
  * @param array The array to destroy.
  */
-void gcu_array_destroy(GCU_Array * array);
+GCU_API void gcu_array_destroy(GCU_Array * array);
 
 /**
  * Release an array's storage without freeing the struct.
@@ -134,7 +134,7 @@ void gcu_array_destroy(GCU_Array * array);
  *
  * @param array The array to tear down.
  */
-void gcu_array_destroy_in_place(GCU_Array * array);
+GCU_API void gcu_array_destroy_in_place(GCU_Array * array);
 
 /**
  * Ensure the array can hold at least `count` elements without reallocating.
@@ -145,7 +145,7 @@ void gcu_array_destroy_in_place(GCU_Array * array);
  * @param count The capacity required.
  * @return `true` on success, `false` on overflow or allocation failure.
  */
-bool gcu_array_reserve(GCU_Array * array, size_t count);
+GCU_API bool gcu_array_reserve(GCU_Array * array, size_t count);
 
 /**
  * Set the element count, zero-filling any new elements.
@@ -157,7 +157,7 @@ bool gcu_array_reserve(GCU_Array * array, size_t count);
  * @param count The new element count.
  * @return `true` on success, `false` on overflow or allocation failure.
  */
-bool gcu_array_resize(GCU_Array * array, size_t count);
+GCU_API bool gcu_array_resize(GCU_Array * array, size_t count);
 
 /**
  * Release capacity beyond the current count.
@@ -168,7 +168,7 @@ bool gcu_array_resize(GCU_Array * array, size_t count);
  * @param array The array to operate on.
  * @return `true` if the capacity now equals the count.
  */
-bool gcu_array_shrink_to_fit(GCU_Array * array);
+GCU_API bool gcu_array_shrink_to_fit(GCU_Array * array);
 
 /**
  * Set the count to zero, keeping the allocated capacity.
@@ -177,7 +177,7 @@ bool gcu_array_shrink_to_fit(GCU_Array * array);
  *
  * @param array The array to operate on.
  */
-void gcu_array_clear(GCU_Array * array);
+GCU_API void gcu_array_clear(GCU_Array * array);
 
 /**
  * Copy one element onto the end of the array.
@@ -186,7 +186,7 @@ void gcu_array_clear(GCU_Array * array);
  * @param element The element to copy.  Must be at least `element_size` bytes.
  * @return `true` on success, `false` on overflow or allocation failure.
  */
-bool gcu_array_append(GCU_Array * array, const void * element);
+GCU_API bool gcu_array_append(GCU_Array * array, const void * element);
 
 /**
  * Copy `n` contiguous elements onto the end of the array.
@@ -198,7 +198,7 @@ bool gcu_array_append(GCU_Array * array, const void * element);
  * @param n The number of elements to copy.
  * @return `true` on success, `false` on overflow or allocation failure.
  */
-bool gcu_array_append_n(GCU_Array * array, const void * elements, size_t n);
+GCU_API bool gcu_array_append_n(GCU_Array * array, const void * elements, size_t n);
 
 /**
  * Grow the array by one zeroed element and return a pointer to it.
@@ -214,7 +214,7 @@ bool gcu_array_append_n(GCU_Array * array, const void * elements, size_t n);
  * @return A pointer to the new element, or `NULL` on failure (in which case
  *   the count is unchanged).
  */
-void * gcu_array_emplace(GCU_Array * array);
+GCU_API void * gcu_array_emplace(GCU_Array * array);
 
 /**
  * Grow the array by `n` zeroed elements and return a pointer to the first.
@@ -225,7 +225,7 @@ void * gcu_array_emplace(GCU_Array * array);
  *   case the count is unchanged).  Returns a non-`NULL` pointer to the end of
  *   the array when `n` is 0 and the array has storage.
  */
-void * gcu_array_emplace_n(GCU_Array * array, size_t n);
+GCU_API void * gcu_array_emplace_n(GCU_Array * array, size_t n);
 
 /**
  * Remove the last element, optionally copying it out.
@@ -235,7 +235,7 @@ void * gcu_array_emplace_n(GCU_Array * array, size_t n);
  *   discard it.
  * @return `true` if an element was removed, `false` if the array was empty.
  */
-bool gcu_array_pop(GCU_Array * array, void * out);
+GCU_API bool gcu_array_pop(GCU_Array * array, void * out);
 
 /**
  * Get a pointer to the element at an index.
@@ -244,7 +244,7 @@ bool gcu_array_pop(GCU_Array * array, void * out);
  * @param index The zero-based index.
  * @return A pointer to the element, or `NULL` if the index is out of range.
  */
-void * gcu_array_at(const GCU_Array * array, size_t index);
+GCU_API void * gcu_array_at(const GCU_Array * array, size_t index);
 
 /**
  * Get a pointer to the last element.
@@ -255,7 +255,7 @@ void * gcu_array_at(const GCU_Array * array, size_t index);
  * @param array The array to operate on.
  * @return A pointer to the last element, or `NULL` if the array is empty.
  */
-void * gcu_array_back(const GCU_Array * array);
+GCU_API void * gcu_array_back(const GCU_Array * array);
 
 /**
  * Remove the element at an index, shifting the remainder down.
@@ -267,7 +267,7 @@ void * gcu_array_back(const GCU_Array * array);
  * @param out Receives a copy of the removed element; may be `NULL`.
  * @return `true` on success, `false` if the index is out of range.
  */
-bool gcu_array_remove_at(GCU_Array * array, size_t index, void * out);
+GCU_API bool gcu_array_remove_at(GCU_Array * array, size_t index, void * out);
 
 /**
  * Remove the element at an index by moving the last element into its place.
@@ -279,7 +279,7 @@ bool gcu_array_remove_at(GCU_Array * array, size_t index, void * out);
  * @param out Receives a copy of the removed element; may be `NULL`.
  * @return `true` on success, `false` if the index is out of range.
  */
-bool gcu_array_swap_remove(GCU_Array * array, size_t index, void * out);
+GCU_API bool gcu_array_swap_remove(GCU_Array * array, size_t index, void * out);
 
 /**
  * Get the number of elements in the array.
@@ -287,7 +287,7 @@ bool gcu_array_swap_remove(GCU_Array * array, size_t index, void * out);
  * @param array The array to operate on; `NULL` counts as empty.
  * @return The element count.
  */
-size_t gcu_array_count(const GCU_Array * array);
+GCU_API size_t gcu_array_count(const GCU_Array * array);
 
 /**
  * Hand the backing storage to the caller and reset the array to empty.
@@ -300,7 +300,7 @@ size_t gcu_array_count(const GCU_Array * array);
  * @param out_count Receives the element count; may be `NULL`.
  * @return The storage, or `NULL` if the array was empty.
  */
-void * gcu_array_steal(GCU_Array * array, size_t * out_count);
+GCU_API void * gcu_array_steal(GCU_Array * array, size_t * out_count);
 
 #ifdef __cplusplus
 }

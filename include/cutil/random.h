@@ -57,7 +57,7 @@ typedef struct GCU_Random_MT32_State {
  * @param state A pointer to the state structure to be initialized.
  * @param seed A seed value with which to initialize the state.
  */
-void gcu_random_mt32_init(GCU_Random_MT32_State * state, uint32_t seed);
+GCU_API void gcu_random_mt32_init(GCU_Random_MT32_State * state, uint32_t seed);
 
 /**
  * Generate the next random number from the 32-bit Mersenne Twister state.
@@ -66,7 +66,7 @@ void gcu_random_mt32_init(GCU_Random_MT32_State * state, uint32_t seed);
  * random number.
  * @return The next random number in the sequence.
  */
-uint32_t gcu_random_mt32_next(GCU_Random_MT32_State * state);
+GCU_API uint32_t gcu_random_mt32_next(GCU_Random_MT32_State * state);
 
 /**
  * The state structure for the 64-bit Mersenne Twister.
@@ -91,7 +91,7 @@ typedef struct GCU_Random_MT64_State {
  * @param state A pointer to the state structure to be initialized.
  * @param seed A seed value with which to initialize the state.
  */
-void gcu_random_mt64_init(GCU_Random_MT64_State * state, uint64_t seed);
+GCU_API void gcu_random_mt64_init(GCU_Random_MT64_State * state, uint64_t seed);
 
 /**
  * Generate the next random number from the 64-bit Mersenne Twister state.
@@ -100,7 +100,7 @@ void gcu_random_mt64_init(GCU_Random_MT64_State * state, uint64_t seed);
  * random number.
  * @return The next random number in the sequence.
  */
-uint64_t gcu_random_mt64_next(GCU_Random_MT64_State * state);
+GCU_API uint64_t gcu_random_mt64_next(GCU_Random_MT64_State * state);
 
 #ifdef __cplusplus
 }

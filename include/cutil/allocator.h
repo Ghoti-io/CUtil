@@ -62,7 +62,7 @@ typedef struct GCU_Allocator {
  *
  * @return A pointer to the default allocator.
  */
-const GCU_Allocator * gcu_allocator_default(void);
+GCU_API const GCU_Allocator * gcu_allocator_default(void);
 
 /**
  * Allocate through an allocator, defaulting when none is supplied.
@@ -71,7 +71,7 @@ const GCU_Allocator * gcu_allocator_default(void);
  * @param size The number of bytes requested.
  * @return The allocated memory, or `NULL` on failure.
  */
-void * gcu_allocator_malloc(const GCU_Allocator * allocator, size_t size);
+GCU_API void * gcu_allocator_malloc(const GCU_Allocator * allocator, size_t size);
 
 /**
  * Allocate zeroed memory through an allocator, defaulting when none is
@@ -82,7 +82,7 @@ void * gcu_allocator_malloc(const GCU_Allocator * allocator, size_t size);
  * @param size The size of each item.
  * @return The allocated memory, or `NULL` on failure (including overflow).
  */
-void * gcu_allocator_calloc(
+GCU_API void * gcu_allocator_calloc(
   const GCU_Allocator * allocator, size_t nitems, size_t size);
 
 /**
@@ -94,7 +94,7 @@ void * gcu_allocator_calloc(
  * @return The resized memory, or `NULL` on failure (in which case `ptr` is
  *   still valid).
  */
-void * gcu_allocator_realloc(
+GCU_API void * gcu_allocator_realloc(
   const GCU_Allocator * allocator, void * ptr, size_t size);
 
 /**
@@ -104,7 +104,7 @@ void * gcu_allocator_realloc(
  * @param allocator The allocator to use, or `NULL` for the default.
  * @param ptr The allocation to release.  `NULL` is ignored.
  */
-void gcu_allocator_free(const GCU_Allocator * allocator, void * ptr);
+GCU_API void gcu_allocator_free(const GCU_Allocator * allocator, void * ptr);
 
 #ifdef __cplusplus
 }

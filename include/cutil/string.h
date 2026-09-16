@@ -29,7 +29,7 @@ extern "C" {
  * @param len The length of the data in bytes.
  * @return A 32-bit number representing the value.
  */
-uint32_t gcu_string_hash_32(char const * str, size_t len);
+GCU_API uint32_t gcu_string_hash_32(char const * str, size_t len);
 
 /**
  * Helper function to wrap the hash function that produces a 64-bit number
@@ -39,7 +39,7 @@ uint32_t gcu_string_hash_32(char const * str, size_t len);
  * @param len The length of the data in bytes.
  * @return A 64-bit number representing the value.
  */
-uint64_t gcu_string_hash_64(char const * str, size_t len);
+GCU_API uint64_t gcu_string_hash_64(char const * str, size_t len);
 
 /**
  * Get 32-bit hash using the MurmurHash3 by Appleby.
@@ -54,7 +54,7 @@ uint64_t gcu_string_hash_64(char const * str, size_t len);
  * @param out A pointer to a 32-bit (4-byte) buffer into which the hash may be
  *   written.  The caller must supply the buffer.
  */
-void gcu_string_murmur3_32(const void * key, size_t len, uint32_t seed, void * out);
+GCU_API void gcu_string_murmur3_32(const void * key, size_t len, uint32_t seed, void * out);
 
 /**
  * Get 128-bit hash using the MurmurHash3 for x86 architecture by Appleby.
@@ -72,7 +72,7 @@ void gcu_string_murmur3_32(const void * key, size_t len, uint32_t seed, void * o
  * @param out A pointer to a 128-bit (16-byte) buffer into which the hash may
  *   be written.  The caller must supply the buffer.
  */
-void gcu_string_murmur3_x86_128(const void * key, size_t len, uint32_t seed, void * out);
+GCU_API void gcu_string_murmur3_x86_128(const void * key, size_t len, uint32_t seed, void * out);
 
 /**
  * Get 128-bit hash using the MurmurHash3 for x64 architecture by Appleby.
@@ -90,7 +90,7 @@ void gcu_string_murmur3_x86_128(const void * key, size_t len, uint32_t seed, voi
  * @param out A pointer to a 128-bit (16-byte) buffer into which the hash may
  *   be written.  The caller must supply the buffer.
  */
-void gcu_string_murmur3_x64_128(const void * key, size_t len, uint32_t seed, void * out);
+GCU_API void gcu_string_murmur3_x64_128(const void * key, size_t len, uint32_t seed, void * out);
 
 #ifdef __cplusplus
 }

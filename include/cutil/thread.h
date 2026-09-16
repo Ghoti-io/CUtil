@@ -116,7 +116,7 @@ typedef uint32_t GCU_Thread;
  * @param arg Argument to pass to the thread function.
  * @return 0 on success, -1 on failure.
  */
-int gcu_thread_create(GCU_Thread * thread, GCU_THREAD_FUNC func, void * arg);
+GCU_API int gcu_thread_create(GCU_Thread * thread, GCU_THREAD_FUNC func, void * arg);
 
 /**
  * Wait for a thread to finish.
@@ -124,7 +124,7 @@ int gcu_thread_create(GCU_Thread * thread, GCU_THREAD_FUNC func, void * arg);
  * @param thread Thread handle.
  * @return 0 on success, -1 on failure.
  */
-int gcu_thread_join(GCU_Thread thread);
+GCU_API int gcu_thread_join(GCU_Thread thread);
 
 /**
  * Detach a thread.
@@ -132,26 +132,26 @@ int gcu_thread_join(GCU_Thread thread);
  * @param thread Thread handle.
  * @return 0 on success, -1 on failure.
  */
-int gcu_thread_detach(GCU_Thread thread);
+GCU_API int gcu_thread_detach(GCU_Thread thread);
 
 /**
  * Sleep for a specified number of milliseconds.
  *
  * @param milliseconds Number of milliseconds to sleep.
  */
-void gcu_thread_sleep(unsigned long milliseconds);
+GCU_API void gcu_thread_sleep(unsigned long milliseconds);
 
 /**
  * Yield the current thread.
  */
-void gcu_thread_yield();
+GCU_API void gcu_thread_yield();
 
 /**
  * Get the number of logical processors on the system.
  *
  * @return The number of logical processors on the system.
  */
-unsigned int gcu_thread_get_num_processors();
+GCU_API unsigned int gcu_thread_get_num_processors();
 
 /**
  * Set the thread affinity mask.
@@ -160,7 +160,7 @@ unsigned int gcu_thread_get_num_processors();
  * @param mask Affinity mask.
  * @return 0 on success, -1 on failure.
  */
-int gcu_thread_set_affinity(GCU_Thread thread, unsigned long mask);
+GCU_API int gcu_thread_set_affinity(GCU_Thread thread, unsigned long mask);
 
 /**
  * Get the thread affinity mask.
@@ -169,7 +169,7 @@ int gcu_thread_set_affinity(GCU_Thread thread, unsigned long mask);
  * @param mask Pointer to a variable to store the affinity mask.
  * @return 0 on success, -1 on failure.
  */
-int gcu_thread_get_affinity(GCU_Thread thread, unsigned long * mask);
+GCU_API int gcu_thread_get_affinity(GCU_Thread thread, unsigned long * mask);
 
 /**
  * Set the thread priority.
@@ -178,7 +178,7 @@ int gcu_thread_get_affinity(GCU_Thread thread, unsigned long * mask);
  * @param priority Thread priority.
  * @return 0 on success, -1 on failure.
  */
-int gcu_thread_set_priority(GCU_Thread thread, int priority);
+GCU_API int gcu_thread_set_priority(GCU_Thread thread, int priority);
 
 /**
  * Get the thread priority.
@@ -187,7 +187,7 @@ int gcu_thread_set_priority(GCU_Thread thread, int priority);
  * @param priority Pointer to a variable to store the thread priority.
  * @return 0 on success, -1 on failure.
  */
-int gcu_thread_get_priority(GCU_Thread thread, int * priority);
+GCU_API int gcu_thread_get_priority(GCU_Thread thread, int * priority);
 
 /**
  * Set the thread name.
@@ -196,7 +196,7 @@ int gcu_thread_get_priority(GCU_Thread thread, int * priority);
  * @param name Thread name.
  * @return 0 on success, -1 on failure.
  */
-int gcu_thread_set_name(GCU_Thread thread, const char * name);
+GCU_API int gcu_thread_set_name(GCU_Thread thread, const char * name);
 
 /**
  * Get the thread name.
@@ -206,7 +206,7 @@ int gcu_thread_set_name(GCU_Thread thread, const char * name);
  * @param size Size of the name buffer.
  * @return 0 on success, nonzero on failure.
  */
-int gcu_thread_get_name(GCU_Thread thread, char * name, size_t size);
+GCU_API int gcu_thread_get_name(GCU_Thread thread, char * name, size_t size);
 
 /**
  * Get the thread name of the current thread.
@@ -215,14 +215,14 @@ int gcu_thread_get_name(GCU_Thread thread, char * name, size_t size);
  * @param size Size of the name buffer.
  * @return 0 on success, -1 on failure.
  */
-int gcu_thread_get_current_name(char * name, size_t size);
+GCU_API int gcu_thread_get_current_name(char * name, size_t size);
 
 /**
  * Get the thread ID of the current thread.
  *
  * @return The thread ID of the current thread.
  */
-GCU_Thread gcu_thread_get_current_id();
+GCU_API GCU_Thread gcu_thread_get_current_id();
 
 /**
  * Return whether or not the thread is running.
@@ -231,7 +231,7 @@ GCU_Thread gcu_thread_get_current_id();
  * @param is_running Pointer to a variable to store the result.
  * @return 0 on success, -1 on failure.
  */
-int gcu_thread_is_running(GCU_Thread thread, bool * is_running);
+GCU_API int gcu_thread_is_running(GCU_Thread thread, bool * is_running);
 
 /**
  * Return whether or not a thread has been joined.
@@ -240,7 +240,7 @@ int gcu_thread_is_running(GCU_Thread thread, bool * is_running);
  * @param is_joined Pointer to a variable to store the result.
  * @return 0 on success, -1 on failure.
  */
-int gcu_thread_is_joined(GCU_Thread thread, bool * is_joined);
+GCU_API int gcu_thread_is_joined(GCU_Thread thread, bool * is_joined);
 
 /**
  * Return whether or not a thread has been detached.
@@ -249,7 +249,7 @@ int gcu_thread_is_joined(GCU_Thread thread, bool * is_joined);
  * @param is_detached Pointer to a variable to store the result.
  * @return 0 on success, -1 on failure.
  */
-int gcu_thread_is_detached(GCU_Thread thread, bool * is_detached);
+GCU_API int gcu_thread_is_detached(GCU_Thread thread, bool * is_detached);
 
 #ifdef __cplusplus
 }

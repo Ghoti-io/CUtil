@@ -54,13 +54,13 @@ extern "C" {
  * Instruct Ghoti.io CUtils library that intercepted memory management calls
  * should be logged to stderr.
  */
-void gcu_mem_start(void);
+GCU_API void gcu_mem_start(void);
 
 /**
  * Instruct Ghoti.io CUtils library that intercepted memory management calls
  * should no longer be logged to stderr.
  */
-void gcu_mem_stop(void);
+GCU_API void gcu_mem_stop(void);
 
 /**
  * Cross-platform wrapper for the standard malloc() function.
@@ -72,7 +72,7 @@ void gcu_mem_stop(void);
  * @param line The line number on which the function was called.
  * @returns The beginning byte of the allocated memory.
  */
-void * gcu_malloc_debug(size_t size, const char * file, size_t line);
+GCU_API void * gcu_malloc_debug(size_t size, const char * file, size_t line);
 
 /**
  * Cross-platform wrapper for the standard calloc() function.
@@ -85,7 +85,7 @@ void * gcu_malloc_debug(size_t size, const char * file, size_t line);
  * @param line The line number on which the function was called.
  * @returns The beginning byte of the allocated memory.
  */
-void * gcu_calloc_debug(size_t nitems, size_t size, const char * file, size_t line);
+GCU_API void * gcu_calloc_debug(size_t nitems, size_t size, const char * file, size_t line);
 
 /**
  * Cross-platform wrapper for the standard realloc() function.
@@ -98,7 +98,7 @@ void * gcu_calloc_debug(size_t nitems, size_t size, const char * file, size_t li
  * @param line The line number on which the function was called.
  * @returns The beginning byte of the reallocated memory.
  */
-void * gcu_realloc_debug(void * pointer, size_t size, const char * file, size_t line);
+GCU_API void * gcu_realloc_debug(void * pointer, size_t size, const char * file, size_t line);
 
 /**
  * Wrapper for the standard free() function.
@@ -109,7 +109,7 @@ void * gcu_realloc_debug(void * pointer, size_t size, const char * file, size_t 
  * @param file The name of the file from which the function was called.
  * @param line The line number on which the function was called.
  */
-void gcu_free_debug(void * pointer, const char * file, size_t line);
+GCU_API void gcu_free_debug(void * pointer, const char * file, size_t line);
 
 /**
  * Get the number of times memory has been allocated.
@@ -119,7 +119,7 @@ void gcu_free_debug(void * pointer, const char * file, size_t line);
  *
  * @returns The number of times memory has been allocated.
  */
-size_t gcu_get_alloc_count(void);
+GCU_API size_t gcu_get_alloc_count(void);
 
 /**
  * Get the number of times memory has been freed.
@@ -128,12 +128,12 @@ size_t gcu_get_alloc_count(void);
  *
  * @returns The number of times memory has been freed.
  */
-size_t gcu_get_free_count(void);
+GCU_API size_t gcu_get_free_count(void);
 
 /**
  * Reset the memory allocation and free counts to zero.
  */
-void gcu_memory_reset_counts(void);
+GCU_API void gcu_memory_reset_counts(void);
 
 /**
  * The number of times memory has been allocated.
@@ -141,7 +141,7 @@ void gcu_memory_reset_counts(void);
  * Do not access this variable directly.  Use gcu_get_alloc_count() instead.
  * It appears here simply so that gcu_malloc() and gcu_calloc() can be inlined.
  */
-extern size_t gcu_memory_alloc_count;
+GCU_API extern size_t gcu_memory_alloc_count;
 
 /**
  * The number of times memory has been freed.
@@ -149,7 +149,7 @@ extern size_t gcu_memory_alloc_count;
  * Do not access this variable directly.  Use gcu_get_free_count() instead.
  * It appears here simply so that gcu_free() can be inlined.
  */
-extern size_t gcu_memory_free_count;
+GCU_API extern size_t gcu_memory_free_count;
 
 #if DOXYGEN
 

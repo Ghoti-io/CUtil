@@ -577,7 +577,7 @@ typedef union {
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type64_Union gcu_type64_p(void * val);
+GCU_API GCU_Type64_Union gcu_type64_p(void * val);
 
 /**
  * Create a 64-bit union variable with the type `uint64_t`.
@@ -590,7 +590,7 @@ GCU_Type64_Union gcu_type64_p(void * val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type64_Union gcu_type64_ui64(uint64_t val);
+GCU_API GCU_Type64_Union gcu_type64_ui64(uint64_t val);
 
 /**
  * Create a 64-bit union variable with the type `uint32_t`.
@@ -603,7 +603,7 @@ GCU_Type64_Union gcu_type64_ui64(uint64_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type64_Union gcu_type64_ui32(uint32_t val);
+GCU_API GCU_Type64_Union gcu_type64_ui32(uint32_t val);
 
 /**
  * Create a 64-bit union variable with the type `uint16_t`.
@@ -616,7 +616,7 @@ GCU_Type64_Union gcu_type64_ui32(uint32_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type64_Union gcu_type64_ui16(uint16_t val);
+GCU_API GCU_Type64_Union gcu_type64_ui16(uint16_t val);
 
 /**
  * Create a 64-bit union variable with the type `uint8_t`.
@@ -629,7 +629,7 @@ GCU_Type64_Union gcu_type64_ui16(uint16_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type64_Union gcu_type64_ui8(uint8_t val);
+GCU_API GCU_Type64_Union gcu_type64_ui8(uint8_t val);
 
 /**
  * Create a 64-bit union variable with the type `int64_t`.
@@ -642,7 +642,7 @@ GCU_Type64_Union gcu_type64_ui8(uint8_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type64_Union gcu_type64_i64(int64_t val);
+GCU_API GCU_Type64_Union gcu_type64_i64(int64_t val);
 
 /**
  * Create a 64-bit union variable with the type `int32_t`.
@@ -655,7 +655,7 @@ GCU_Type64_Union gcu_type64_i64(int64_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type64_Union gcu_type64_i32(int32_t val);
+GCU_API GCU_Type64_Union gcu_type64_i32(int32_t val);
 
 /**
  * Create a 64-bit union variable with the type `int16_t`.
@@ -668,7 +668,7 @@ GCU_Type64_Union gcu_type64_i32(int32_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type64_Union gcu_type64_i16(int16_t val);
+GCU_API GCU_Type64_Union gcu_type64_i16(int16_t val);
 
 /**
  * Create a 64-bit union variable with the type `int8_t`.
@@ -681,7 +681,7 @@ GCU_Type64_Union gcu_type64_i16(int16_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type64_Union gcu_type64_i8(int8_t val);
+GCU_API GCU_Type64_Union gcu_type64_i8(int8_t val);
 
 /**
  * Create a 64-bit union variable with the type float with 64 bits.
@@ -694,7 +694,7 @@ GCU_Type64_Union gcu_type64_i8(int8_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type64_Union gcu_type64_f64(GCU_float64_t val);
+GCU_API GCU_Type64_Union gcu_type64_f64(GCU_float64_t val);
 
 /**
  * Create a 64-bit union variable with the type float with 32 bits.
@@ -707,7 +707,7 @@ GCU_Type64_Union gcu_type64_f64(GCU_float64_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type64_Union gcu_type64_f32(GCU_float32_t val);
+GCU_API GCU_Type64_Union gcu_type64_f32(GCU_float32_t val);
 
 /**
  * Create a 64-bit union variable with the type `wchar_t`.
@@ -720,7 +720,7 @@ GCU_Type64_Union gcu_type64_f32(GCU_float32_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type64_Union gcu_type64_wc(wchar_t val);
+GCU_API GCU_Type64_Union gcu_type64_wc(wchar_t val);
 
 /**
  * Create a 64-bit union variable with the type `char`.
@@ -733,7 +733,7 @@ GCU_Type64_Union gcu_type64_wc(wchar_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type64_Union gcu_type64_c(char val);
+GCU_API GCU_Type64_Union gcu_type64_c(char val);
 
 /**
  * Create a 64-bit union variable with the type `bool`.
@@ -746,7 +746,7 @@ GCU_Type64_Union gcu_type64_c(char val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type64_Union gcu_type64_b(bool val);
+GCU_API GCU_Type64_Union gcu_type64_b(bool val);
 
 /**
  * Create a 32-bit union variable with the type `uint32_t`.
@@ -759,7 +759,7 @@ GCU_Type64_Union gcu_type64_b(bool val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type32_Union gcu_type32_ui32(uint32_t val);
+GCU_API GCU_Type32_Union gcu_type32_ui32(uint32_t val);
 
 /**
  * Create a 32-bit union variable with the type `uint16_t`.
@@ -772,7 +772,7 @@ GCU_Type32_Union gcu_type32_ui32(uint32_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type32_Union gcu_type32_ui16(uint16_t val);
+GCU_API GCU_Type32_Union gcu_type32_ui16(uint16_t val);
 
 /**
  * Create a 32-bit union variable with the type `uint8_t`.
@@ -785,7 +785,7 @@ GCU_Type32_Union gcu_type32_ui16(uint16_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type32_Union gcu_type32_ui8(uint8_t val);
+GCU_API GCU_Type32_Union gcu_type32_ui8(uint8_t val);
 
 /**
  * Create a 32-bit union variable with the type `int32_t`.
@@ -798,7 +798,7 @@ GCU_Type32_Union gcu_type32_ui8(uint8_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type32_Union gcu_type32_i32(int32_t val);
+GCU_API GCU_Type32_Union gcu_type32_i32(int32_t val);
 
 /**
  * Create a 32-bit union variable with the type `int16_t`.
@@ -811,7 +811,7 @@ GCU_Type32_Union gcu_type32_i32(int32_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type32_Union gcu_type32_i16(int16_t val);
+GCU_API GCU_Type32_Union gcu_type32_i16(int16_t val);
 
 /**
  * Create a 32-bit union variable with the type `int8_t`.
@@ -824,7 +824,7 @@ GCU_Type32_Union gcu_type32_i16(int16_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type32_Union gcu_type32_i8(int8_t val);
+GCU_API GCU_Type32_Union gcu_type32_i8(int8_t val);
 
 /**
  * Create a 32-bit union variable with the type float with 32 bits.
@@ -837,7 +837,7 @@ GCU_Type32_Union gcu_type32_i8(int8_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type32_Union gcu_type32_f32(GCU_float32_t val);
+GCU_API GCU_Type32_Union gcu_type32_f32(GCU_float32_t val);
 
 #if GCU_WCHAR_WIDTH <= 4
 /**
@@ -851,7 +851,7 @@ GCU_Type32_Union gcu_type32_f32(GCU_float32_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type32_Union gcu_type32_wc(wchar_t val);
+GCU_API GCU_Type32_Union gcu_type32_wc(wchar_t val);
 #endif
 
 /**
@@ -865,7 +865,7 @@ GCU_Type32_Union gcu_type32_wc(wchar_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type32_Union gcu_type32_c(char val);
+GCU_API GCU_Type32_Union gcu_type32_c(char val);
 
 /**
  * Create a 32-bit union variable with the type `bool`.
@@ -878,7 +878,7 @@ GCU_Type32_Union gcu_type32_c(char val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type32_Union gcu_type32_b(bool val);
+GCU_API GCU_Type32_Union gcu_type32_b(bool val);
 
 /**
  * Create a 16-bit union variable with the type `uint16_t`.
@@ -891,7 +891,7 @@ GCU_Type32_Union gcu_type32_b(bool val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type16_Union gcu_type16_ui16(uint16_t val);
+GCU_API GCU_Type16_Union gcu_type16_ui16(uint16_t val);
 
 /**
  * Create a 16-bit union variable with the type `uint8_t`.
@@ -904,7 +904,7 @@ GCU_Type16_Union gcu_type16_ui16(uint16_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type16_Union gcu_type16_ui8(uint8_t val);
+GCU_API GCU_Type16_Union gcu_type16_ui8(uint8_t val);
 
 /**
  * Create a 16-bit union variable with the type `int16_t`.
@@ -917,7 +917,7 @@ GCU_Type16_Union gcu_type16_ui8(uint8_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type16_Union gcu_type16_i16(int16_t val);
+GCU_API GCU_Type16_Union gcu_type16_i16(int16_t val);
 
 /**
  * Create a 16-bit union variable with the type `int8_t`.
@@ -930,7 +930,7 @@ GCU_Type16_Union gcu_type16_i16(int16_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type16_Union gcu_type16_i8(int8_t val);
+GCU_API GCU_Type16_Union gcu_type16_i8(int8_t val);
 
 /**
  * Create a 16-bit union variable with the type `char`.
@@ -943,7 +943,7 @@ GCU_Type16_Union gcu_type16_i8(int8_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type16_Union gcu_type16_c(char val);
+GCU_API GCU_Type16_Union gcu_type16_c(char val);
 
 /**
  * Create a 16-bit union variable with the type `bool`.
@@ -956,7 +956,7 @@ GCU_Type16_Union gcu_type16_c(char val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type16_Union gcu_type16_b(bool val);
+GCU_API GCU_Type16_Union gcu_type16_b(bool val);
 
 
 /**
@@ -970,7 +970,7 @@ GCU_Type16_Union gcu_type16_b(bool val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type8_Union gcu_type8_ui8(uint8_t val);
+GCU_API GCU_Type8_Union gcu_type8_ui8(uint8_t val);
 
 /**
  * Create a 8-bit union variable with the type `int8_t`.
@@ -983,7 +983,7 @@ GCU_Type8_Union gcu_type8_ui8(uint8_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type8_Union gcu_type8_i8(int8_t val);
+GCU_API GCU_Type8_Union gcu_type8_i8(int8_t val);
 
 /**
  * Create a 8-bit union variable with the type `char`.
@@ -996,7 +996,7 @@ GCU_Type8_Union gcu_type8_i8(int8_t val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type8_Union gcu_type8_c(char val);
+GCU_API GCU_Type8_Union gcu_type8_c(char val);
 
 /**
  * Create a 8-bit union variable with the type `bool`.
@@ -1009,7 +1009,7 @@ GCU_Type8_Union gcu_type8_c(char val);
  * @param val The value to put into the union.
  * @return The union variable.
  */
-GCU_Type8_Union gcu_type8_b(bool val);
+GCU_API GCU_Type8_Union gcu_type8_b(bool val);
 
 #ifdef __cplusplus
 }
