@@ -371,7 +371,7 @@ $(APP_DIR)/test-safemath$(EXE_EXTENSION): test/test-safemath.cpp | $(APP_DIR)/$(
 # General commands
 .PHONY: clean cloc docs docs-pdf coverage check-symbols
 # Release build commands
-.PHONY: all install test test-watch uninstall watch
+.PHONY: all install test test-asan test-ubsan test-watch uninstall watch
 # Debug build commands
 .PHONY: all-debug install-debug test-debug test-watch-debug uninstall-debug watch-debug
 
@@ -497,10 +497,112 @@ test: $(APP_DIR)/$(TARGET) $(TEST_BINARIES) check-symbols
 		env LD_LIBRARY_PATH="$(APP_DIR)" $$t --gtest_brief=1 || exit 1; \
 	done
 
+####################################################################
+# Sanitizer builds (ASan + UBSan)
+####################################################################
+#
+# This library had no sanitizer target at all, which meant its memory
+# behaviour was only ever asserted by tests that pass or fail on values -
+# and a use-after-free reads back plausible values. The sibling compress
+# library, which did have one, turned out to have three of them the moment
+# the target was made to run.
+#
+# The instrumented objects live in their own tree so that an ordinary `make`
+# can never link them by mistake.
+
+ASAN_UBSAN_FLAGS := -fsanitize=address -fsanitize=undefined \
+	-fno-omit-frame-pointer -g
+
+ASAN_BUILD_DIR := $(BUILD)-asan
+ASAN_OBJ_DIR := $(ASAN_BUILD_DIR)/objects
+ASAN_APP_DIR := $(ASAN_BUILD_DIR)/apps
+ASAN_TARGET := $(BASE_NAME_PREFIX)-asan.so
+
+ASAN_CFLAGS := $(CFLAGS) $(ASAN_UBSAN_FLAGS)
+ASAN_CXXFLAGS := $(CXXFLAGS) $(ASAN_UBSAN_FLAGS)
+ASAN_LDFLAGS := $(LDFLAGS) $(ASAN_UBSAN_FLAGS)
+ASAN_LIBOBJECTS := $(patsubst $(OBJ_DIR)/%,$(ASAN_OBJ_DIR)/%,$(LIBOBJECTS))
+ASAN_TEST_BINARIES := \
+	$(foreach t,$(TEST_NAMES),$(ASAN_APP_DIR)/$(t)$(EXE_EXTENSION))
+ASAN_CUTILLIBRARY := -L $(ASAN_APP_DIR) -l$(SUITE)-$(PROJECT)$(BRANCH)-asan
+
+# The ASan runtime insists on being initialised before anything it has to
+# intercept, and refuses to start rather than run uninstrumented if some other
+# library got there first:
+#
+#   ASan runtime does not come first in initial library list
+#
+# A desktop session that sets LD_PRELOAD for its own reasons is enough to
+# trigger that, and every test then aborts before gtest gets control. Naming
+# the runtime here replaces whatever was inherited and puts it first.
+ASAN_RUNTIME := $(shell $(CC) -print-file-name=libasan.so)
+
+# float.h and libver_gen.h are plain generated headers, so the instrumented
+# build reuses the ones the ordinary build made rather than building a second
+# copy of the generator. That also keeps the generator itself uninstrumented:
+# it is a build tool that runs at build time, and instrumenting it only made
+# it inherit the startup problem described above.
+$(ASAN_OBJ_DIR)/%.o: src/%.c \
+		| $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/float.h \
+		  $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/libver_gen.h
+	@printf "\n### Compiling (ASan+UBSan): $@ ###\n"
+	@mkdir -p $(@D)
+	$(CC) $(ASAN_CFLAGS) $(INCLUDE) -c $< -o $@ $(OS_SPECIFIC_CXX_FLAGS)
+
+$(ASAN_OBJ_DIR)/hash.o: src/hash.template.c
+$(ASAN_OBJ_DIR)/vector.o: src/vector.template.c
+
+$(ASAN_APP_DIR)/$(ASAN_TARGET): $(ASAN_LIBOBJECTS)
+	@printf "\n### Linking (ASan+UBSan) $@ ###\n"
+	@mkdir -p $(@D)
+	$(CC) $(ASAN_CFLAGS) $(OS_SPECIFIC_CXX_FLAGS) -o $@ $^ $(ASAN_LDFLAGS)
+
+# One rule per test, generated from TEST_NAMES for the same reason the ordinary
+# test list is: a hand-maintained second list is a list that can silently omit
+# a test.
+define ASAN_TEST_RULE
+$(ASAN_APP_DIR)/$(1)$(EXE_EXTENSION): test/$(1).cpp \
+		| $(ASAN_APP_DIR)/$(ASAN_TARGET)
+	@printf "\n### Compiling (ASan+UBSan) $$@ ###\n"
+	@mkdir -p $$(@D)
+	$$(CXX) $$(ASAN_CXXFLAGS) $$(INCLUDE) -o $$@ $$< $$(ASAN_LDFLAGS) \
+		$$(TESTFLAGS) $$(ASAN_CUTILLIBRARY)
+endef
+$(foreach t,$(TEST_NAMES),$(eval $(call ASAN_TEST_RULE,$(t))))
+
+test-asan: ## Make and run the Unit tests under AddressSanitizer + UBSan
+test-asan: $(ASAN_APP_DIR)/$(ASAN_TARGET) $(ASAN_TEST_BINARIES)
+ifeq ($(OS_NAME), Linux)
+	@printf "\033[0;36m"
+	@printf "#######################################\n"
+	@printf "### Running tests with ASan + UBSan ###\n"
+	@printf "#######################################\n"
+	@printf "\033[0m"
+	@for t in $(ASAN_TEST_BINARIES); do \
+		printf "\n--- $$t ---\n"; \
+		env LD_LIBRARY_PATH="$(ASAN_APP_DIR)" LD_PRELOAD="$(ASAN_RUNTIME)" \
+			ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 \
+			UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=1 \
+			$$t --gtest_brief=1 || exit 1; \
+	done
+	@printf "\033[0;32m\nAll tests passed with ASan + UBSan.\033[0m\n"
+else
+	@printf "\033[0;31mSanitizer builds are currently only supported on Linux.\033[0m\n"
+	@exit 1
+endif
+
+test-ubsan: ## Alias for test-asan (ASan and UBSan run together)
+test-ubsan: test-asan
+
 clean: ## Remove all contents of the build directories.
+# The sanitizer tree is removed too. It is a sibling of the ordinary build
+# directory rather than a child, so a clean that names only the ordinary one
+# leaves instrumented objects behind - and they are the ones a stale-binary
+# mistake is hardest to notice with, because they still run.
 	-@rm -rvf $(OBJ_DIR)/*
 	-@rm -rvf $(APP_DIR)/*
 	-@rm -rvf $(GEN_DIR)/*
+	-@rm -rvf $(ASAN_BUILD_DIR)
 	-@rm -f include/$(SUITE)/$(PROJECT)/float.h
 
 # Files will be as follows:
