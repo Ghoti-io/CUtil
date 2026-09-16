@@ -5,7 +5,7 @@
 
 #include <gtest/gtest.h>
 
-#include <cutil/safemath.h>
+#include <ghoti.io/cutil/safemath.h>
 
 using namespace std;
 

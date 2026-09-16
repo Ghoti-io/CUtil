@@ -6,7 +6,7 @@
 #include <cstring>
 #include <gtest/gtest.h>
 
-#include <cutil/array.h>
+#include <ghoti.io/cutil/array.h>
 
 using namespace std;
 

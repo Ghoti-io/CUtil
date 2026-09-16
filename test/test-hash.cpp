@@ -1,7 +1,7 @@
 #include <chrono>
 #include <sstream>
 #include <gtest/gtest.h>
-#include <cutil/hash.h>
+#include <ghoti.io/cutil/hash.h>
 
 using namespace std;
 

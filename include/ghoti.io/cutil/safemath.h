@@ -8,8 +8,10 @@
  * these compile to a single instruction plus a branch.
  */
 
-#ifndef GHOTIIO_CUTIL_SAFEMATH_H
-#define GHOTIIO_CUTIL_SAFEMATH_H
+#ifndef GHOTI_IO_GCU_SAFEMATH_H
+#define GHOTI_IO_GCU_SAFEMATH_H
+
+#include <ghoti.io/cutil/macros.h>
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -235,4 +237,4 @@ static inline bool gcu_safe_mul_u32(uint32_t a, uint32_t b, uint32_t * result) {
 }
 #endif
 
-#endif //GHOTIIO_CUTIL_SAFEMATH_H
+#endif //GHOTI_IO_GCU_SAFEMATH_H

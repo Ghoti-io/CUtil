@@ -5,8 +5,9 @@
  */
 
 #include <string.h>
-#include <cutil/array.h>
-#include <cutil/safemath.h>
+#include <ghoti.io/cutil/macros.h>
+#include <ghoti.io/cutil/array.h>
+#include <ghoti.io/cutil/safemath.h>
 
 /// Smallest allocation made for a lazily-grown array, in elements.
 #define GCU_ARRAY_MIN_CAPACITY 8

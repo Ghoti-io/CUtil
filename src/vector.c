@@ -4,8 +4,9 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <cutil/memory.h>
-#include <cutil/vector.h>
+#include <ghoti.io/cutil/macros.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/cutil/vector.h>
 
 #define GROWTH_FACTOR 1.3
 

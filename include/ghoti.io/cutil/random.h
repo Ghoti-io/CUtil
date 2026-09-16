@@ -4,16 +4,16 @@
  * This file implements cross-platform random number generation functions.
  */
 
-#ifndef G_CUTIL_RANDOM_H
-#define G_CUTIL_RANDOM_H
+#ifndef GHOTI_IO_GCU_RANDOM_H
+#define GHOTI_IO_GCU_RANDOM_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
 
 #include <stdint.h>
-#include <cutil/libver.h>
-#include <cutil/float.h>
+#include <ghoti.io/cutil/macros.h>
+#include <ghoti.io/cutil/float.h>
 
 /**
  * The number of elements in the state array for the 32-bit Mersenne Twister.
@@ -25,14 +25,6 @@ extern "C" {
  */
 #define GCU_RANDOM_MT_STATE_SIZE64 312
 
-/// @cond HIDDEN_SYMBOLS
-#define GCU_Random_MT32_State GHOTIIO_CUTIL(GCU_Random_MT32_State)
-#define GCU_Random_MT64_State GHOTIIO_CUTIL(GCU_Random_MT64_State)
-#define gcu_random_mt32_init GHOTIIO_CUTIL(gcu_random_mt32_init)
-#define gcu_random_mt32_next GHOTIIO_CUTIL(gcu_random_mt32_next)
-#define gcu_random_mt64_init GHOTIIO_CUTIL(gcu_random_mt64_init)
-#define gcu_random_mt64_next GHOTIIO_CUTIL(gcu_random_mt64_next)
-/// @endcond
 
 /**
  * The state structure for the 32-bit Mersenne Twister.
@@ -106,4 +98,4 @@ GCU_API uint64_t gcu_random_mt64_next(GCU_Random_MT64_State * state);
 }
 #endif // __cplusplus
 
-#endif // G_CUTIL_RANDOM_H
+#endif // GHOTI_IO_GCU_RANDOM_H

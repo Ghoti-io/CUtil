@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include <cutil/semaphore.h>
-#include <cutil/thread.h>
+#include <ghoti.io/cutil/semaphore.h>
+#include <ghoti.io/cutil/thread.h>
 
 using namespace std;
 

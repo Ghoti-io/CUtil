@@ -11,9 +11,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <cutil/memory.h>
-#include <cutil/thread.h>
-#include <cutil/hash.h>
+#include <ghoti.io/cutil/macros.h>
+#include <ghoti.io/cutil/memory.h>
+#include <ghoti.io/cutil/thread.h>
+#include <ghoti.io/cutil/hash.h>
 
 #ifdef _WIN32
 #else

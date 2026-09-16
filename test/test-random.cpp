@@ -1,7 +1,7 @@
 #include <random>
 #include <sstream>
 #include <gtest/gtest.h>
-#include <cutil/random.h>
+#include <ghoti.io/cutil/random.h>
 
 using namespace std;
 

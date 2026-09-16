@@ -1,5 +1,6 @@
 
-#include <cutil/random.h>
+#include <ghoti.io/cutil/macros.h>
+#include <ghoti.io/cutil/random.h>
 
 // For reference, see the Mersenne Twister pseudocode from Wikipedia:
 // https://en.wikipedia.org/wiki/Mersenne_Twister

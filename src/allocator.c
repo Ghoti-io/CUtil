@@ -5,8 +5,9 @@
  */
 
 #include <stdlib.h>
-#include <cutil/allocator.h>
-#include <cutil/safemath.h>
+#include <ghoti.io/cutil/macros.h>
+#include <ghoti.io/cutil/allocator.h>
+#include <ghoti.io/cutil/safemath.h>
 
 static void * default_malloc(void * ctx, size_t size) {
   (void)ctx;

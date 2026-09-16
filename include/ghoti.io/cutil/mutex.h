@@ -4,8 +4,10 @@
  * This file implements cross-platform mutex functions.
  */
 
-#ifndef G_CUTIL_MUTEX_H
-#define G_CUTIL_MUTEX_H
+#ifndef GHOTI_IO_GCU_MUTEX_H
+#define GHOTI_IO_GCU_MUTEX_H
+
+#include <ghoti.io/cutil/macros.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -82,4 +84,4 @@ typedef void* GCU_MUTEX_TYPE;
 }
 #endif
 
-#endif // G_CUTIL_MUTEX_H
+#endif // GHOTI_IO_GCU_MUTEX_H

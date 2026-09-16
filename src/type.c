@@ -1,7 +1,8 @@
 /**
  */
 
-#include <cutil/type.h>
+#include <ghoti.io/cutil/macros.h>
+#include <ghoti.io/cutil/type.h>
 
 
 GCU_Type64_Union gcu_type64_p(void * val) {

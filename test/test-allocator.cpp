@@ -6,7 +6,7 @@
 #include <cstring>
 #include <gtest/gtest.h>
 
-#include <cutil/allocator.h>
+#include <ghoti.io/cutil/allocator.h>
 
 using namespace std;
 

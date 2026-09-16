@@ -3,23 +3,18 @@
  * A collection of string-related functions.
  */
 
-#ifndef GHOTIIO_CUTIL_STRING_H
-#define GHOTIIO_CUTIL_STRING_H
+#ifndef GHOTI_IO_GCU_STRING_H
+#define GHOTI_IO_GCU_STRING_H
+
+#include <ghoti.io/cutil/macros.h>
 
 #include <stddef.h>
-#include <cutil/type.h>
+#include <ghoti.io/cutil/type.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/// @cond HIDDEN_SYMBOLS
-#define gcu_string_hash_32 GHOTIIO_CUTIL(gcu_string_hash_32)
-#define gcu_string_hash_64 GHOTIIO_CUTIL(gcu_string_hash_64)
-#define gcu_string_murmur3_32 GHOTIIO_CUTIL(gcu_string_murmur3_32)
-#define gcu_string_murmur3_x86_128 GHOTIIO_CUTIL(gcu_string_murmur3_x86_128)
-#define gcu_string_murmur3_x64_128 GHOTIIO_CUTIL(gcu_string_murmur3_x64_128)
-/// @endcond
 
 /**
  * Helper function to wrap the hash function that produces a 32-bit number
@@ -96,5 +91,5 @@ GCU_API void gcu_string_murmur3_x64_128(const void * key, size_t len, uint32_t s
 }
 #endif
 
-#endif //GHOTIIO_CUTIL_STRING_H
+#endif //GHOTI_IO_GCU_STRING_H
 

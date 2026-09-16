@@ -11,24 +11,16 @@
  * functions taking an allocator may be called without one.
  */
 
-#ifndef GHOTIIO_CUTIL_ALLOCATOR_H
-#define GHOTIIO_CUTIL_ALLOCATOR_H
+#ifndef GHOTI_IO_GCU_ALLOCATOR_H
+#define GHOTI_IO_GCU_ALLOCATOR_H
 
 #include <stddef.h>
-#include <cutil/libver.h>
+#include <ghoti.io/cutil/macros.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/// @cond HIDDEN_SYMBOLS
-#define GCU_Allocator GHOTIIO_CUTIL(GCU_Allocator)
-#define gcu_allocator_default GHOTIIO_CUTIL(gcu_allocator_default)
-#define gcu_allocator_malloc GHOTIIO_CUTIL(gcu_allocator_malloc)
-#define gcu_allocator_calloc GHOTIIO_CUTIL(gcu_allocator_calloc)
-#define gcu_allocator_realloc GHOTIIO_CUTIL(gcu_allocator_realloc)
-#define gcu_allocator_free GHOTIIO_CUTIL(gcu_allocator_free)
-/// @endcond
 
 /**
  * A caller-supplied memory management strategy.
@@ -110,4 +102,4 @@ GCU_API void gcu_allocator_free(const GCU_Allocator * allocator, void * ptr);
 }
 #endif
 
-#endif //GHOTIIO_CUTIL_ALLOCATOR_H
+#endif //GHOTI_IO_GCU_ALLOCATOR_H

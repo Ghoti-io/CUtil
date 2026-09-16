@@ -3,95 +3,20 @@
  * A simple hash table implementation.
  */
 
-#ifndef GHOTIIO_CUTIL_HASH_H
-#define GHOTIIO_CUTIL_HASH_H
+#ifndef GHOTI_IO_GCU_HASH_H
+#define GHOTI_IO_GCU_HASH_H
+
+#include <ghoti.io/cutil/macros.h>
 
 #include <stddef.h>
 #include <stdint.h>
-#include <cutil/type.h>
-#include <cutil/mutex.h>
+#include <ghoti.io/cutil/type.h>
+#include <ghoti.io/cutil/mutex.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/// @cond HIDDEN_SYMBOLS
-#define GCU_Hash64_Cleanup GHOTIIO_CUTIL(GCU_Hash64_Cleanup)
-#define GCU_Hash64_Value GHOTIIO_CUTIL(GCU_Hash64_Value)
-#define GCU_Hash64_Cell GHOTIIO_CUTIL(GCU_Hash64_Cell)
-#define GCU_Hash64 GHOTIIO_CUTIL(GCU_Hash64)
-#define GCU_Hash64_Iterator GHOTIIO_CUTIL(GCU_Hash64_Iterator)
-
-#define gcu_hash64_create GHOTIIO_CUTIL(gcu_hash64_create)
-#define gcu_hash64_create_in_place GHOTIIO_CUTIL(gcu_hash64_create_in_place)
-#define gcu_hash64_destroy GHOTIIO_CUTIL(gcu_hash64_destroy)
-#define gcu_hash64_destroy_in_place GHOTIIO_CUTIL(gcu_hash64_destroy_in_place)
-#define gcu_hash64_clone GHOTIIO_CUTIL(gcu_hash64_clone)
-#define gcu_hash64_set GHOTIIO_CUTIL(gcu_hash64_set)
-#define gcu_hash64_get GHOTIIO_CUTIL(gcu_hash64_get)
-#define gcu_hash64_contains GHOTIIO_CUTIL(gcu_hash64_contains)
-#define gcu_hash64_remove GHOTIIO_CUTIL(gcu_hash64_remove)
-#define gcu_hash64_count GHOTIIO_CUTIL(gcu_hash64_count)
-#define gcu_hash64_iterator_get GHOTIIO_CUTIL(gcu_hash64_iterator_get)
-#define gcu_hash64_iterator_next GHOTIIO_CUTIL(gcu_hash64_iterator_next)
-
-#define GCU_Hash32_Cleanup GHOTIIO_CUTIL(GCU_Hash32_Cleanup)
-#define GCU_Hash32_Value GHOTIIO_CUTIL(GCU_Hash32_Value)
-#define GCU_Hash32_Cell GHOTIIO_CUTIL(GCU_Hash32_Cell)
-#define GCU_Hash32 GHOTIIO_CUTIL(GCU_Hash32)
-#define GCU_Hash32_Iterator GHOTIIO_CUTIL(GCU_Hash32_Iterator)
-
-#define gcu_hash32_create GHOTIIO_CUTIL(gcu_hash32_create)
-#define gcu_hash32_create_in_place GHOTIIO_CUTIL(gcu_hash32_create_in_place)
-#define gcu_hash32_destroy GHOTIIO_CUTIL(gcu_hash32_destroy)
-#define gcu_hash32_destroy_in_place GHOTIIO_CUTIL(gcu_hash32_destroy_in_place)
-#define gcu_hash32_clone GHOTIIO_CUTIL(gcu_hash32_clone)
-#define gcu_hash32_set GHOTIIO_CUTIL(gcu_hash32_set)
-#define gcu_hash32_get GHOTIIO_CUTIL(gcu_hash32_get)
-#define gcu_hash32_contains GHOTIIO_CUTIL(gcu_hash32_contains)
-#define gcu_hash32_remove GHOTIIO_CUTIL(gcu_hash32_remove)
-#define gcu_hash32_count GHOTIIO_CUTIL(gcu_hash32_count)
-#define gcu_hash32_iterator_get GHOTIIO_CUTIL(gcu_hash32_iterator_get)
-#define gcu_hash32_iterator_next GHOTIIO_CUTIL(gcu_hash32_iterator_next)
-
-#define GCU_Hash16_Cleanup GHOTIIO_CUTIL(GCU_Hash16_Cleanup)
-#define GCU_Hash16_Value GHOTIIO_CUTIL(GCU_Hash16_Value)
-#define GCU_Hash16_Cell GHOTIIO_CUTIL(GCU_Hash16_Cell)
-#define GCU_Hash16 GHOTIIO_CUTIL(GCU_Hash16)
-#define GCU_Hash16_Iterator GHOTIIO_CUTIL(GCU_Hash16_Iterator)
-
-#define gcu_hash16_create GHOTIIO_CUTIL(gcu_hash16_create)
-#define gcu_hash16_create_in_place GHOTIIO_CUTIL(gcu_hash16_create_in_place)
-#define gcu_hash16_destroy GHOTIIO_CUTIL(gcu_hash16_destroy)
-#define gcu_hash16_destroy_in_place GHOTIIO_CUTIL(gcu_hash16_destroy_in_place)
-#define gcu_hash16_clone GHOTIIO_CUTIL(gcu_hash16_clone)
-#define gcu_hash16_set GHOTIIO_CUTIL(gcu_hash16_set)
-#define gcu_hash16_get GHOTIIO_CUTIL(gcu_hash16_get)
-#define gcu_hash16_contains GHOTIIO_CUTIL(gcu_hash16_contains)
-#define gcu_hash16_remove GHOTIIO_CUTIL(gcu_hash16_remove)
-#define gcu_hash16_count GHOTIIO_CUTIL(gcu_hash16_count)
-#define gcu_hash16_iterator_get GHOTIIO_CUTIL(gcu_hash16_iterator_get)
-#define gcu_hash16_iterator_next GHOTIIO_CUTIL(gcu_hash16_iterator_next)
-
-#define GCU_Hash8_Cleanup GHOTIIO_CUTIL(GCU_Hash8_Cleanup)
-#define GCU_Hash8_Value GHOTIIO_CUTIL(GCU_Hash8_Value)
-#define GCU_Hash8_Cell GHOTIIO_CUTIL(GCU_Hash8_Cell)
-#define GCU_Hash8 GHOTIIO_CUTIL(GCU_Hash8)
-#define GCU_Hash8_Iterator GHOTIIO_CUTIL(GCU_Hash8_Iterator)
-
-#define gcu_hash8_create GHOTIIO_CUTIL(gcu_hash8_create)
-#define gcu_hash8_create_in_place GHOTIIO_CUTIL(gcu_hash8_create_in_place)
-#define gcu_hash8_destroy GHOTIIO_CUTIL(gcu_hash8_destroy)
-#define gcu_hash8_destroy_in_place GHOTIIO_CUTIL(gcu_hash8_destroy_in_place)
-#define gcu_hash8_clone GHOTIIO_CUTIL(gcu_hash8_clone)
-#define gcu_hash8_set GHOTIIO_CUTIL(gcu_hash8_set)
-#define gcu_hash8_get GHOTIIO_CUTIL(gcu_hash8_get)
-#define gcu_hash8_contains GHOTIIO_CUTIL(gcu_hash8_contains)
-#define gcu_hash8_remove GHOTIIO_CUTIL(gcu_hash8_remove)
-#define gcu_hash8_count GHOTIIO_CUTIL(gcu_hash8_count)
-#define gcu_hash8_iterator_get GHOTIIO_CUTIL(gcu_hash8_iterator_get)
-#define gcu_hash8_iterator_next GHOTIIO_CUTIL(gcu_hash8_iterator_next)
-/// @endcond
 
 typedef struct GCU_Hash64 GCU_Hash64;
 typedef struct GCU_Hash32 GCU_Hash32;
@@ -987,5 +912,5 @@ GCU_API GCU_Hash8_Iterator gcu_hash8_iterator_next(GCU_Hash8_Iterator iterator);
 }
 #endif
 
-#endif //GHOTIIO_CUTIL_HASH_H
+#endif //GHOTI_IO_GCU_HASH_H
 

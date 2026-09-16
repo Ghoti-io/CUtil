@@ -3,7 +3,8 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <cutil/string.h>
+#include <ghoti.io/cutil/macros.h>
+#include <ghoti.io/cutil/string.h>
 
 #define ROTL32(a,b) ((a << b) | (a >> (32 - b)))
 #define ROTL64(a,b) ((a << b) | (a >> (64 - b)))

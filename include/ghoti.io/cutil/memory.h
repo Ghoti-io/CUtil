@@ -19,8 +19,8 @@
  * by the use of a `#define` *before* including the header.
  */
 
-#ifndef GHOTIIO_CUTIL_DEBUG_H
-#define GHOTIIO_CUTIL_DEBUG_H
+#ifndef GHOTI_IO_GCU_MEMORY_H
+#define GHOTI_IO_GCU_MEMORY_H
 
 #include <stdbool.h>
 
@@ -30,25 +30,12 @@
 #include <stdlib.h>
 #endif
 
-#include <cutil/libver.h>
+#include <ghoti.io/cutil/macros.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/// @cond HIDDEN_SYMBOLS
-#define gcu_mem_start GHOTIIO_CUTIL(gcu_mem_start)
-#define gcu_mem_stop GHOTIIO_CUTIL(gcu_mem_stop)
-#define gcu_malloc_debug GHOTIIO_CUTIL(gcu_malloc_debug)
-#define gcu_calloc_debug GHOTIIO_CUTIL(gcu_calloc_debug)
-#define gcu_realloc_debug GHOTIIO_CUTIL(gcu_realloc_debug)
-#define gcu_free_debug GHOTIIO_CUTIL(gcu_free_debug)
-#define gcu_get_alloc_count GHOTIIO_CUTIL(gcu_get_alloc_count)
-#define gcu_get_free_count GHOTIIO_CUTIL(gcu_get_free_count)
-#define gcu_memory_reset_counts GHOTIIO_CUTIL(gcu_memory_reset_counts)
-#define gcu_memory_alloc_count GHOTIIO_CUTIL(gcu_memory_alloc_count)
-#define gcu_memory_free_count GHOTIIO_CUTIL(gcu_memory_free_count)
-/// @endcond
 
 /**
  * Instruct Ghoti.io CUtils library that intercepted memory management calls
@@ -141,7 +128,7 @@ GCU_API void gcu_memory_reset_counts(void);
  * Do not access this variable directly.  Use gcu_get_alloc_count() instead.
  * It appears here simply so that gcu_malloc() and gcu_calloc() can be inlined.
  */
-GCU_API extern size_t gcu_memory_alloc_count;
+GCU_API_DATA extern size_t gcu_memory_alloc_count;
 
 /**
  * The number of times memory has been freed.
@@ -149,7 +136,7 @@ GCU_API extern size_t gcu_memory_alloc_count;
  * Do not access this variable directly.  Use gcu_get_free_count() instead.
  * It appears here simply so that gcu_free() can be inlined.
  */
-GCU_API extern size_t gcu_memory_free_count;
+GCU_API_DATA extern size_t gcu_memory_free_count;
 
 #if DOXYGEN
 
@@ -259,5 +246,5 @@ static inline void gcu_free(void * pointer) {
 }
 #endif
 
-#endif // GHOTIIO_CUTIL_DEBUG_H
+#endif // GHOTI_IO_GCU_MEMORY_H
 

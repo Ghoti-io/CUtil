@@ -2,5 +2,6 @@
  */
 
 #include <stdio.h>
-#include <cutil/debug.h>
+#include <ghoti.io/cutil/macros.h>
+#include <ghoti.io/cutil/debug.h>
 

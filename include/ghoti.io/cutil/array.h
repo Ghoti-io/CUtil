@@ -21,41 +21,18 @@
  * array across threads must synchronize externally.
  */
 
-#ifndef GHOTIIO_CUTIL_ARRAY_H
-#define GHOTIIO_CUTIL_ARRAY_H
+#ifndef GHOTI_IO_GCU_ARRAY_H
+#define GHOTI_IO_GCU_ARRAY_H
 
 #include <stdbool.h>
 #include <stddef.h>
-#include <cutil/allocator.h>
-#include <cutil/libver.h>
+#include <ghoti.io/cutil/allocator.h>
+#include <ghoti.io/cutil/macros.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/// @cond HIDDEN_SYMBOLS
-#define GCU_Array GHOTIIO_CUTIL(GCU_Array)
-#define GCU_Array_Cleanup GHOTIIO_CUTIL(GCU_Array_Cleanup)
-#define gcu_array_create GHOTIIO_CUTIL(gcu_array_create)
-#define gcu_array_create_in_place GHOTIIO_CUTIL(gcu_array_create_in_place)
-#define gcu_array_destroy GHOTIIO_CUTIL(gcu_array_destroy)
-#define gcu_array_destroy_in_place GHOTIIO_CUTIL(gcu_array_destroy_in_place)
-#define gcu_array_reserve GHOTIIO_CUTIL(gcu_array_reserve)
-#define gcu_array_resize GHOTIIO_CUTIL(gcu_array_resize)
-#define gcu_array_shrink_to_fit GHOTIIO_CUTIL(gcu_array_shrink_to_fit)
-#define gcu_array_clear GHOTIIO_CUTIL(gcu_array_clear)
-#define gcu_array_append GHOTIIO_CUTIL(gcu_array_append)
-#define gcu_array_append_n GHOTIIO_CUTIL(gcu_array_append_n)
-#define gcu_array_emplace GHOTIIO_CUTIL(gcu_array_emplace)
-#define gcu_array_emplace_n GHOTIIO_CUTIL(gcu_array_emplace_n)
-#define gcu_array_pop GHOTIIO_CUTIL(gcu_array_pop)
-#define gcu_array_at GHOTIIO_CUTIL(gcu_array_at)
-#define gcu_array_back GHOTIIO_CUTIL(gcu_array_back)
-#define gcu_array_remove_at GHOTIIO_CUTIL(gcu_array_remove_at)
-#define gcu_array_swap_remove GHOTIIO_CUTIL(gcu_array_swap_remove)
-#define gcu_array_count GHOTIIO_CUTIL(gcu_array_count)
-#define gcu_array_steal GHOTIIO_CUTIL(gcu_array_steal)
-/// @endcond
 
 typedef struct GCU_Array GCU_Array;
 
@@ -306,4 +283,4 @@ GCU_API void * gcu_array_steal(GCU_Array * array, size_t * out_count);
 }
 #endif
 
-#endif //GHOTIIO_CUTIL_ARRAY_H
+#endif //GHOTI_IO_GCU_ARRAY_H

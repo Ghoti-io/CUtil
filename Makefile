@@ -1,6 +1,10 @@
 CXX := g++
 CXXFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c++20 -O1 -g $(EXTRA_CXXFLAGS)
 CC := cc
+# GHOTIIO_CUTIL_BUILD enables DLL export on Windows (checked by GCU_API).
+# GHOTIIO_CUTIL_TEST_BUILD would export internals for testing (checked by
+# GCU_INTERNAL_API); it is deliberately not set here, so the shipped library
+# exports its public API and nothing else.
 CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c17 -O3 -g -fvisibility=hidden -DGHOTIIO_CUTIL_BUILD $(EXTRA_CFLAGS)
 # -DGHOTIIO_CUTIL_ENABLE_MEMORY_DEBUG
 LDFLAGS := -L /usr/lib -lstdc++ -lm $(EXTRA_LDFLAGS)
@@ -185,13 +189,13 @@ $(FLOAT_IDENTIFIER): \
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $< -o $@
 
-$(BUILD_DIR)/include/$(PROJECT):
+$(BUILD_DIR)/include/$(SUITE)/$(PROJECT):
 	@mkdir -p $@
 
 # The generated half of libver.h: the namespace token and version string.
-$(BUILD_DIR)/include/$(PROJECT)/libver_gen.h: \
+$(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/libver_gen.h: \
 		Makefile \
-		$(BUILD_DIR)/include/$(PROJECT)
+		$(BUILD_DIR)/include/$(SUITE)/$(PROJECT)
 	@if [ -z "$(LIBVER_SYMBOL)" ]; then \
 		printf "### LIBVER_SYMBOL is empty ###\n" >&2; \
 		printf "Every exported symbol would lose its version namespace, and two\n" >&2; \
@@ -211,10 +215,10 @@ $(BUILD_DIR)/include/$(PROJECT)/libver_gen.h: \
 		'' \
 		'#endif // GHOTIIO_CUTIL_LIBVER_GEN_H' > $@
 
-$(BUILD_DIR)/include/$(PROJECT)/float.h: \
+$(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/float.h: \
 		src/float.h.template \
 		$(FLOAT_IDENTIFIER) \
-		$(BUILD_DIR)/include/$(PROJECT)
+		$(BUILD_DIR)/include/$(SUITE)/$(PROJECT)
 	@f32="$$($(FLOAT_IDENTIFIER) 32)"; f64="$$($(FLOAT_IDENTIFIER) 64)"; \
 	if [ -z "$$f32" ] || [ -z "$$f64" ]; then \
 		printf "### $(FLOAT_IDENTIFIER) produced no type name ###\n" >&2; \
@@ -231,7 +235,7 @@ $(BUILD_DIR)/include/$(PROJECT)/float.h: \
 
 # Pattern rule: compile .c to .o and generate dependency file (compiler tracks headers).
 # float.h is generated; ensure it exists before compiling any .c that may include it (e.g. type.h).
-$(OBJ_DIR)/%.o: src/%.c | $(BUILD_DIR)/include/$(PROJECT)/float.h $(BUILD_DIR)/include/$(PROJECT)/libver_gen.h
+$(OBJ_DIR)/%.o: src/%.c | $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/float.h $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/libver_gen.h
 	@printf "\n### Compiling $@ ###\n"
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@ $(OS_SPECIFIC_CXX_FLAGS)
@@ -373,7 +377,7 @@ ifeq ($(OS_NAME), Linux)
 		exit 1; \
 	fi
 	@unexported=$$(awk '/^#if DOXYGEN/{d=1} d==0 && /^[a-z_][A-Za-z0-9_ ]*\**[[:space:]]*gcu_[a-z0-9_]+[[:space:]]*\(/{print FILENAME": "$$0} /^#endif/{d=0}' \
-		include/$(PROJECT)/*.h | grep -vE 'typedef|static inline' || true); \
+		include/$(SUITE)/$(PROJECT)/*.h | grep -vE 'typedef|static inline' || true); \
 	if [ -n "$$unexported" ]; then \
 		printf "\033[0;31m\n### Public declarations without GCU_API ###\033[0m\n" >&2; \
 		printf "%s\n" "$$unexported" >&2; \
@@ -391,8 +395,32 @@ ifeq ($(OS_NAME), Linux)
 		printf "declares or defines something without including macros.h first.\n" >&2; \
 		exit 1; \
 	fi
+	@nomacros=$$(find include src -name '*.h' \
+		! -name 'libver.h' ! -name 'libver_gen.h' ! -name 'namespace.h' ! -name 'macros.h' \
+		-exec grep -L '#include <ghoti.io/cutil/macros.h>' {} + || true); \
+	if [ -n "$$nomacros" ]; then \
+		printf "\033[0;31m\n### Headers that do not include macros.h ###\033[0m\n" >&2; \
+		printf "%s\n" "$$nomacros" >&2; \
+		printf "\nEvery header must include <ghoti.io/cutil/macros.h> before it declares\n" >&2; \
+		printf "anything, so that the renames in namespace.h are already in effect. A\n" >&2; \
+		printf "header that skips it can name a type before that type has been renamed,\n" >&2; \
+		printf "producing two different types under one spelling.\n" >&2; \
+		printf "See CONVENTIONS.md section 4.\n" >&2; \
+		exit 1; \
+	fi
+	@dupguards=$$(find include src -name '*.h' -exec sed -n '/^#ifndef/{p;q}' {} + \
+		| awk '{print $$2}' | sort | uniq -d || true); \
+	if [ -n "$$dupguards" ]; then \
+		printf "\033[0;31m\n### Headers sharing an include guard ###\033[0m\n" >&2; \
+		printf "%s\n" "$$dupguards" >&2; \
+		printf "\nTwo headers with one guard means whichever is included second is\n" >&2; \
+		printf "silently empty. Guards mirror the path: GHOTI_IO_GCU_<PATH>_H.\n" >&2; \
+		exit 1; \
+	fi
 	@printf "\033[0;32mEvery exported symbol carries the $(LIBVER_SYMBOL)_ namespace.\033[0m\n"
 	@printf "\033[0;32mEvery public declaration carries GCU_API.\033[0m\n"
+	@printf "\033[0;32mEvery header includes macros.h.\033[0m\n"
+	@printf "\033[0;32mEvery include guard is unique.\033[0m\n"
 else
 	@printf "check-symbols: skipped (Linux only)\n"
 endif
@@ -417,7 +445,7 @@ clean: ## Remove all contents of the build directories.
 	-@rm -rvf $(OBJ_DIR)/*
 	-@rm -rvf $(APP_DIR)/*
 	-@rm -rvf $(GEN_DIR)/*
-	-@rm -f include/$(PROJECT)/float.h
+	-@rm -f include/$(SUITE)/$(PROJECT)/float.h
 
 # Files will be as follows:
 # /usr/local/lib/(SUITE)/
@@ -459,6 +487,10 @@ ifeq ($(OS_NAME), Windows)
 	@cp $(APP_DIR)/$(TARGET) $(BIN_INSTALL_PATH)
 endif
 	# Installing the headers.
+	# Removed first: this directory is owned entirely by this project and
+	# branch, and copying over the top of it would leave headers behind that
+	# have since been renamed or deleted.
+	@rm -rf $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH)
 	@mkdir -p $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH)
 	@cd include &&	find . -name "*.h" -exec cp --parents '{}' $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH)/ \;
 	@cd $(BUILD_DIR)/include &&	find . -name "*.h" -exec cp --parents '{}' $(INCLUDE_INSTALL_PATH)/$(SUITE)/$(PROJECT)$(BRANCH)/ \;

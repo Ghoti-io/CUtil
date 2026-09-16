@@ -3,63 +3,25 @@
  * Type definitions and utilities for use by the Ghoti.io projects.
  */
 
-#ifndef GHOTIIO_CUTIL_TYPE_H
-#define GHOTIIO_CUTIL_TYPE_H
+#ifndef GHOTI_IO_GCU_TYPE_H
+#define GHOTI_IO_GCU_TYPE_H
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <cutil/libver.h>
-#include <cutil/float.h>
+#include <ghoti.io/cutil/macros.h>
+#include <ghoti.io/cutil/float.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /// @cond HIDDEN_SYMBOLS
-#define GCU_Type64_Union GHOTIIO_CUTIL(GCU_Type64_Union)
-#define GCU_Type32_Union GHOTIIO_CUTIL(GCU_Type32_Union)
-#define GCU_Type16_Union GHOTIIO_CUTIL(GCU_Type16_Union)
-#define GCU_Type8_Union GHOTIIO_CUTIL(GCU_Type8_Union)
 
-#define gcu_type64_p GHOTIIO_CUTIL(gcu_type64_p)
-#define gcu_type64_ui64 GHOTIIO_CUTIL(gcu_type64_ui64)
-#define gcu_type64_f64 GHOTIIO_CUTIL(gcu_type64_f64)
-#define gcu_type64_f32 GHOTIIO_CUTIL(gcu_type64_f32)
-#define gcu_type64_ui32 GHOTIIO_CUTIL(gcu_type64_ui32)
-#define gcu_type64_ui16 GHOTIIO_CUTIL(gcu_type64_ui16)
-#define gcu_type64_ui8 GHOTIIO_CUTIL(gcu_type64_ui8)
-#define gcu_type64_i64 GHOTIIO_CUTIL(gcu_type64_i64)
-#define gcu_type64_i32 GHOTIIO_CUTIL(gcu_type64_i32)
-#define gcu_type64_i16 GHOTIIO_CUTIL(gcu_type64_i16)
-#define gcu_type64_i8 GHOTIIO_CUTIL(gcu_type64_i8)
-#define gcu_type64_wc GHOTIIO_CUTIL(gcu_type64_wc)
-#define gcu_type64_c GHOTIIO_CUTIL(gcu_type64_c)
-#define gcu_type64_b GHOTIIO_CUTIL(gcu_type64_b)
 
-#define gcu_type32_ui32 GHOTIIO_CUTIL(gcu_type32_ui32)
-#define gcu_type32_f32 GHOTIIO_CUTIL(gcu_type32_f32)
-#define gcu_type32_ui16 GHOTIIO_CUTIL(gcu_type32_ui16)
-#define gcu_type32_ui8 GHOTIIO_CUTIL(gcu_type32_ui8)
-#define gcu_type32_i32 GHOTIIO_CUTIL(gcu_type32_i32)
-#define gcu_type32_i16 GHOTIIO_CUTIL(gcu_type32_i16)
-#define gcu_type32_i8 GHOTIIO_CUTIL(gcu_type32_i8)
 #if GCU_WCHAR_WIDTH <= 4
-#define gcu_type32_wc GHOTIIO_CUTIL(gcu_type32_wc)
 #endif
-#define gcu_type32_c GHOTIIO_CUTIL(gcu_type32_c)
-#define gcu_type32_b GHOTIIO_CUTIL(gcu_type32_b)
 
-#define gcu_type16_ui16 GHOTIIO_CUTIL(gcu_type16_ui16)
-#define gcu_type16_ui8 GHOTIIO_CUTIL(gcu_type16_ui8)
-#define gcu_type16_i16 GHOTIIO_CUTIL(gcu_type16_i16)
-#define gcu_type16_i8 GHOTIIO_CUTIL(gcu_type16_i8)
-#define gcu_type16_c GHOTIIO_CUTIL(gcu_type16_c)
-#define gcu_type16_b GHOTIIO_CUTIL(gcu_type16_b)
 
-#define gcu_type8_ui8 GHOTIIO_CUTIL(gcu_type8_ui8)
-#define gcu_type8_i8 GHOTIIO_CUTIL(gcu_type8_i8)
-#define gcu_type8_c GHOTIIO_CUTIL(gcu_type8_c)
-#define gcu_type8_b GHOTIIO_CUTIL(gcu_type8_b)
 /// @endcond
 
 /**
@@ -1015,5 +977,5 @@ GCU_API GCU_Type8_Union gcu_type8_b(bool val);
 }
 #endif
 
-#endif //GHOTIIO_CUTIL_TYPE_H
+#endif //GHOTI_IO_GCU_TYPE_H
 

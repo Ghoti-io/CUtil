@@ -4,10 +4,10 @@
  * Cross-platform semaphore implementation.
  */
 
-#ifndef G_CUTIL_SEMAPHORE_H
-#define G_CUTIL_SEMAPHORE_H
+#ifndef GHOTI_IO_GCU_SEMAPHORE_H
+#define GHOTI_IO_GCU_SEMAPHORE_H
 
-#include <cutil/libver.h>
+#include <ghoti.io/cutil/macros.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,16 +20,6 @@ extern "C" {
 typedef void GCU_Semaphore;
 #endif // DOXYGEN
 
-/// @cond HIDDEN_SYMBOLS
-#define GCU_Semaphore GHOTIIO_CUTIL(GCU_Semaphore)
-#define gcu_semaphore_create GHOTIIO_CUTIL(gcu_semaphore_create)
-#define gcu_semaphore_destroy GHOTIIO_CUTIL(gcu_semaphore_destroy)
-#define gcu_semaphore_wait GHOTIIO_CUTIL(gcu_semaphore_wait)
-#define gcu_semaphore_signal GHOTIIO_CUTIL(gcu_semaphore_signal)
-#define gcu_semaphore_trywait GHOTIIO_CUTIL(gcu_semaphore_trywait)
-#define gcu_semaphore_getvalue GHOTIIO_CUTIL(gcu_semaphore_getvalue)
-#define gcu_semaphore_timedwait GHOTIIO_CUTIL(gcu_semaphore_timedwait)
-/// @endcond
 
 #ifdef _WIN32
 #include <windows.h>
@@ -103,4 +93,4 @@ GCU_API int gcu_semaphore_timedwait(GCU_Semaphore * semaphore, int timeout);
 }
 #endif
 
-#endif // G_CUTIL_SEMAPHORE_H
+#endif // GHOTI_IO_GCU_SEMAPHORE_H

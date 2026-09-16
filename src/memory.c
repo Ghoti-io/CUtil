@@ -6,7 +6,8 @@
 
 static bool capture = true;
 
-#include <cutil/memory.h>
+#include <ghoti.io/cutil/macros.h>
+#include <ghoti.io/cutil/memory.h>
 
 // Defined after the include on purpose: memory.h renames these two into the
 // library's version namespace, and a definition placed above it would not be

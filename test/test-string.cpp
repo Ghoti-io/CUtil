@@ -1,6 +1,6 @@
 #include <sstream>
 #include <gtest/gtest.h>
-#include <cutil/string.h>
+#include <ghoti.io/cutil/string.h>
 
 using namespace std;
 

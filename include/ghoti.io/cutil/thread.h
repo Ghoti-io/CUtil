@@ -4,40 +4,17 @@
  * Cross-platform thread abstraction.
  */
 
-#ifndef G_CUTIL_THREAD_H
-#define G_CUTIL_THREAD_H
+#ifndef GHOTI_IO_GCU_THREAD_H
+#define GHOTI_IO_GCU_THREAD_H
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <cutil/libver.h>
+#include <ghoti.io/cutil/macros.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
 
-/// @cond HIDDEN_SYMBOLS
-#define GCU_Thread GHOTIIO_CUTIL(GCU_Thread)
-#define gcu_thread_constructor GHOTIIO_CUTIL(gcu_thread_constructor)
-#define gcu_thread_destructor GHOTIIO_CUTIL(gcu_thread_destructor)
-#define gcu_thread_create GHOTIIO_CUTIL(gcu_thread_create)
-#define gcu_thread_join GHOTIIO_CUTIL(gcu_thread_join)
-#define gcu_thread_detach GHOTIIO_CUTIL(gcu_thread_detach)
-#define gcu_thread_is_running GHOTIIO_CUTIL(gcu_thread_is_running)
-#define gcu_thread_is_joined GHOTIIO_CUTIL(gcu_thread_is_joined)
-#define gcu_thread_is_detached GHOTIIO_CUTIL(gcu_thread_is_detached)
-#define gcu_thread_cancel GHOTIIO_CUTIL(gcu_thread_cancel)
-#define gcu_thread_sleep GHOTIIO_CUTIL(gcu_thread_sleep)
-#define gcu_thread_yield GHOTIIO_CUTIL(gcu_thread_yield)
-#define gcu_thread_get_num_processors GHOTIIO_CUTIL(gcu_thread_get_num_processors)
-#define gcu_thread_set_affinity GHOTIIO_CUTIL(gcu_thread_set_affinity)
-#define gcu_thread_get_affinity GHOTIIO_CUTIL(gcu_thread_get_affinity)
-#define gcu_thread_set_priority GHOTIIO_CUTIL(gcu_thread_set_priority)
-#define gcu_thread_get_priority GHOTIIO_CUTIL(gcu_thread_get_priority)
-#define gcu_thread_set_name GHOTIIO_CUTIL(gcu_thread_set_name)
-#define gcu_thread_get_name GHOTIIO_CUTIL(gcu_thread_get_name)
-#define gcu_thread_get_current_name GHOTIIO_CUTIL(gcu_thread_get_current_name)
-#define gcu_thread_get_current_id GHOTIIO_CUTIL(gcu_thread_get_current_id)
-/// @endcond
 
 #ifdef DOXYGEN
 /**
@@ -255,4 +232,4 @@ GCU_API int gcu_thread_is_detached(GCU_Thread thread, bool * is_detached);
 }
 #endif // __cplusplus
 
-#endif // G_CUTIL_THREAD_H
+#endif // GHOTI_IO_GCU_THREAD_H

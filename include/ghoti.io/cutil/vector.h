@@ -3,62 +3,19 @@
  * A simple vector implementation.
  */
 
-#ifndef GHOTIIO_CUTIL_VECTOR_H
-#define GHOTIIO_CUTIL_VECTOR_H
+#ifndef GHOTI_IO_GCU_VECTOR_H
+#define GHOTI_IO_GCU_VECTOR_H
+
+#include <ghoti.io/cutil/macros.h>
 
 #include <stddef.h>
-#include <cutil/type.h>
-#include <cutil/mutex.h>
+#include <ghoti.io/cutil/type.h>
+#include <ghoti.io/cutil/mutex.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/// @cond HIDDEN_SYMBOLS
-#define GCU_Vector64_Cleanup GHOTIIO_CUTIL(GCU_Vector64_Cleanup)
-#define GCU_Vector64_Value GHOTIIO_CUTIL(GCU_Vector64_Value)
-#define GCU_Vector64 GHOTIIO_CUTIL(GCU_Vector64)
-#define gcu_vector64_create GHOTIIO_CUTIL(gcu_vector64_create)
-#define gcu_vector64_create_in_place GHOTIIO_CUTIL(gcu_vector64_create_in_place)
-#define gcu_vector64_destroy GHOTIIO_CUTIL(gcu_vector64_destroy)
-#define gcu_vector64_destroy_in_place GHOTIIO_CUTIL(gcu_vector64_destroy_in_place)
-#define gcu_vector64_append GHOTIIO_CUTIL(gcu_vector64_append)
-#define gcu_vector64_count GHOTIIO_CUTIL(gcu_vector64_count)
-#define gcu_vector64_reserve GHOTIIO_CUTIL(gcu_vector64_reserve)
-
-#define GCU_Vector32_Cleanup GHOTIIO_CUTIL(GCU_Vector32_Cleanup)
-#define GCU_Vector32_Value GHOTIIO_CUTIL(GCU_Vector32_Value)
-#define GCU_Vector32 GHOTIIO_CUTIL(GCU_Vector32)
-#define gcu_vector32_create GHOTIIO_CUTIL(gcu_vector32_create)
-#define gcu_vector32_create_in_place GHOTIIO_CUTIL(gcu_vector32_create_in_place)
-#define gcu_vector32_destroy GHOTIIO_CUTIL(gcu_vector32_destroy)
-#define gcu_vector32_destroy_in_place GHOTIIO_CUTIL(gcu_vector32_destroy_in_place)
-#define gcu_vector32_append GHOTIIO_CUTIL(gcu_vector32_append)
-#define gcu_vector32_count GHOTIIO_CUTIL(gcu_vector32_count)
-#define gcu_vector32_reserve GHOTIIO_CUTIL(gcu_vector32_reserve)
-
-#define GCU_Vector16_Cleanup GHOTIIO_CUTIL(GCU_Vector16_Cleanup)
-#define GCU_Vector16_Value GHOTIIO_CUTIL(GCU_Vector16_Value)
-#define GCU_Vector16 GHOTIIO_CUTIL(GCU_Vector16)
-#define gcu_vector16_create GHOTIIO_CUTIL(gcu_vector16_create)
-#define gcu_vector16_create_in_place GHOTIIO_CUTIL(gcu_vector16_create_in_place)
-#define gcu_vector16_destroy GHOTIIO_CUTIL(gcu_vector16_destroy)
-#define gcu_vector16_destroy_in_place GHOTIIO_CUTIL(gcu_vector16_destroy_in_place)
-#define gcu_vector16_append GHOTIIO_CUTIL(gcu_vector16_append)
-#define gcu_vector16_count GHOTIIO_CUTIL(gcu_vector16_count)
-#define gcu_vector16_reserve GHOTIIO_CUTIL(gcu_vector16_reserve)
-
-#define GCU_Vector8_Cleanup GHOTIIO_CUTIL(GCU_Vector8_Cleanup)
-#define GCU_Vector8_Value GHOTIIO_CUTIL(GCU_Vector8_Value)
-#define GCU_Vector8 GHOTIIO_CUTIL(GCU_Vector8)
-#define gcu_vector8_create GHOTIIO_CUTIL(gcu_vector8_create)
-#define gcu_vector8_create_in_place GHOTIIO_CUTIL(gcu_vector8_create_in_place)
-#define gcu_vector8_destroy GHOTIIO_CUTIL(gcu_vector8_destroy)
-#define gcu_vector8_destroy_in_place GHOTIIO_CUTIL(gcu_vector8_destroy_in_place)
-#define gcu_vector8_append GHOTIIO_CUTIL(gcu_vector8_append)
-#define gcu_vector8_count GHOTIIO_CUTIL(gcu_vector8_count)
-#define gcu_vector8_reserve GHOTIIO_CUTIL(gcu_vector8_reserve)
-/// @endcond
 
 typedef struct GCU_Vector64 GCU_Vector64;
 typedef struct GCU_Vector32 GCU_Vector32;
@@ -529,5 +486,5 @@ GCU_API bool gcu_vector8_reserve(GCU_Vector8 * vector, size_t count);
 }
 #endif
 
-#endif //GHOTIIO_CUTIL_VECTOR_H
+#endif //GHOTI_IO_GCU_VECTOR_H
 

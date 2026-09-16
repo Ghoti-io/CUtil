@@ -2,7 +2,8 @@
 #define _POSIX_C_SOURCE 200112L
 
 #include <stdio.h>
-#include <cutil/semaphore.h>
+#include <ghoti.io/cutil/macros.h>
+#include <ghoti.io/cutil/semaphore.h>
 
 #ifdef _WIN32
 #else
