@@ -21,7 +21,18 @@
 extern "C" {
 #endif
 
-#if defined(__GNUC__) || defined(__clang__)
+/**
+ * Each function below has two bodies: the compiler's overflow builtins where
+ * they exist, and a portable check where they do not. Only one is ever
+ * compiled, and on GCC and Clang it is always the first - which left the
+ * second unreachable, and so unexecuted by any test, on every platform the
+ * suite is tested on. It is the body an MSVC build compiles.
+ *
+ * Defining GCU_SAFEMATH_NO_BUILTINS selects the portable body regardless of
+ * the compiler, so a test can reach it. Nothing but a test should define it.
+ */
+#if !defined(GCU_SAFEMATH_NO_BUILTINS) &&                                      \
+    (defined(__GNUC__) || defined(__clang__))
 #define GCU_HAS_BUILTIN_OVERFLOW 1
 #endif
 

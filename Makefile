@@ -199,7 +199,7 @@ all: $(APP_DIR)/$(TARGET) ## Build the shared library
 # Dependency Inclusion
 ####################################################################
 # Compiler-generated .d files (see -MMD -MP -MF in compile commands).
-TEST_NAMES := test-debug test-type test-memory test-hash test-random test-semaphore test-string test-thread test-vector test-array test-allocator test-safemath
+TEST_NAMES := test-debug test-type test-memory test-hash test-random test-semaphore test-string test-thread test-vector test-array test-allocator test-safemath test-safemath-portable
 TEST_BINARIES := $(foreach t,$(TEST_NAMES),$(APP_DIR)/$(t)$(EXE_EXTENSION))
 TEST_DEPFILES := $(addprefix $(APP_DIR)/,$(TEST_NAMES:%=%.d))
 DEPFILES := $(LIBOBJECTS:.o=.d) $(TEST_DEPFILES)
@@ -363,6 +363,15 @@ $(APP_DIR)/test-safemath$(EXE_EXTENSION): test/test-safemath.cpp | $(APP_DIR)/$(
 	@printf "\n### Compiling Safe Math Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-safemath.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+
+# The same cases against the portable body of each operation. It includes
+# test-safemath.cpp, so -I test/ is needed to find it, and it has to be
+# rebuilt when that file changes.
+$(APP_DIR)/test-safemath-portable$(EXE_EXTENSION): test/test-safemath-portable.cpp \
+		test/test-safemath.cpp | $(APP_DIR)/$(TARGET)
+	@printf "\n### Compiling Safe Math Test (portable body) ###\n"
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -I test/ -MMD -MP -MF $(APP_DIR)/test-safemath-portable.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
 ####################################################################
 # Commands
@@ -565,7 +574,7 @@ $(ASAN_APP_DIR)/$(1)$(EXE_EXTENSION): test/$(1).cpp \
 		| $(ASAN_APP_DIR)/$(ASAN_TARGET)
 	@printf "\n### Compiling (ASan+UBSan) $$@ ###\n"
 	@mkdir -p $$(@D)
-	$$(CXX) $$(ASAN_CXXFLAGS) $$(INCLUDE) -o $$@ $$< $$(ASAN_LDFLAGS) \
+	$$(CXX) $$(ASAN_CXXFLAGS) $$(INCLUDE) -I test/ -o $$@ $$< $$(ASAN_LDFLAGS) \
 		$$(TESTFLAGS) $$(ASAN_CUTILLIBRARY)
 endef
 $(foreach t,$(TEST_NAMES),$(eval $(call ASAN_TEST_RULE,$(t))))
