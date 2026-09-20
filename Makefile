@@ -391,7 +391,7 @@ $(APP_DIR)/test-safemath-portable$(EXE_EXTENSION): test/test-safemath-portable.c
 ####################################################################
 
 # General commands
-.PHONY: clean cloc docs docs-pdf coverage check-symbols
+.PHONY: clean cloc docs docs-pdf coverage check-symbols test-tsan
 # Release build commands
 .PHONY: all install test test-asan test-ubsan test-watch uninstall watch
 # Debug build commands
@@ -616,6 +616,91 @@ endif
 test-ubsan: ## Alias for test-asan (ASan and UBSan run together)
 test-ubsan: test-asan
 
+# ---------------------------------------------------------------------------
+# ThreadSanitizer
+#
+# ASan and UBSan assert what a single thread does with memory. They say
+# nothing about two threads reaching the same memory without a lock between
+# them, which is the defect this library's concurrent modules are most likely
+# to have: the sibling compress library's thread pool shares its shutdown flag
+# across threads as a plain bool, and nothing in its test suite can see that.
+#
+# TSan cannot be combined with ASan, so it gets its own tree, built the same
+# way and kept beside the ordinary and instrumented ones.
+#
+# It is driven by its own list rather than by TEST_NAMES. hash and vector ship
+# a mutex that the README describes as the caller's responsibility to use, so
+# their tests may race deliberately, and auditing them should not gate a run
+# that is here to watch the synchronisation primitives themselves. Add a name
+# here once its test is expected to be clean under TSan.
+
+TSAN_TEST_NAMES := test-mutex test-semaphore test-thread
+
+TSAN_FLAGS := -fsanitize=thread -fno-omit-frame-pointer -g
+
+TSAN_BUILD_DIR := $(BUILD)-tsan
+TSAN_OBJ_DIR := $(TSAN_BUILD_DIR)/objects
+TSAN_APP_DIR := $(TSAN_BUILD_DIR)/apps
+TSAN_TARGET := $(BASE_NAME_PREFIX)-tsan.so
+
+TSAN_CFLAGS := $(CFLAGS) $(TSAN_FLAGS)
+TSAN_CXXFLAGS := $(CXXFLAGS) $(TSAN_FLAGS)
+TSAN_LDFLAGS := $(LDFLAGS) $(TSAN_FLAGS)
+TSAN_LIBOBJECTS := $(patsubst $(OBJ_DIR)/%,$(TSAN_OBJ_DIR)/%,$(LIBOBJECTS))
+TSAN_TEST_BINARIES := \
+	$(foreach t,$(TSAN_TEST_NAMES),$(TSAN_APP_DIR)/$(t)$(EXE_EXTENSION))
+TSAN_CUTILLIBRARY := -L $(TSAN_APP_DIR) -l$(SUITE)-$(PROJECT)$(BRANCH)-tsan
+
+# Same initialisation-order requirement as the ASan runtime; see the comment
+# on ASAN_RUNTIME.
+TSAN_RUNTIME := $(shell $(CC) -print-file-name=libtsan.so)
+
+$(TSAN_OBJ_DIR)/%.o: src/%.c \
+		| $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/float.h \
+		  $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/libver_gen.h
+	@printf "\n### Compiling (TSan): $@ ###\n"
+	@mkdir -p $(@D)
+	$(CC) $(TSAN_CFLAGS) $(INCLUDE) -c $< -o $@ $(OS_SPECIFIC_CXX_FLAGS)
+
+$(TSAN_OBJ_DIR)/hash.o: src/hash.template.c
+$(TSAN_OBJ_DIR)/vector.o: src/vector.template.c
+
+$(TSAN_APP_DIR)/$(TSAN_TARGET): $(TSAN_LIBOBJECTS)
+	@printf "\n### Linking (TSan) $@ ###\n"
+	@mkdir -p $(@D)
+	$(CC) $(TSAN_CFLAGS) $(OS_SPECIFIC_CXX_FLAGS) -o $@ $^ $(TSAN_LDFLAGS)
+
+define TSAN_TEST_RULE
+$(TSAN_APP_DIR)/$(1)$(EXE_EXTENSION): test/$(1).cpp \
+		| $(TSAN_APP_DIR)/$(TSAN_TARGET)
+	@printf "\n### Compiling (TSan) $$@ ###\n"
+	@mkdir -p $$(@D)
+	$$(CXX) $$(TSAN_CXXFLAGS) $$(INCLUDE) -I test/ -o $$@ $$< $$(TSAN_LDFLAGS) \
+		$$(TESTFLAGS) $$(TSAN_CUTILLIBRARY)
+endef
+$(foreach t,$(TSAN_TEST_NAMES),$(eval $(call TSAN_TEST_RULE,$(t))))
+
+test-tsan: ## Make and run the concurrency tests under ThreadSanitizer
+test-tsan: $(TSAN_APP_DIR)/$(TSAN_TARGET) $(TSAN_TEST_BINARIES)
+ifeq ($(OS_NAME), Linux)
+	@printf "\033[0;36m"
+	@printf "####################################\n"
+	@printf "### Running tests with TSan      ###\n"
+	@printf "####################################\n"
+	@printf "\033[0m"
+	@for t in $(TSAN_TEST_BINARIES); do \
+		printf "\n--- $$t ---\n"; \
+		env LD_LIBRARY_PATH="$(TSAN_APP_DIR)" LD_PRELOAD="$(TSAN_RUNTIME)" \
+			TSAN_OPTIONS=halt_on_error=1:second_deadlock_stack=1 \
+			$$t --gtest_brief=1 || exit 1; \
+	done
+	@printf "\033[0;32m\nAll tests passed with TSan.\033[0m\n"
+else
+	@printf "\033[0;31mSanitizer builds are currently only supported on Linux.\033[0m\n"
+	@exit 1
+endif
+
+
 clean: ## Remove all contents of the build directories.
 # The sanitizer tree is removed too. It is a sibling of the ordinary build
 # directory rather than a child, so a clean that names only the ordinary one
@@ -625,6 +710,7 @@ clean: ## Remove all contents of the build directories.
 	-@rm -rvf $(APP_DIR)/*
 	-@rm -rvf $(GEN_DIR)/*
 	-@rm -rvf $(ASAN_BUILD_DIR)
+	-@rm -rvf $(TSAN_BUILD_DIR)
 	-@rm -f include/$(SUITE)/$(PROJECT)/float.h
 
 # Files will be as follows:
