@@ -87,6 +87,20 @@ Workers are named `<prefix>-<index>` from a caller-supplied `name_prefix`, which
 
 The design and the reasoning behind each decision are in `documentation/thread-pool.md`.
 
+### Sequencer
+
+Provides `GCU_Sequencer`, a reorder buffer:  items go in, are finished in any order at all, and come back out in the order they went in.
+
+`gcu_sequencer_submit()` stores a `void *` payload and returns a **ticket**.  The work happens wherever the caller likes -- typically on a `GCU_Pool` -- and whoever finishes an item calls `gcu_sequencer_complete()` with its ticket and a status.  `gcu_sequencer_next()` then hands items back strictly in submission order, blocking while the oldest uncollected one is still outstanding.
+
+It pairs with the Thread Pool and does not overlap it:  the pool decides *when* work runs, the sequencer decides *what order results are seen in*.  Parallel block compression is the shape it was drawn from -- compress every block at once, write them out in file order -- but nothing about it is specific to compression.  The sequencer never dereferences a payload and never interprets a status.
+
+`capacity` bounds how many items may be outstanding, which is how a producer is kept from running arbitrarily far ahead of a consumer.  `gcu_sequencer_submit()` reports `GCU_SEQUENCER_FULL` rather than waiting, and is the call to reach for:  space is freed only by `gcu_sequencer_next()`, so a caller that collects its own results and blocks in `gcu_sequencer_submit_wait()` would be waiting for space that only it could free.  The blocking form is correct when a *different* thread collects.
+
+An empty sequencer returns `GCU_SEQUENCER_EMPTY` rather than blocking, since with nothing in flight no completion could ever arrive.  That makes EMPTY a usable end-of-stream signal for a caller that does not count its own items, at the price that a collector which can outrun its producer must treat it as "not yet".
+
+The design and the reasoning behind each decision are in `documentation/sequencer.md`.
+
 ### Thread
 
 Provides a thread abstraction layer to better manage threads and information about the threads.
