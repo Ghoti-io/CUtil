@@ -8,6 +8,7 @@
 #define _GNU_SOURCE
 
 #include <assert.h>
+#include <stdatomic.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -15,6 +16,7 @@
 #include <ghoti.io/cutil/memory.h>
 #include <ghoti.io/cutil/thread.h>
 #include <ghoti.io/cutil/hash.h>
+#include <ghoti.io/cutil/semaphore.h>
 
 #ifdef _WIN32
 #else
@@ -46,6 +48,8 @@ typedef struct {
   GCU_THREAD_FUNC func;         // The function to run.
   GCU_THREAD_FUNC_ARG_T arg;    // The argument to pass to the function.
   GCU_Thread_Internal * thread; // The thread record.
+  GCU_Semaphore started;        // Posted once the new thread has recorded its
+                                //   id.  See gcu_thread_create().
 } GCU_Thread_Wrapper_Arg;
 
 
@@ -59,7 +63,13 @@ typedef struct GCU_Thread_Internal {
   GCU_THREAD_T handle;                   // The thread handle.
   GCU_THREAD_FUNC_RETURN_T return_value; // The return value of the thread.
   uint32_t id;                           // The thread ID.
-  bool running;                          // Whether the thread is running.
+  // Written by the thread itself as it starts and finishes, and read by any
+  // thread through gcu_thread_is_running(), so it crosses a thread boundary
+  // with no lock between the two.  It cannot be placed under the hash mutex:
+  // gcu_thread_hash_cleanup() holds that mutex while it joins, so a thread
+  // taking it on the way out to clear its own flag would deadlock against
+  // the join that is waiting for it.
+  atomic_bool running;                   // Whether the thread is running.
   bool joined;                           // Whether the thread has been joined.
   bool detached;                         // Whether the thread has been
                                          //   detached.
@@ -111,8 +121,14 @@ static GCU_THREAD_FUNC_RETURN_T GCU_THREAD_FUNC_CALLING_CONVENTION gcu_thread_wr
 
   // Set the thread id.
   thread->id = gcu_thread_get_current_id();
-
   thread->running = true;
+
+  // Release the creating thread.  Both writes above are sequenced before this
+  // signal and the creator's wait is sequenced after it, so the creator sees
+  // them without a race.  Nothing below this line may touch wrapper_arg: the
+  // creator destroys the semaphore as soon as it wakes.
+  gcu_semaphore_signal(&wrapper_arg->started);
+
   thread->return_value = func(arg);
   thread->running = false;
   return thread->return_value;
@@ -283,6 +299,13 @@ int gcu_thread_create(GCU_Thread * thread, GCU_THREAD_FUNC func, void * arg) {
     .id = 0
   };
 
+  // The handshake that hands the new thread's id back to this one.
+  if (gcu_semaphore_create(&thread_internal->wrapper_arg.started, 0) != 0) {
+    gcu_free(thread_internal);
+    GCU_MUTEX_UNLOCK(gcu_thread_hash->mutex);
+    return -1;
+  }
+
   // TODO: Verify that the hash table can be grown.
   // The following code assumes that the hash table can be grown.
 
@@ -300,17 +323,24 @@ int gcu_thread_create(GCU_Thread * thread, GCU_THREAD_FUNC func, void * arg) {
   // If the thread creation failed, remove the thread record from the hash and
   // return.
   if (failed) {
+    gcu_semaphore_destroy(&thread_internal->wrapper_arg.started);
     gcu_free(thread_internal);
     GCU_MUTEX_UNLOCK(gcu_thread_hash->mutex);
     return -1;
   }
 
-  // Wait for the thread to start and set its id.
-  volatile GCU_Thread * thread_id = &thread_internal->id;
-  while (!*thread_id) {
-    gcu_thread_yield();
-  }
-  *thread = *thread_id;
+  // Wait for the thread to start and record its id.
+  //
+  // This was a spin on a `volatile` read of thread_internal->id.  `volatile`
+  // is not a synchronisation primitive in C: it keeps the compiler from
+  // caching the value in a register, but it supplies neither atomicity nor
+  // any ordering between the two threads, so the read raced the new thread's
+  // write.  It happened to work on x86, whose memory model is strong enough
+  // to hide it; it is not guaranteed anywhere, and ThreadSanitizer reports
+  // it.  A semaphore gives the ordering the spin only assumed.
+  gcu_semaphore_wait(&thread_internal->wrapper_arg.started);
+  gcu_semaphore_destroy(&thread_internal->wrapper_arg.started);
+  *thread = thread_internal->id;
 
   // We now have the thread id, but it is possible that the thread ID has
   // already been set in the hash table.  If this is the case, then we need to

@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <ghoti.io/cutil/thread.h>
 
+#include <atomic>
 #include <iostream>
 
 #ifndef _WIN32
@@ -12,19 +13,22 @@ using namespace std;
 
 #define SLEEP_MS 10
 
+// Both flags cross a thread boundary: the worker writes them and the main
+// thread reads them.  They were plain bools accessed through a `volatile`
+// reference, which keeps the compiler from caching the value but supplies no
+// ordering between the threads at all, so every access raced.
 struct thread_status {
-  bool is_running;
-  bool run;
+  std::atomic<bool> is_running;
+  std::atomic<bool> run;
 };
 
 GCU_THREAD_FUNC_RETURN_T GCU_THREAD_FUNC_CALLING_CONVENTION loop(GCU_THREAD_FUNC_ARG_T status) {
-  volatile bool & run = ((thread_status *)status)->run;
-  bool & is_running = ((thread_status *)status)->is_running;
-  is_running = true;
-  while (run) {
+  thread_status * state = (thread_status *)status;
+  state->is_running = true;
+  while (state->run) {
     gcu_thread_yield();
   };
-  is_running = false;
+  state->is_running = false;
   return GCU_THREAD_FUNC_RETURN_T{};
 };
 
@@ -59,16 +63,23 @@ TEST(Thread, SingleThreadLifetime) {
   // The signal will be sent from the main thread.
   // The thread will be stopped from the main thread.
   // The thread will be joined from the main thread.
-  thread_status status = {
-    .is_running = false,
-    .run = true
-  };
+  thread_status status;
+  status.is_running = false;
+  status.run = true;
   bool result = false;
 
   // Create the thread
   GCU_Thread thread;
   EXPECT_EQ(0, gcu_thread_create(&thread, loop, &status));
   EXPECT_NE(thread, 0);
+
+  // gcu_thread_create() returns once the new thread has recorded its id,
+  // which happens before the thread function is entered.  Asserting that the
+  // loop is running therefore has to wait for the loop, rather than assume
+  // that it has already been reached.
+  while (!status.is_running) {
+    gcu_thread_yield();
+  }
 
   // Check the thread state.
   EXPECT_TRUE(status.is_running);
@@ -83,8 +94,7 @@ TEST(Thread, SingleThreadLifetime) {
   status.run = false;
 
   // Wait so that the thread can stop.
-  volatile bool * is_running = &status.is_running;
-  while (*is_running) {
+  while (status.is_running) {
     gcu_thread_yield();
   }
 
