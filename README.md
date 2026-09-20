@@ -11,6 +11,12 @@ Provides 2 types: `GCU_float64_t` and `GCU_float32_t` which are generated during
 
 Provides type unions based on bit size for use in other parts of this library.  Names are `GCU_Type64_Union`, `GCU_Type32_Union`, `GCU_Type16_Union`, and `GCU_Type8_Union`.  Union contains all basic types that will fit into that bit size.  Pointers, for example, only exist in the `64`-bit union.  The programmer is responsible for the memory management of the pointed-to data.
 
+### Allocator
+
+Provides `GCU_Allocator`, a small vtable (a user-defined `ctx` pointer plus `malloc_fn`, `calloc_fn`, `realloc_fn`, and `free_fn`) that lets a caller supply its own allocation strategy -- an arena, a pool, or a tracking allocator -- to any part of this library that accepts one.
+
+`gcu_allocator_default()` returns the standard allocator, which forwards to the Memory Library described below.  The `gcu_allocator_malloc()`, `gcu_allocator_calloc()`, `gcu_allocator_realloc()`, and `gcu_allocator_free()` helpers dispatch through a given allocator so that calling code does not need to touch the function pointers directly.
+
 ### Memory Library
 
 Provides functions `gcu_malloc()`, `gcu_calloc()`, `gcu_realloc()`, and `gcu_free()` which are used by all other parts of the library.  Calling `gcu_mem_start()` and `gcu_mem_stop()` will cause all calls to the afore-mentioned memory functions to be logged to `stderr`, including the calling location and the memory locations involved, making memory errors easy to track down.
@@ -18,6 +24,18 @@ Provides functions `gcu_malloc()`, `gcu_calloc()`, `gcu_realloc()`, and `gcu_fre
 ### String
 
 Provides several functions which will calculate a hash on a set of bytes using the **Murmur3** algorithm.
+
+### Array
+
+Provides `GCU_Array`, a generalized growable array.  Unlike the Vector (below), it is byte-oriented: the element size is fixed when the array is created, so an array may hold arbitrary structures rather than only values that fit into a fixed-width union.
+
+The array takes a `GCU_Allocator` (see above), and may be created either on the heap (`gcu_array_create()` / `gcu_array_destroy()`) or in memory the caller already owns (`gcu_array_create_in_place()` / `gcu_array_destroy_in_place()`).
+
+Capacity is managed with `gcu_array_reserve()`, `gcu_array_resize()`, and `gcu_array_shrink_to_fit()`.  Elements may be added by copy with `gcu_array_append()` and `gcu_array_append_n()`, or constructed in place by taking a writable slot from `gcu_array_emplace()` and `gcu_array_emplace_n()`, which avoids a copy.  Elements are read with `gcu_array_at()` and `gcu_array_back()`, and removed with `gcu_array_pop()`, `gcu_array_remove_at()` (order-preserving), and `gcu_array_swap_remove()` (constant-time, does not preserve order).  `gcu_array_steal()` hands the backing buffer to the caller and leaves the array empty.
+
+The programmer may provide a `cleanup` function which will be called when the array is destroyed, and a `supplementary_data` pointer for the cleanup function's use.
+
+Note that, unlike the Hash Table and Vector, the array does *not* carry a mutex.  Callers needing one should use the Mutex library directly.
 
 ### Hash Table
 
@@ -37,6 +55,22 @@ The vector will also have a mutex, but it is the programmer's responsibility to 
 
 The programmer may provide a `cleanup` function which will be called when the vector is destroyed.
 
+For elements that do not fit into one of those fixed-width unions -- arbitrary structures, for example -- see the Array library above, which is byte-oriented and takes a caller-supplied allocator.
+
+### Safe Math
+
+Provides header-only, overflow-checked integer arithmetic.  Each function returns `true` on success and writes through its `result` pointer, or returns `false` if the operation would overflow, leaving `result` untouched.
+
+Available for `size_t` are `gcu_safe_add_size()`, `gcu_safe_sub_size()`, `gcu_safe_mul_size()`, `gcu_safe_add3_size()`, and `gcu_safe_mul_add_size()` -- the last of which covers the common allocation-sizing idiom of `(count * element_size) + header`.  `gcu_safe_add_u64()`, `gcu_safe_mul_u64()`, `gcu_safe_add_u32()`, and `gcu_safe_mul_u32()` provide the same for fixed-width unsigned types.
+
+Where the compiler provides them, these use the `__builtin_*_overflow()` intrinsics and `GCU_HAS_BUILTIN_OVERFLOW` is defined; otherwise a portable fallback using division and subtraction checks is compiled instead.  Both paths are tested.
+
+### Random
+
+Provides the Mersenne Twister pseudo-random number generator in both 32-bit (`gcu_random_mt32_init()` / `gcu_random_mt32_next()`) and 64-bit (`gcu_random_mt64_init()` / `gcu_random_mt64_next()`) forms.
+
+The generator state is held in a caller-owned `GCU_Random_MT32_State` or `GCU_Random_MT64_State` structure rather than in a global, so that separate streams do not interfere with one another and a seeded sequence is reproducible.
+
 ### Thread
 
 Provides a thread abstraction layer to better manage threads and information about the threads.
@@ -49,9 +83,21 @@ Provides a mutex abstraction for use as a low-level synchronization tool.
 
 Provides a counting semaphore implementation with a user-configurable limit.  A counting semaphore with a limit of 1 will be, in effect, a binary semaphore.
 
+### Portability Macros
+
+Provides the macros used to keep the rest of the library portable across compilers and platforms.  `GCU_API` and `GCU_API_DATA` expand to the correct export or import decoration (`__declspec(dllexport)`, `__declspec(dllimport)`, or `__attribute__((visibility("default")))`) for the current target, and `GCU_EXTERN` handles `extern "C"` when compiling as C++.
+
+Also provided are `GCU_MAYBE_UNUSED()` and `GCU_DEPRECATED` attribute wrappers, the `GCU_WCHAR_WIDTH` and `GCU_WCHAR_SIGNED` detection macros, and `GCU_INIT_FUNCTION()` / `GCU_CLEANUP_FUNCTION()` for declaring functions that run before `main()` and after it returns.
+
+### Symbol Namespacing and Versioning
+
+Every public symbol in this library is mapped through the `GHOTIIO_CUTIL()` macro, which prefixes it with a build-specific token.  That token is derived from the Makefile's `BRANCH`, and it is the same token that names the shared library, the `.pc` file, and the install directory.  The result is that two projects may embed two different versions of this library in the same program without their symbols colliding.  Building with `make BRANCH=-dev` produces a build with its own identity throughout.
+
+`libver.h` exposes `GCU_VERSION_MAJOR`, `GCU_VERSION_MINOR`, `GCU_VERSION_PATCH`, and `GCU_VERSION_STRING`.  For compile-time comparisons, `GCU_VERSION_NUMBER` packs the current version into a single integer which may be tested against `GCU_MAKE_VERSION(major, minor, patch)`.
+
 ## Tests
 
-All librarys contain a corresponding test written in C++ (demonstrating that the library can be used in C++ as well as C) using the Google Test (`gtest`) framework.
+All libraries contain a corresponding test written in C++ (demonstrating that the library can be used in C++ as well as C) using the Google Test (`gtest`) framework.
 
 ## Documentation
 
