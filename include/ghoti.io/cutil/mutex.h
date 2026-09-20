@@ -17,7 +17,7 @@ extern "C" {
 /**
  * Cross-platform mutex type.
  */
-typedef void* GCU_MUTEX_TYPE;
+typedef void* GCU_MUTEX_T;
 
 /**
  * Cross-platform mutex creation.
@@ -52,7 +52,9 @@ typedef void* GCU_MUTEX_TYPE;
  * Cross-platform mutex trylock.
  * 
  * @param x Mutex.
- * @return true if lock was acquired, false otherwise.
+ * @return 0 if the lock was acquired, non-zero otherwise.  Note that this is
+ *   a zero-on-success convention, not a boolean:  writing
+ *   `if (GCU_MUTEX_TRYLOCK(x))` tests for *failure* to acquire.
  */
 #define GCU_MUTEX_TRYLOCK(x)
 

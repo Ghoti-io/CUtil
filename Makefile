@@ -207,7 +207,7 @@ all: $(APP_DIR)/$(TARGET) ## Build the shared library
 # Dependency Inclusion
 ####################################################################
 # Compiler-generated .d files (see -MMD -MP -MF in compile commands).
-TEST_NAMES := test-debug test-type test-memory test-hash test-random test-semaphore test-string test-thread test-vector test-array test-allocator test-safemath test-safemath-portable
+TEST_NAMES := test-debug test-type test-memory test-hash test-mutex test-random test-semaphore test-string test-thread test-vector test-array test-allocator test-safemath test-safemath-portable
 TEST_BINARIES := $(foreach t,$(TEST_NAMES),$(APP_DIR)/$(t)$(EXE_EXTENSION))
 TEST_DEPFILES := $(addprefix $(APP_DIR)/,$(TEST_NAMES:%=%.d))
 DEPFILES := $(LIBOBJECTS:.o=.d) $(TEST_DEPFILES)
@@ -331,6 +331,11 @@ $(APP_DIR)/test-hash$(EXE_EXTENSION): test/test-hash.cpp | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Hash Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-hash.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+
+$(APP_DIR)/test-mutex$(EXE_EXTENSION): test/test-mutex.cpp | $(APP_DIR)/$(TARGET)
+	@printf "\n### Compiling Mutex Test ###\n"
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-mutex.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
 $(APP_DIR)/test-random$(EXE_EXTENSION): test/test-random.cpp | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Random Test ###\n"
