@@ -14,16 +14,18 @@ themselves. It is the missing piece between `thread.h`, `mutex.h` and
 `semaphore.h`, all of which already ship, and the parallel work that the
 sibling libraries in the suite want to do.
 
-Two implementations already exist in the suite, and both informed this design:
+Two implementations existed in the suite when this was written, and both
+informed this design:
 
 - **`Ghoti.io/Pool`** - a C++ library, now superseded. Its API shape is worth
   reading; its implementation should not be ported.
 - **`compress/src/core/thread_pool.c`** - a working C implementation built on
-  cutil's own primitives. Much of it is right, and this design keeps its good
-  decisions. The defects listed under *Prior Art* are the reason we are not
-  simply moving that file into cutil unchanged.
+  cutil's own primitives. Much of it was right, and this design keeps its good
+  decisions. The defects listed under *Prior Art* are the reason we did not
+  simply move that file into cutil unchanged.
 
-This module replaces both. `compress` will migrate to it.
+This module replaces both. `compress` has since migrated to it and its copy is
+deleted; section 12 records how that went and where it departed from the plan.
 
 ---
 
@@ -89,13 +91,19 @@ plumbing together.
 
 ### 2.2 `compress`'s `thread_pool.c`
 
-This one is built the way this document proposes to build it - cutil mutex,
+**This file no longer exists.** It was deleted when `compress` was converted
+to this pool (see section 12), so the line references below point at code
+that is only in that repository's history. They are kept because the defects
+are the specification this module was written against, and a reader deserves
+to see what was actually wrong rather than take the claim on trust.
+
+This one was built the way this document proposes to build it - cutil mutex,
 cutil counting semaphore, cutil threads, a linked-list FIFO - and it works.
 Its good decisions are kept here: an inline mode, tasks that return a status,
 first-error aggregation, a completion callback, a config struct, an injected
 allocator, and a carefully unwound failure path in `create`.
 
-It has four defects, which are the specification for what the cutil version
+It had four defects, which are the specification for what the cutil version
 must get right.
 
 **(a) `destroy` documents draining and implements abandoning.** The header
@@ -577,29 +585,46 @@ contention and drain cases additionally under ThreadSanitizer, which will requir
 
 ## 12. Migrating `compress`
 
-`compress` already depends on cutil for threads, mutexes and semaphores, so
-this is a substitution rather than a new dependency.
+**Done.** `compress` no longer has a thread pool of its own; it creates a
+`GCU_Pool` in `src/core/parallel_block.c` and `src/core/thread_pool.c` and
+`include/ghoti.io/compress/thread_pool.h` are deleted, along with their nine
+`namespace.h` entries and `tests/core/test_thread_pool.cpp`.
+
+What was planned, and what was actually done, differ in one step. The plan
+was:
 
 1. Land `gcu_pool_*` in cutil with its tests green.
-2. Reimplement `gcomp_thread_pool_*` as a thin shim over `gcu_pool_*`,
-   translating `gcomp_status_t` to and from the pool's `int`. `compress`'s
-   existing `tests/core/test_thread_pool.cpp` must pass unchanged - it is the
-   evidence that the substitution is faithful.
+2. Reimplement `gcomp_thread_pool_*` as a thin shim over `gcu_pool_*`, so
+   that `compress`'s existing `test_thread_pool.cpp` passes unchanged and is
+   the evidence that the substitution is faithful.
 3. Fix the header's drain promise, which the shim now actually honors.
-4. Convert the three consumers - `src/core/parallel_block.c`,
-   `src/methods/zstd/zstd_parallel.c`, `src/methods/lz4/` - to call
-   `gcu_pool_*` directly.
-5. Delete `src/core/thread_pool.c` and its header, and remove their entries
-   from `include/ghoti.io/compress/namespace.h`.
+4. Convert the consumers to call `gcu_pool_*` directly.
+5. Delete `thread_pool.c`, its header, and its `namespace.h` entries.
 
-`job_queue` is untouched. It layers ordered, bounded result collection over a
-pool and remains compress-specific.
+**Step 2 was skipped.** The shim existed only to keep the old tests running
+as a check on the substitution, and the substitution turned out to have a
+single consumer -- `parallel_block.c` -- so there was nothing for a shim to
+insulate. Building one, running the old tests against it, and then deleting
+both in the same session would have been ceremony rather than evidence. The
+integration tests that actually exercise the pool through the encoders
+(`testLz4_parallel`, `testZstd_parallel`, `testThread_safety`) were left
+untouched and stayed green across the conversion, which is the same check
+one step further out.
 
-**One behavior change to announce.** Any `compress` caller that relies today
-on `gcomp_thread_pool_destroy` *not* running queued jobs will find that it now
-does. Given the header has always documented draining, such a caller is
-relying on a bug, but the change should be called out in the commit rather
-than discovered.
+The behavior change was announced in the commit as this section asked: a
+caller relying on `gcomp_thread_pool_destroy` *not* running queued jobs now
+finds that it does. Since the header had always documented draining, such a
+caller was relying on a bug.
+
+**`job_queue` did not stay untouched.** An earlier draft of this section said
+it "layers ordered, bounded result collection over a pool and remains
+compress-specific", and that was wrong. The layering is real but the
+mechanism is entirely generic: it is a reorder buffer, and nothing about
+accepting items in one order and returning them in that order has anything
+to do with compression. It has since been lifted into this library as
+`GCU_Sequencer`, and `compress`'s copy is deleted too. See
+`documentation/sequencer.md`, whose section 2 records the four things that
+had to change to make it general.
 
 ---
 

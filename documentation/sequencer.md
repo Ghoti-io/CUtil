@@ -30,11 +30,17 @@ producer --submit--> [sequencer] <--complete-- workers <--task-- [pool]
 
 ## 2. Prior art
 
-`compress` had one, as `gcomp_job_queue_t`.  It worked, and its concurrency
-was sound after two fixes made in the same session as the thread pool (a
-waiter *count* rather than a `bool`, and releasing blocked waiters before
-teardown frees the memory they are sleeping on).  Four things were wrong with
-it as a *general* facility, and all four are fixed here:
+`compress` had one, as `gcomp_job_queue_t`.  **Those files no longer exist**
+-- `src/core/job_queue.c` and `include/ghoti.io/compress/job_queue.h` were
+deleted when that library was converted to this module (section 10), so the
+references below point at code that is only in its history.  They are kept
+because the defects are the specification this module was written against.
+
+It worked, and its concurrency was sound after two fixes made in the same
+session as the thread pool (a waiter *count* rather than a `bool`, and
+releasing blocked waiters before teardown frees the memory they are sleeping
+on).  Four things were wrong with it as a *general* facility, and all four
+are fixed here:
 
 1. **The element type was not generic.**  `gcomp_block_job_t` carried the
    ordering fields (`sequence_num`, `status`) welded to compression payload
@@ -172,3 +178,45 @@ against a naive implementation:
 - `submit()` reports full rather than deadlocking a self-collecting caller.
 
 Run under `make test`, `make test-asan`, and `make test-tsan`.
+
+---
+
+## 10. Converting `compress`
+
+**Done**, in the same session this module was written.
+
+`gcomp_job_queue_t` is gone.  `src/core/parallel_block.c` creates a
+`GCU_Sequencer` beside the `GCU_Pool` it already had, and the public
+`include/ghoti.io/compress/job_queue.h`, `src/core/job_queue.c`,
+`tests/core/test_job_queue.cpp` and fourteen `namespace.h` entries are
+deleted.
+
+Three details of that conversion are worth recording, because they are the
+sort of thing a second consumer will hit too.
+
+**The job struct stayed behind.**  `gcomp_block_job_t` is embedded as a first
+member by `lz4_parallel.h` and `zstd_parallel.h` and downcast, so it could
+not be deleted with the queue.  It moved to a *private* header,
+`src/core/block_job.h`:  no public header outside `job_queue.h` itself ever
+referenced it, so the public API surface shrank rather than being preserved
+for its own sake.  A caller embedding a payload type is normal; what was
+wrong was the queue *requiring* that type.
+
+**The ticket goes in the payload, not the sequencer.**  `parallel_block.c`
+stores the ticket in the job's own `sequence_num` field, and the pool's
+completion callback reads it back to name what it just finished.  That write
+happens before the job is handed to the pool, because a worker may run it the
+instant it is enqueued.
+
+**Two contracts were preserved deliberately rather than inherited.**  This
+module reports an empty buffer as `GCU_SEQUENCER_EMPTY` where the old queue
+returned an argument error, and `gcu_sequencer_reset()` drops outstanding
+items where the old queue refused.  `compress` wanted the old behavior in
+both cases, so it translates EMPTY back and checks before resetting -- its
+inline path reports those two situations the old way, and the two modes must
+not diverge.  A library adopting this module fresh has no such obligation.
+
+The allocator matters:  `gcomp_allocator_t` *is* `GCU_Allocator`, so the
+sequencer is created with `compress`'s tracked allocator and its ring counts
+against that library's memory limit exactly as the queue it replaced did.
+Passing `NULL` would have quietly moved those bytes outside the limit.

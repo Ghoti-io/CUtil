@@ -634,8 +634,10 @@ test-ubsan: test-asan
 # ASan and UBSan assert what a single thread does with memory. They say
 # nothing about two threads reaching the same memory without a lock between
 # them, which is the defect this library's concurrent modules are most likely
-# to have: the sibling compress library's thread pool shares its shutdown flag
-# across threads as a plain bool, and nothing in its test suite can see that.
+# to have: the sibling compress library's thread pool shared its shutdown flag
+# across threads as a plain bool, and nothing in its test suite could see
+# that. (That pool has since been replaced by this one, and its job queue by
+# this library's sequencer, which is why both are on the list below.)
 #
 # TSan cannot be combined with ASan, so it gets its own tree, built the same
 # way and kept beside the ordinary and instrumented ones.
