@@ -631,6 +631,16 @@ fails with `ERANGE` above 15 characters plus the terminator, while Windows
 accepts far more. A name that works on one platform silently fails on the
 other, and the header should say so.
 
+**2b. The thread record's synchronisation.** *(Completed after the pool
+landed.)* The `joined` and `detached` flags were written without
+synchronisation, and every accessor reached its record through the hash with
+no lock while `gcu_thread_create()` mutates that hash and frees the previous
+record on thread-id reuse. Joining and detaching also read the flags, blocked,
+and wrote them back across an unguarded gap, so two callers could both reach
+`pthread_join()` on one thread. All record access now goes through a locked
+snapshot, and join and detach take an exclusive claim. The pool depends on
+this: it joins from teardown while other threads are live.
+
 **2. A `test-tsan` target.** ThreadSanitizer is the tool that finds the class
 of defect this module is most likely to have - it is exactly what would have
 caught the unsynchronized `shutdown` flag in `compress`. The target mirrors

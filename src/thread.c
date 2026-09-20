@@ -136,6 +136,134 @@ static GCU_THREAD_FUNC_RETURN_T GCU_THREAD_FUNC_CALLING_CONVENTION gcu_thread_wr
 
 
 //
+// Everything below reaches a thread record through the hash, and the hash is
+// mutable:  gcu_thread_create() inserts, and frees the previous record when
+// the OS reuses a thread id.  A lookup therefore has to hold the hash mutex,
+// and - just as importantly - nothing may dereference a record after
+// releasing it.  These helpers copy out what a caller needs, by value, while
+// the lock is held.
+//
+
+//
+// What the platform calls need from a record.
+//
+typedef struct {
+  GCU_THREAD_T handle; // The platform thread handle.
+  bool joined;         // Whether the thread has been joined.
+  bool detached;       // Whether the thread has been detached.
+  bool running;        // Whether the thread is running.
+  bool exists;         // Whether a record was found at all.
+} GCU_Thread_Snapshot;
+
+
+//
+// Copy a record's contents out under the hash mutex.
+//
+static GCU_Thread_Snapshot gcu_thread_snapshot(GCU_Thread thread) {
+  GCU_Thread_Snapshot snapshot = {0};
+
+  GCU_MUTEX_LOCK(gcu_thread_hash->mutex);
+
+  GCU_Hash64_Value hash_value = gcu_hash64_get(gcu_thread_hash, thread);
+  if (hash_value.exists) {
+    GCU_Thread_Internal * thread_internal = hash_value.value.p;
+    snapshot.handle = thread_internal->handle;
+    snapshot.joined = thread_internal->joined;
+    snapshot.detached = thread_internal->detached;
+    // Atomic, because the thread itself writes this one and cannot take the
+    // lock to do it:  the cleanup path joins while holding the mutex, so a
+    // thread clearing its own flag on the way out would deadlock against the
+    // join waiting for it.
+    snapshot.running = thread_internal->running;
+    snapshot.exists = true;
+  }
+
+  GCU_MUTEX_UNLOCK(gcu_thread_hash->mutex);
+  return snapshot;
+}
+
+
+//
+// Claim the exclusive right to join or detach a thread.
+//
+// Joining and detaching each have to read the flags, act, and then write them
+// back, and the acting part blocks - so the read and the write cannot be one
+// critical section.  Leaving the gap unguarded let two callers both observe a
+// thread as unjoined and both reach pthread_join() on it, which POSIX leaves
+// undefined; the same gap let a join and a detach both proceed on one thread.
+// Setting the flag at the moment of the check closes it:  whoever sets it
+// owns the operation, and everyone else is refused.
+//
+// Returns the handle by value, so that the blocking call that follows does
+// not touch a record the lock no longer protects.
+//
+static bool gcu_thread_claim(GCU_Thread thread, bool for_detach,
+    GCU_THREAD_T * handle, GCU_Thread_Internal ** claimed) {
+  bool acquired = false;
+
+  GCU_MUTEX_LOCK(gcu_thread_hash->mutex);
+
+  GCU_Hash64_Value hash_value = gcu_hash64_get(gcu_thread_hash, thread);
+  if (hash_value.exists) {
+    GCU_Thread_Internal * thread_internal = hash_value.value.p;
+
+    if (!thread_internal->joined && !thread_internal->detached) {
+      if (for_detach) {
+        thread_internal->detached = true;
+      }
+      else {
+        thread_internal->joined = true;
+      }
+      *handle = thread_internal->handle;
+      *claimed = thread_internal;
+      acquired = true;
+    }
+  }
+
+  GCU_MUTEX_UNLOCK(gcu_thread_hash->mutex);
+  return acquired;
+}
+
+
+//
+// Give a claim back, for an operation that then failed.
+//
+// The record is re-found rather than reused:  gcu_thread_create() may have
+// freed and replaced it while the operation was in flight, and in that case
+// the thread this claim referred to is gone and there is nothing to undo.
+//
+static void gcu_thread_unclaim(
+    GCU_Thread thread, bool for_detach, GCU_Thread_Internal * claimed) {
+  GCU_MUTEX_LOCK(gcu_thread_hash->mutex);
+
+  GCU_Hash64_Value hash_value = gcu_hash64_get(gcu_thread_hash, thread);
+  if (hash_value.exists && hash_value.value.p == claimed) {
+    if (for_detach) {
+      claimed->detached = false;
+    }
+    else {
+      claimed->joined = false;
+    }
+  }
+
+  GCU_MUTEX_UNLOCK(gcu_thread_hash->mutex);
+}
+
+
+//
+// Join a thread by handle, touching neither the hash nor its mutex, so that
+// it is callable from a context that already holds the lock.
+//
+static int gcu_thread_join_handle(GCU_THREAD_T handle) {
+#ifdef _WIN32
+  return WaitForSingleObject(handle, INFINITE) != WAIT_OBJECT_0;
+#else
+  return pthread_join(handle, NULL);
+#endif
+}
+
+
+//
 // This will be called when the `gcu_thread_hash` is destroyed.
 //
 static void gcu_thread_hash_cleanup(GCU_Hash64 * hash) {
@@ -154,7 +282,11 @@ static void gcu_thread_hash_cleanup(GCU_Hash64 * hash) {
       if (!thread->detached && !thread->joined) {
         if (!gcu_thread_handle_is_current(thread->handle)) {
           // We cannot join the current thread, into itself.
-          gcu_thread_join(thread->id);
+          //
+          // The handle form, not gcu_thread_join():  this runs with the hash
+          // mutex held, and the public call now takes that same mutex.
+          gcu_thread_join_handle(thread->handle);
+          thread->joined = true;
         }
       }
       gcu_free(thread);
@@ -379,35 +511,21 @@ int gcu_thread_join(GCU_Thread thread_id) {
     return -1;
   }
 
-  // Get the thread record from the hash.
-  GCU_Hash64_Value hash_value = gcu_hash64_get(gcu_thread_hash, thread_id);
-  if (!hash_value.exists) {
-    return -1;
-  }
-  GCU_Thread_Internal * thread_internal = hash_value.value.p;
-
-  // Verify that the thread has not already been joined.
-  if (thread_internal->joined) {
+  // Claim the join.  This both refuses a thread that is already joined or
+  // detached and stops a second caller from reaching pthread_join() on the
+  // same thread while this one is blocked in it.
+  GCU_THREAD_T handle;
+  GCU_Thread_Internal * claimed;
+  if (!gcu_thread_claim(thread_id, false, &handle, &claimed)) {
     return -1;
   }
 
-  // Verify that the thread has not already been detached.
-  if (thread_internal->detached) {
-    return -1;
-  }
+  int failed = gcu_thread_join_handle(handle);
 
-  // Join the thread.
-  int failed;
-#ifdef _WIN32
-  DWORD wait_result = WaitForSingleObject(thread_internal->handle, INFINITE);
-  failed = wait_result != WAIT_OBJECT_0;
-#else
-  failed = pthread_join(thread_internal->handle, NULL);
-#endif
-
-  // Set the joined flag if the join was successful.
-  if (!failed) {
-    thread_internal->joined = true;
+  // The claim was taken before the join could be attempted, so an attempt
+  // that failed has to give it back.
+  if (failed) {
+    gcu_thread_unclaim(thread_id, false, claimed);
   }
 
   return failed
@@ -422,33 +540,31 @@ int gcu_thread_detach(GCU_Thread thread) {
     return -1;
   }
 
-  // Get the thread record from the hash.
-  GCU_Hash64_Value hash_value = gcu_hash64_get(gcu_thread_hash, thread);
-  if (!hash_value.exists) {
-    return -1;
-  }
-  GCU_Thread_Internal * thread_internal = hash_value.value.p;
-
-  // Verify that the thread has not already been joined.
-  if (thread_internal->joined) {
-    return -1;
-  }
-
-  // Verify that the thread has not already been detached.
-  if (thread_internal->detached) {
+  // Claim the detach, for the same reason a join is claimed:  a detach and a
+  // join must not both proceed on one thread.
+  GCU_THREAD_T handle;
+  GCU_Thread_Internal * claimed;
+  if (!gcu_thread_claim(thread, true, &handle, &claimed)) {
     return -1;
   }
 
   // Detach the thread.
+  //
+  // The handle, not the id.  This passed `thread` - a GCU_Thread, which is a
+  // uint32_t thread id - to pthread_detach(), which takes a pthread_t.  The
+  // two are different values, so the call detached whatever that id happened
+  // to alias and could not have worked; nothing caught it because no test
+  // detaches a live thread and checks the result.
   int failed;
 #ifdef _WIN32
-  failed = !CloseHandle(thread_internal->handle);
+  failed = !CloseHandle(handle);
 #else
-  failed = pthread_detach(thread);
+  failed = pthread_detach(handle);
 #endif
 
-  // Set the detached flag.
-  thread_internal->detached = !failed;
+  if (failed) {
+    gcu_thread_unclaim(thread, true, claimed);
+  }
 
   return failed;
 }
@@ -504,25 +620,24 @@ int gcu_thread_set_affinity(GCU_Thread thread, unsigned long mask) {
     return -1;
   }
 
-  // Get the thread record from the hash.
-  GCU_Hash64_Value hash_value = gcu_hash64_get(gcu_thread_hash, thread);
-  if (!hash_value.exists) {
+  // Copy the record out under the lock; see gcu_thread_snapshot().
+  GCU_Thread_Snapshot snapshot = gcu_thread_snapshot(thread);
+  if (!snapshot.exists) {
     return -1;
   }
-  GCU_Thread_Internal * thread_internal = hash_value.value.p;
 
   // Verify that the thread has not already been joined.
-  if (thread_internal->joined) {
+  if (snapshot.joined) {
     return -1;
   }
 
   // Verify that the thread has not already been detached.
-  if (thread_internal->detached) {
+  if (snapshot.detached) {
     return -1;
   }
 
 #ifdef _WIN32
-  return SetThreadAffinityMask(thread_internal->handle, mask) == 0;
+  return SetThreadAffinityMask(snapshot.handle, mask) == 0;
 #else
   cpu_set_t cpuset;
   CPU_ZERO(&cpuset);
@@ -531,7 +646,7 @@ int gcu_thread_set_affinity(GCU_Thread thread, unsigned long mask) {
       CPU_SET(i, &cpuset);
     }
   }
-  return pthread_setaffinity_np(thread_internal->handle, sizeof(cpuset), &cpuset);
+  return pthread_setaffinity_np(snapshot.handle, sizeof(cpuset), &cpuset);
 #endif
 }
 
@@ -542,20 +657,19 @@ int gcu_thread_get_affinity(GCU_Thread thread, unsigned long * mask) {
     return -1;
   }
 
-  // Get the thread record from the hash.
-  GCU_Hash64_Value hash_value = gcu_hash64_get(gcu_thread_hash, thread);
-  if (!hash_value.exists) {
+  // Copy the record out under the lock; see gcu_thread_snapshot().
+  GCU_Thread_Snapshot snapshot = gcu_thread_snapshot(thread);
+  if (!snapshot.exists) {
     return -1;
   }
-  GCU_Thread_Internal * thread_internal = hash_value.value.p;
 
   // Verify that the thread has not already been joined.
-  if (thread_internal->joined) {
+  if (snapshot.joined) {
     return -1;
   }
 
   // Verify that the thread has not already been detached.
-  if (thread_internal->detached) {
+  if (snapshot.detached) {
     return -1;
   }
 
@@ -567,9 +681,9 @@ int gcu_thread_get_affinity(GCU_Thread thread, unsigned long * mask) {
     // See: https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getprocessaffinitymask
     // See: https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-setthreadaffinitymask
     // thread_mask will contain the "old" thread mask, which we will restore.
-    DWORD_PTR thread_mask = SetThreadAffinityMask(thread_internal->handle, process_mask);
+    DWORD_PTR thread_mask = SetThreadAffinityMask(snapshot.handle, process_mask);
     if (thread_mask) {
-      SetThreadAffinityMask(thread_internal->handle, thread_mask);
+      SetThreadAffinityMask(snapshot.handle, thread_mask);
       *mask = thread_mask;
       return 0;
     }
@@ -577,7 +691,7 @@ int gcu_thread_get_affinity(GCU_Thread thread, unsigned long * mask) {
   return 1;
 #else
   cpu_set_t cpuset;
-  int ret = pthread_getaffinity_np(thread_internal->handle, sizeof(cpuset), &cpuset);
+  int ret = pthread_getaffinity_np(snapshot.handle, sizeof(cpuset), &cpuset);
   *mask = 0;
   for (size_t i = 0; i < sizeof(cpuset) * 8; i++) {
     if (CPU_ISSET(i, &cpuset)) {
@@ -595,19 +709,18 @@ int gcu_thread_set_priority(GCU_Thread thread, int priority) {
     return -1;
   }
 
-  // Get the thread record from the hash.
-  GCU_Hash64_Value hash_value = gcu_hash64_get(gcu_thread_hash, thread);
-  if (!hash_value.exists) {
+  // Copy the record out under the lock; see gcu_thread_snapshot().
+  GCU_Thread_Snapshot snapshot = gcu_thread_snapshot(thread);
+  if (!snapshot.exists) {
     return -1;
   }
-  GCU_Thread_Internal * thread_internal = hash_value.value.p;
 
 #ifdef _WIN32
-  return SetThreadPriority(thread_internal->handle, priority) == 0;
+  return SetThreadPriority(snapshot.handle, priority) == 0;
 #else
   struct sched_param param;
   param.sched_priority = priority;
-  return pthread_setschedparam(thread_internal->handle, SCHED_OTHER, &param);
+  return pthread_setschedparam(snapshot.handle, SCHED_OTHER, &param);
 #endif
 }
 
@@ -618,20 +731,19 @@ int gcu_thread_get_priority(GCU_Thread thread, int * priority) {
     return -1;
   }
 
-  // Get the thread record from the hash.
-  GCU_Hash64_Value hash_value = gcu_hash64_get(gcu_thread_hash, thread);
-  if (!hash_value.exists) {
+  // Copy the record out under the lock; see gcu_thread_snapshot().
+  GCU_Thread_Snapshot snapshot = gcu_thread_snapshot(thread);
+  if (!snapshot.exists) {
     return -1;
   }
-  GCU_Thread_Internal * thread_internal = hash_value.value.p;
 
 #ifdef _WIN32
-  *priority = GetThreadPriority(thread_internal->handle);
+  *priority = GetThreadPriority(snapshot.handle);
   return *priority == THREAD_PRIORITY_ERROR_RETURN;
 #else
   struct sched_param param;
   int policy;
-  int ret = pthread_getschedparam(thread_internal->handle, &policy, &param);
+  int ret = pthread_getschedparam(snapshot.handle, &policy, &param);
   *priority = param.sched_priority;
   return ret;
 #endif
@@ -644,12 +756,11 @@ int gcu_thread_set_name(GCU_Thread thread, const char * name) {
     return -1;
   }
 
-  // Get the thread record from the hash.
-  GCU_Hash64_Value hash_value = gcu_hash64_get(gcu_thread_hash, thread);
-  if (!hash_value.exists) {
+  // Copy the record out under the lock; see gcu_thread_snapshot().
+  GCU_Thread_Snapshot snapshot = gcu_thread_snapshot(thread);
+  if (!snapshot.exists) {
     return -1;
   }
-  GCU_Thread_Internal * thread_internal = hash_value.value.p;
 
 #ifdef _WIN32
   size_t wname_len = MultiByteToWideChar(CP_UTF8, 0, name, -1, NULL, 0);
@@ -672,13 +783,13 @@ int gcu_thread_set_name(GCU_Thread thread, const char * name) {
   }
 
   // Set the thread name.
-  HRESULT result = SetThreadDescription(thread_internal->handle, wname);
+  HRESULT result = SetThreadDescription(snapshot.handle, wname);
   gcu_free(wname);
   return SUCCEEDED(result)
     ? 0   // The thread name was set successfully.
     : -1; // The thread name could not be set.
 #else
-  return pthread_setname_np(thread_internal->handle, name);
+  return pthread_setname_np(snapshot.handle, name);
 #endif
 }
 
@@ -689,16 +800,15 @@ int gcu_thread_get_name(GCU_Thread thread, char * name, size_t size) {
     return -1;
   }
 
-  // Get the thread record from the hash.
-  GCU_Hash64_Value hash_value = gcu_hash64_get(gcu_thread_hash, thread);
-  if (!hash_value.exists) {
+  // Copy the record out under the lock; see gcu_thread_snapshot().
+  GCU_Thread_Snapshot snapshot = gcu_thread_snapshot(thread);
+  if (!snapshot.exists) {
     return -1;
   }
-  GCU_Thread_Internal * thread_internal = hash_value.value.p;
 
 #ifdef _WIN32
   PWSTR threadname = NULL;
-  HRESULT result = GetThreadDescription(thread_internal->handle, &threadname) == 0;
+  HRESULT result = GetThreadDescription(snapshot.handle, &threadname) == 0;
 
   if (SUCCEEDED(result) && threadname) {
     // Convert the thread name to UTF-8.
@@ -718,7 +828,7 @@ int gcu_thread_get_name(GCU_Thread thread, char * name, size_t size) {
   return -1;
 
 #else
-  return pthread_getname_np(thread_internal->handle, name, size);
+  return pthread_getname_np(snapshot.handle, name, size);
 #endif
 }
 
@@ -743,14 +853,13 @@ int gcu_thread_is_running(GCU_Thread thread, bool * is_running) {
     return -1;
   }
 
-  // Get the thread record from the hash.
-  GCU_Hash64_Value hash_value = gcu_hash64_get(gcu_thread_hash, thread);
-  if (!hash_value.exists) {
+  // Copy the record out under the lock; see gcu_thread_snapshot().
+  GCU_Thread_Snapshot snapshot = gcu_thread_snapshot(thread);
+  if (!snapshot.exists) {
     return -1;
   }
 
-  GCU_Thread_Internal * thread_internal = hash_value.value.p;
-  *is_running = thread_internal->running;
+  *is_running = snapshot.running;
   return 0;
 }
 
@@ -761,14 +870,13 @@ int gcu_thread_is_joined(GCU_Thread thread, bool * is_joined) {
     return -1;
   }
 
-  // Get the thread record from the hash.
-  GCU_Hash64_Value hash_value = gcu_hash64_get(gcu_thread_hash, thread);
-  if (!hash_value.exists) {
+  // Copy the record out under the lock; see gcu_thread_snapshot().
+  GCU_Thread_Snapshot snapshot = gcu_thread_snapshot(thread);
+  if (!snapshot.exists) {
     return -1;
   }
 
-  GCU_Thread_Internal * thread_internal = hash_value.value.p;
-  *is_joined = thread_internal->joined;
+  *is_joined = snapshot.joined;
   return 0;
 }
 
@@ -779,14 +887,13 @@ int gcu_thread_is_detached(GCU_Thread thread, bool * is_detached) {
     return -1;
   }
 
-  // Get the thread record from the hash.
-  GCU_Hash64_Value hash_value = gcu_hash64_get(gcu_thread_hash, thread);
-  if (!hash_value.exists) {
+  // Copy the record out under the lock; see gcu_thread_snapshot().
+  GCU_Thread_Snapshot snapshot = gcu_thread_snapshot(thread);
+  if (!snapshot.exists) {
     return -1;
   }
 
-  GCU_Thread_Internal * thread_internal = hash_value.value.p;
-  *is_detached = thread_internal->detached;
+  *is_detached = snapshot.detached;
   return 0;
 }
 

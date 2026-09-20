@@ -3,6 +3,8 @@
 
 #include <atomic>
 #include <iostream>
+#include <thread>
+#include <vector>
 
 #ifndef _WIN32
 #include <sys/wait.h>
@@ -161,6 +163,134 @@ TEST(Thread, NameFunctions) {
 
   status.run = false;
   gcu_thread_join(child_thread);
+}
+
+TEST(Thread, DetachSucceedsAndIsReported) {
+  GCU_Thread thread;
+  ASSERT_EQ(0, gcu_thread_create(&thread, doNothing, NULL));
+
+  bool flag = true;
+  ASSERT_EQ(0, gcu_thread_is_detached(thread, &flag));
+  EXPECT_FALSE(flag);
+
+  // This handed pthread_detach() a GCU_Thread - a uint32_t thread id - where
+  // it wants a pthread_t, so it detached whatever that value aliased and
+  // could not have worked.  Nothing caught it because no test ever detached a
+  // live thread and checked the result.
+  EXPECT_EQ(0, gcu_thread_detach(thread));
+
+  ASSERT_EQ(0, gcu_thread_is_detached(thread, &flag));
+  EXPECT_TRUE(flag);
+
+  // A detached thread can be neither joined nor detached again.
+  EXPECT_EQ(-1, gcu_thread_join(thread));
+  EXPECT_NE(0, gcu_thread_detach(thread));
+}
+
+TEST(Thread, DoubleJoinIsRefused) {
+  GCU_Thread thread;
+  ASSERT_EQ(0, gcu_thread_create(&thread, doNothing, NULL));
+
+  EXPECT_EQ(0, gcu_thread_join(thread));
+
+  // Joining twice is undefined at the POSIX level, so the second call has to
+  // be refused rather than passed through.
+  EXPECT_EQ(-1, gcu_thread_join(thread));
+  EXPECT_NE(0, gcu_thread_detach(thread));
+
+  bool joined = false;
+  ASSERT_EQ(0, gcu_thread_is_joined(thread, &joined));
+  EXPECT_TRUE(joined);
+}
+
+TEST(Thread, OnlyOneOfManyConcurrentJoinsSucceeds) {
+  // Reading the joined flag, joining, and writing the flag back cannot be one
+  // critical section, because the join blocks.  With that gap unguarded,
+  // every caller here observed the thread as unjoined and every one of them
+  // reached pthread_join() on it.
+  for (int round = 0; round < 50; ++round) {
+    GCU_Thread thread;
+    ASSERT_EQ(0, gcu_thread_create(&thread, doNothing, NULL));
+
+    const int kJoiners = 8;
+    std::atomic<int> succeeded{0};
+    std::vector<std::thread> joiners;
+
+    for (int i = 0; i < kJoiners; ++i) {
+      joiners.emplace_back([&] {
+        if (gcu_thread_join(thread) == 0) {
+          succeeded.fetch_add(1);
+        }
+      });
+    }
+    for (auto & t : joiners) {
+      t.join();
+    }
+
+    ASSERT_EQ(1, succeeded.load()) << "round " << round;
+  }
+}
+
+TEST(Thread, JoinAndDetachDoNotBothSucceed) {
+  for (int round = 0; round < 100; ++round) {
+    GCU_Thread thread;
+    ASSERT_EQ(0, gcu_thread_create(&thread, doNothing, NULL));
+
+    std::atomic<int> joined_ok{0};
+    std::atomic<int> detached_ok{0};
+
+    std::thread a([&] {
+      if (gcu_thread_join(thread) == 0) {
+        joined_ok.fetch_add(1);
+      }
+    });
+    std::thread b([&] {
+      if (gcu_thread_detach(thread) == 0) {
+        detached_ok.fetch_add(1);
+      }
+    });
+    a.join();
+    b.join();
+
+    // Exactly one of the two claims the thread; detaching one that is being
+    // joined is as undefined as joining it twice.
+    ASSERT_EQ(1, joined_ok.load() + detached_ok.load()) << "round " << round;
+  }
+}
+
+TEST(Thread, ConcurrentAccessorsAreSafe) {
+  // The accessors reached their records through the hash with no lock, while
+  // gcu_thread_create() mutates that hash and frees the previous record when
+  // the OS reuses an id.  This exists mostly to give ThreadSanitizer
+  // something to look at.
+  const int kReaders = 4;
+  std::atomic<bool> stop{false};
+  std::vector<std::thread> readers;
+  GCU_Thread self = gcu_thread_get_current_id();
+
+  for (int i = 0; i < kReaders; ++i) {
+    readers.emplace_back([&] {
+      char name[64];
+      bool flag = false;
+      while (!stop.load()) {
+        gcu_thread_is_running(self, &flag);
+        gcu_thread_is_joined(self, &flag);
+        gcu_thread_is_detached(self, &flag);
+        gcu_thread_get_name(self, name, sizeof(name));
+      }
+    });
+  }
+
+  for (int i = 0; i < 200; ++i) {
+    GCU_Thread thread;
+    ASSERT_EQ(0, gcu_thread_create(&thread, doNothing, NULL));
+    EXPECT_EQ(0, gcu_thread_join(thread));
+  }
+
+  stop.store(true);
+  for (auto & t : readers) {
+    t.join();
+  }
 }
 
 TEST(Thread, ProcessorCount) {
