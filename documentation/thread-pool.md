@@ -1,9 +1,10 @@
 # Thread Pool
 
-**Status:** Design, reviewed. No code exists yet. This document describes the
-intended `gcu_pool_*` module and the decisions behind it. The four questions
-left open in the first draft were settled on 2026-09-19 and are recorded in
-*Decisions 6-9* and *Prerequisites*; implementation may begin.
+**Status:** Implemented. `include/ghoti.io/cutil/pool.h`, `src/pool.c` and
+`test/test-pool.cpp` ship what this describes. The four questions left open in
+the first draft were settled on 2026-09-19 and are recorded in *Decisions 6-9*;
+both prerequisites have landed. *Implementation notes* records the two places
+where the code departs from the design as written.
 
 ## Purpose
 
@@ -647,7 +648,40 @@ reports gets its own issue.
 
 ---
 
-## 14. Decisions settled during review
+## 14. Implementation notes
+
+Two things turned out differently once the code existed.
+
+**The freed slot is posted with the mutex held, not after it.** Section 9
+described a worker popping a task, releasing the mutex and then posting
+`slots`. That leaves a window in which the pool reports the task as running
+while the slot it vacated is not yet available, so *no* observation of the
+pool tells a caller when it may enqueue again - a test that waited for
+`gcu_pool_count_active()` to rise and then enqueued into a bounded pool failed
+intermittently for exactly that reason. The post now happens inside the same
+critical section as the pop, making "the task left the queue" and "its slot is
+free" one indivisible step. Posting a semaphore does not block, so the only
+cost is that a woken producer waits momentarily for a lock the worker is about
+to release.
+
+**There is no `draining` flag.** The struct sketch carried one alongside
+`shutting_down`. It is unnecessary: abandoning clears the queue before the
+workers are woken, so they find it empty and stop, while draining leaves the
+queue for them to run out. One flag and one shutdown path cover both, and the
+difference is the single `gcu_array_clear()` call.
+
+One hazard worth recording, because it cost an hour of diagnosis: **a pool
+that is never destroyed hangs the process at exit.** Its workers block in the
+pool's semaphore forever, and the thread module's exit destructor joins every
+thread it still knows about. In a test suite a failed assertion returns from
+the test body immediately, so teardown written as the last statement of a test
+never runs and the failure becomes a hang instead of a report. `test-pool.cpp`
+therefore tears every pool down from a scope guard rather than a trailing
+call.
+
+---
+
+## 15. Decisions settled during review
 
 The first draft left four questions open. All four were answered on
 2026-09-19, and the sections above reflect the answers. Recorded here so that

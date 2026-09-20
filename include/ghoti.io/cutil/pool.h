@@ -1,0 +1,339 @@
+/**
+ * @file
+ *
+ * A thread pool: a fixed set of worker threads drawing tasks from a shared
+ * FIFO queue.
+ *
+ * The design and the reasoning behind each decision are recorded in
+ * `documentation/thread-pool.md`.
+ *
+ * Copyright 2026 by Corey Pennycuff
+ */
+
+#ifndef GHOTI_IO_GCU_POOL_H
+#define GHOTI_IO_GCU_POOL_H
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <ghoti.io/cutil/allocator.h>
+#include <ghoti.io/cutil/array.h>
+#include <ghoti.io/cutil/macros.h>
+#include <ghoti.io/cutil/mutex.h>
+#include <ghoti.io/cutil/semaphore.h>
+#include <ghoti.io/cutil/thread.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * Passed as `thread_count` to request one worker per logical processor.
+ */
+#define GCU_POOL_THREADS_AUTO ((size_t)-1)
+
+/**
+ * The longest `name_prefix` that is used in full.  A longer prefix is
+ * truncated to this many characters.
+ *
+ * POSIX caps a thread name at 15 characters plus the terminator, and the
+ * worker index is appended to the prefix, so the prefix cannot have all of
+ * that budget.  See gcu_thread_set_name().
+ */
+#define GCU_POOL_NAME_PREFIX_MAX 8
+
+/**
+ * A thread pool.
+ *
+ * The layout is published only so that a caller may embed one in a structure
+ * of its own and use the `_in_place` calls.  **Every field is private.**
+ * Read the counts through gcu_pool_count_queued() and its siblings, which
+ * take the lock; reading a field directly races the workers.
+ */
+typedef struct GCU_Pool GCU_Pool;
+
+/// @cond HIDDEN_SYMBOLS
+struct GCU_Pool {
+  const GCU_Allocator * allocator; ///< Private.  Allocator for all memory.
+  size_t thread_count;             ///< Private.  Worker count; 0 when inline.
+  GCU_Thread * threads;            ///< Private.  Worker ids, or NULL.
+  bool is_inline;                  ///< Private.  Tasks run at enqueue time.
+  size_t max_queued;               ///< Private.  Queue limit; 0 = unbounded.
+
+  GCU_MUTEX_T mutex;               ///< Private.  Covers every field below.
+  GCU_Array queue;                 ///< Private.  FIFO of queued tasks.
+  size_t queue_head;               ///< Private.  Index of the next task.
+  size_t active;                   ///< Private.  Tasks currently running.
+  int first_error;                 ///< Private.  First non-zero status seen.
+  bool shutting_down;              ///< Private.  No new work accepted.
+  size_t waiters;                  ///< Private.  Threads in gcu_pool_wait().
+  size_t slot_waiters;             ///< Private.  Threads awaiting a slot.
+
+  GCU_Semaphore work;              ///< Private.  Outstanding worker wakeups.
+  GCU_Semaphore idle;              ///< Private.  Releases waiters when idle.
+  GCU_Semaphore slots;             ///< Private.  Free slots when bounded.
+};
+/// @endcond
+
+/**
+ * A unit of work.
+ *
+ * @param ctx The context pointer supplied when the task was enqueued.
+ * @return `0` on success, or any non-zero status on failure.  A non-zero
+ *   status is recorded by the pool and reported by gcu_pool_wait(); it does
+ *   not stop the pool or affect any other task.
+ */
+typedef int (*GCU_Pool_Task)(void * ctx);
+
+/**
+ * Called after a task returns.
+ *
+ * Runs on the worker thread that ran the task, outside every pool lock, after
+ * the task returns and before the task is counted as complete.  It must not
+ * call back into the pool that invoked it.
+ *
+ * @param ctx The context pointer the task was enqueued with.
+ * @param status The value the task returned.
+ * @param user_data The data supplied alongside the callback.
+ */
+typedef void (*GCU_Pool_Complete)(void * ctx, int status, void * user_data);
+
+/**
+ * Pool configuration.  A `NULL` config selects every default.
+ */
+typedef struct GCU_Pool_Config {
+  /**
+   * Worker threads to create.
+   *
+   * `0` selects inline mode, in which no threads are created and each task
+   * runs on the calling thread at enqueue time.  `GCU_POOL_THREADS_AUTO`
+   * selects one worker per logical processor.  Any other value is taken
+   * literally: `1` means one worker thread, not inline.
+   */
+  size_t thread_count;
+
+  /**
+   * The most tasks that may be queued at once, or `0` for no limit.
+   *
+   * When a limit is set, gcu_pool_enqueue() fails once the queue is full and
+   * gcu_pool_enqueue_wait() blocks until a slot frees.  Ignored in inline
+   * mode, which never queues.
+   */
+  size_t max_queued;
+
+  /**
+   * Prefix for worker thread names, or `NULL` for `"gcu-pool"`.
+   *
+   * Workers are named `<prefix>-<index>`.  Truncated to
+   * #GCU_POOL_NAME_PREFIX_MAX characters.  Naming is best-effort: a platform
+   * that refuses the name does not fail the create.
+   */
+  const char * name_prefix;
+
+  /**
+   * The allocator, or `NULL` for gcu_allocator_default().  It must outlive
+   * the pool.
+   */
+  const GCU_Allocator * allocator;
+} GCU_Pool_Config;
+
+/**
+ * Create a pool on the heap and start its workers.
+ *
+ * @param config The configuration, or `NULL` for every default.
+ * @return The pool, or `NULL` on failure.  Destroy it with
+ *   gcu_pool_destroy().
+ */
+GCU_API GCU_Pool * gcu_pool_create(const GCU_Pool_Config * config);
+
+/**
+ * Create a pool in memory the caller owns, and start its workers.
+ *
+ * @param pool Storage for the pool.  Must not be `NULL`.
+ * @param config The configuration, or `NULL` for every default.
+ * @return `true` on success.  On failure the pool is left zeroed and safe to
+ *   pass to gcu_pool_destroy_in_place().
+ */
+GCU_API bool gcu_pool_create_in_place(
+  GCU_Pool * pool, const GCU_Pool_Config * config);
+
+/**
+ * Run every queued task, stop the workers, and free the pool.
+ *
+ * Blocks until the queue is empty and no task is running.  Nothing that was
+ * successfully enqueued is discarded.  To discard the queue instead, use
+ * gcu_pool_abandon().
+ *
+ * Must not be called while another thread is calling into the pool, with one
+ * exception: threads blocked in gcu_pool_enqueue_wait() are released, return
+ * `false`, and are waited for before anything is freed.  Passing `NULL` does
+ * nothing.
+ *
+ * @param pool The pool to drain and destroy.
+ */
+GCU_API void gcu_pool_destroy(GCU_Pool * pool);
+
+/**
+ * As gcu_pool_destroy(), for a pool created with gcu_pool_create_in_place().
+ *
+ * @param pool The pool to drain and tear down.
+ */
+GCU_API void gcu_pool_destroy_in_place(GCU_Pool * pool);
+
+/**
+ * Discard the queued tasks, stop the workers, and free the pool.
+ *
+ * Tasks that have already started run to completion; tasks still queued are
+ * discarded without running and without being reported. Blocks until the
+ * workers have stopped.
+ *
+ * This loses work by design.  gcu_pool_destroy() is the ordinary teardown.
+ *
+ * Must not be called while another thread is calling into the pool, with the
+ * same exception gcu_pool_destroy() makes for gcu_pool_enqueue_wait().
+ * Passing `NULL` does nothing.
+ *
+ * @param pool The pool to abandon and destroy.
+ */
+GCU_API void gcu_pool_abandon(GCU_Pool * pool);
+
+/**
+ * As gcu_pool_abandon(), for a pool created with gcu_pool_create_in_place().
+ *
+ * @param pool The pool to abandon and tear down.
+ */
+GCU_API void gcu_pool_abandon_in_place(GCU_Pool * pool);
+
+/**
+ * Enqueue a task without blocking.
+ *
+ * In inline mode the task runs on the calling thread before this returns.
+ *
+ * @param pool The pool.
+ * @param task The task.  Must not be `NULL`.
+ * @param ctx The context pointer to hand the task.
+ * @return `true` if the task was enqueued (or, inline, run).  `false` if the
+ *   pool or task is `NULL`, the pool is shutting down, the queue is bounded
+ *   and full, or memory could not be obtained.
+ */
+GCU_API bool gcu_pool_enqueue(
+  GCU_Pool * pool, GCU_Pool_Task task, void * ctx);
+
+/**
+ * Enqueue a task with a completion callback, without blocking.
+ *
+ * @param pool The pool.
+ * @param task The task.  Must not be `NULL`.
+ * @param ctx The context pointer to hand the task.
+ * @param on_complete Called after the task returns, or `NULL`.
+ * @param user_data Passed to @p on_complete.
+ * @return As gcu_pool_enqueue().
+ */
+GCU_API bool gcu_pool_enqueue_cb(GCU_Pool * pool, GCU_Pool_Task task,
+  void * ctx, GCU_Pool_Complete on_complete, void * user_data);
+
+/**
+ * Enqueue a task, waiting for room if the queue is bounded and full.
+ *
+ * On an unbounded queue this is exactly gcu_pool_enqueue(), since a slot is
+ * always available.
+ *
+ * **Never call this from a task running on the same pool.**  The slot it
+ * waits for can only be freed by a worker, and the caller is occupying one,
+ * so the pool can deadlock against itself.  Use gcu_pool_enqueue() there.
+ *
+ * @param pool The pool.
+ * @param task The task.  Must not be `NULL`.
+ * @param ctx The context pointer to hand the task.
+ * @return `true` if the task was enqueued.  `false` on the same conditions as
+ *   gcu_pool_enqueue(), and if the pool began shutting down while waiting.
+ */
+GCU_API bool gcu_pool_enqueue_wait(
+  GCU_Pool * pool, GCU_Pool_Task task, void * ctx);
+
+/**
+ * As gcu_pool_enqueue_wait(), with a completion callback.
+ *
+ * @param pool The pool.
+ * @param task The task.  Must not be `NULL`.
+ * @param ctx The context pointer to hand the task.
+ * @param on_complete Called after the task returns, or `NULL`.
+ * @param user_data Passed to @p on_complete.
+ * @return As gcu_pool_enqueue_wait().
+ */
+GCU_API bool gcu_pool_enqueue_wait_cb(GCU_Pool * pool, GCU_Pool_Task task,
+  void * ctx, GCU_Pool_Complete on_complete, void * user_data);
+
+/**
+ * Block until the queue is empty and no task is running.
+ *
+ * May be called from any number of threads at once; all waiters are released
+ * together.
+ *
+ * Returning means the pool was idle at the instant the condition was
+ * observed.  If other threads are still enqueueing, more work may exist by
+ * the time this returns.  Stopping the producers is the caller's job.
+ *
+ * @param pool The pool.
+ * @return The first non-zero status any task has returned since the last
+ *   gcu_pool_clear_error(), or `0`.  Reading it does not clear it, so every
+ *   waiter sees the same answer.
+ */
+GCU_API int gcu_pool_wait(GCU_Pool * pool);
+
+/**
+ * Forget the recorded first error, so that gcu_pool_wait() reports `0` again.
+ *
+ * @param pool The pool.
+ */
+GCU_API void gcu_pool_clear_error(GCU_Pool * pool);
+
+/**
+ * The number of tasks waiting to start.
+ *
+ * An observation, not a guarantee: it may be stale before it is returned.
+ *
+ * @param pool The pool.
+ * @return The queued task count, or `0` if @p pool is `NULL`.
+ */
+GCU_API size_t gcu_pool_count_queued(const GCU_Pool * pool);
+
+/**
+ * The number of tasks currently running.
+ *
+ * An observation, not a guarantee.
+ *
+ * @param pool The pool.
+ * @return The running task count, or `0` if @p pool is `NULL`.
+ */
+GCU_API size_t gcu_pool_count_active(const GCU_Pool * pool);
+
+/**
+ * The number of worker threads.
+ *
+ * @param pool The pool.
+ * @return The worker count, which is `0` in inline mode and for a `NULL`
+ *   pool.
+ */
+GCU_API size_t gcu_pool_count_threads(const GCU_Pool * pool);
+
+/**
+ * Whether the pool runs tasks on the calling thread.
+ *
+ * @param pool The pool.
+ * @return `true` in inline mode, and for a `NULL` pool.
+ */
+GCU_API bool gcu_pool_is_inline(const GCU_Pool * pool);
+
+/**
+ * Whether teardown has begun and the pool has stopped accepting tasks.
+ *
+ * @param pool The pool.
+ * @return `true` once shutdown has been requested, and for a `NULL` pool.
+ */
+GCU_API bool gcu_pool_is_shutting_down(const GCU_Pool * pool);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // GHOTI_IO_GCU_POOL_H

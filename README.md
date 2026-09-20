@@ -71,6 +71,22 @@ Provides the Mersenne Twister pseudo-random number generator in both 32-bit (`gc
 
 The generator state is held in a caller-owned `GCU_Random_MT32_State` or `GCU_Random_MT64_State` structure rather than in a global, so that separate streams do not interfere with one another and a seeded sequence is reproducible.
 
+### Thread Pool
+
+Provides `GCU_Pool`, a fixed set of worker threads drawing tasks from a shared FIFO queue.  Built on the Thread, Mutex and Semaphore libraries below; it needs no condition variable, because a counting semaphore expresses a task queue directly.
+
+A task is a function returning `0` for success or any non-zero status for failure.  `gcu_pool_enqueue()` hands one to the pool, `gcu_pool_enqueue_cb()` attaches a completion callback, and `gcu_pool_wait()` blocks until the pool is idle and reports the first non-zero status any task returned.  Reading that status does not consume it, so several threads may wait and all see the same answer.
+
+`gcu_pool_destroy()` **drains**: it runs everything already queued before stopping the workers, so nothing successfully enqueued is silently lost.  `gcu_pool_abandon()` discards the queue instead.  Draining is the default because forgetting it loses completed work and reports no error, while forgetting to abandon only costs some waiting.
+
+A `thread_count` of `0` selects inline mode, in which tasks run on the calling thread and no threads are created -- useful for deterministic tests.  `GCU_POOL_THREADS_AUTO` selects one worker per logical processor.  A count of `1` means one worker thread, not inline.
+
+The queue is unbounded by default.  Setting `max_queued` makes `gcu_pool_enqueue()` fail once the queue is full and `gcu_pool_enqueue_wait()` block until a slot frees.
+
+Workers are named `<prefix>-<index>` from a caller-supplied `name_prefix`, which shows up in a debugger when several pools are running at once.
+
+The design and the reasoning behind each decision are in `documentation/thread-pool.md`.
+
 ### Thread
 
 Provides a thread abstraction layer to better manage threads and information about the threads.
