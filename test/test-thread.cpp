@@ -153,6 +153,47 @@ TEST(Thread, NameFunctions) {
   gcu_thread_join(child_thread);
 }
 
+TEST(Thread, ProcessorCount) {
+  // The count is documented as never less than 1, so that callers sizing a
+  // pool or a table from it always get a usable number.  The POSIX
+  // implementation is sysconf(), which reports failure as -1 and would
+  // otherwise convert to UINT_MAX.
+  unsigned int count = gcu_thread_get_num_processors();
+  EXPECT_GE(count, 1u);
+
+  // A wrapped -1 would satisfy the check above, so reject an implausible
+  // count as well.  This is the shape the failure actually took.
+  EXPECT_LT(count, 65536u);
+}
+
+#ifndef _WIN32
+TEST(Thread, NameLengthLimitIsReported) {
+  // pthread_setname_np() accepts at most 15 characters plus the terminator.
+  // The header documents that the limit is platform-specific and that a
+  // caller who may exceed it must check the return value; this pins the
+  // POSIX half of that statement so the documentation cannot drift.
+  GCU_Thread thread = gcu_thread_get_current_id();
+
+  // This renames the process's own main thread, so put back whatever it was
+  // called: another test reads the parent name to check that a child inherits
+  // it, and leaving this one's name behind would make that depend on the
+  // order the tests happen to run in.
+  char original[64] = {0};
+  bool restore = gcu_thread_get_name(thread, original, sizeof(original)) == 0;
+
+  // 15 characters is the longest name that fits.
+  EXPECT_EQ(0, gcu_thread_set_name(thread, "123456789012345"));
+
+  // 16 characters does not, and the failure is reported rather than silently
+  // truncated.
+  EXPECT_NE(0, gcu_thread_set_name(thread, "1234567890123456"));
+
+  if (restore) {
+    gcu_thread_set_name(thread, original);
+  }
+}
+#endif // _WIN32
+
 #ifndef _WIN32
 //
 // The thread module registers the main thread at load time and joins whatever

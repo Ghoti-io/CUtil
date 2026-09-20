@@ -449,9 +449,21 @@ unsigned int gcu_thread_get_num_processors() {
 #ifdef _WIN32
   SYSTEM_INFO sysinfo;
   GetSystemInfo(&sysinfo);
-  return sysinfo.dwNumberOfProcessors;
+  // Clamped for symmetry with the POSIX branch.  GetSystemInfo() does not
+  // report failure and dwNumberOfProcessors is documented as at least 1, so
+  // this is not expected to trigger.
+  return sysinfo.dwNumberOfProcessors < 1
+    ? 1
+    : (unsigned int)sysinfo.dwNumberOfProcessors;
 #else
-  return sysconf(_SC_NPROCESSORS_ONLN);
+  // sysconf() returns a long and reports failure as -1, which would convert
+  // to UINT_MAX rather than to zero.  _SC_NPROCESSORS_ONLN is a glibc/BSD
+  // extension rather than base POSIX, and it does fail where /proc or /sys is
+  // unavailable, so the failure is reachable and must not escape: the module
+  // constructor sizes its thread table from this value, and a wrapped count
+  // there fails the allocation and leaves the whole module inoperable.
+  long count = sysconf(_SC_NPROCESSORS_ONLN);
+  return count < 1 ? 1 : (unsigned int)count;
 #endif
 }
 

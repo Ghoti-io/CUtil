@@ -126,7 +126,11 @@ GCU_API void gcu_thread_yield();
 /**
  * Get the number of logical processors on the system.
  *
- * @return The number of logical processors on the system.
+ * The count is always at least 1.  Where the platform cannot report a count,
+ * 1 is returned rather than an error, so that a caller sizing a thread pool
+ * or a table from this value always receives a usable number.
+ *
+ * @return The number of logical processors on the system; never less than 1.
  */
 GCU_API unsigned int gcu_thread_get_num_processors();
 
@@ -169,8 +173,15 @@ GCU_API int gcu_thread_get_priority(GCU_Thread thread, int * priority);
 /**
  * Set the thread name.
  *
+ * The maximum length is platform-specific and is not normalised here.  On
+ * POSIX systems the underlying `pthread_setname_np()` accepts at most 15
+ * characters plus the terminator and fails otherwise, while Windows accepts
+ * considerably more.  A name that is portable across both must therefore be
+ * kept to 15 characters, and a caller that may exceed that should check the
+ * return value rather than assume the name was set.
+ *
  * @param thread Thread handle.
- * @param name Thread name.
+ * @param name Thread name.  See above regarding length.
  * @return 0 on success, -1 on failure.
  */
 GCU_API int gcu_thread_set_name(GCU_Thread thread, const char * name);
