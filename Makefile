@@ -63,6 +63,11 @@ BASE_NAME := $(BASE_NAME_PREFIX).so
 SO_NAME := $(BASE_NAME).$(MAJOR_VERSION)
 
 
+# PKG_CONFIG_PATH names where this project's own .pc file is installed, and the
+# platform block below overwrites it to say so. Remember what the environment
+# asked for first, so dependency lookup can still honour it further down.
+PKG_CONFIG_PATH_ENV := $(PKG_CONFIG_PATH)
+
 # Detect OS
 UNAME_S := $(shell uname -s)
 
@@ -162,6 +167,12 @@ endif
 LDCONF_INSTALL_PATH :=
 endif
 
+# Dependencies are looked up along the inherited PKG_CONFIG_PATH as well as the
+# install location chosen above, so that exporting PKG_CONFIG_PATH works as the
+# errors below say it does. The inherited value comes first: it is an explicit
+# request for this build, where the install location may be only a default.
+PKG_CONFIG_LOOKUP_PATH := $(if $(PKG_CONFIG_PATH_ENV),$(PKG_CONFIG_PATH_ENV):)$(PKG_CONFIG_PATH)
+
 ifdef PREFIX
 # So that a library, a test or an example finds its Ghoti.io dependencies in the
 # prefix at run time without LD_LIBRARY_PATH.
@@ -189,7 +200,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/type.o \
 	$(OBJ_DIR)/vector.o
 
-TESTFLAGS := `PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config --libs --cflags gtest`
+TESTFLAGS := `PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs --cflags gtest`
 
 # The checks `make test` runs besides the tests themselves. Named in a
 # variable so that a build which cannot satisfy them can clear it: the
