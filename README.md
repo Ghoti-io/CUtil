@@ -87,6 +87,20 @@ Workers are named `<prefix>-<index>` from a caller-supplied `name_prefix`, which
 
 The design and the reasoning behind each decision are in `documentation/thread-pool.md`.
 
+### File
+
+Provides whole-file reading and atomic whole-file replacement.  Built on the Path library below; it adds nothing of its own about path syntax.
+
+`gcu_file_read()` reads a file into an allocator-owned buffer.  It reads in **chunks rather than sizing the file first**, so it works on inputs that report no size at all -- pipes, character devices, and everything under `/proc`, where a seek-and-tell implementation silently returns an empty buffer.  The buffer carries a NUL one byte past `out_len` that is not counted in it, so a text caller can use the result as a C string without copying and a binary caller can ignore it.  `max_bytes` is a promise:  a file over the limit gives `GCU_FILE_ERR_LIMIT` and nothing is allocated, never a truncation.
+
+`GCU_File_Temp` is a temporary file, created and opened in one step that fails rather than following a symbolic link somebody else put there, and readable only by its owner.  It is disposed of by exactly one of `gcu_file_temp_commit()` (move it into place) or `gcu_file_temp_abort()` (delete it).  Both leave the handle zeroed and `abort` accepts a zeroed handle, so `abort` may sit on an unconditional cleanup path without tracking whether `commit` already ran.
+
+`gcu_file_write_atomic()` is the whole sequence for content already in memory.  The temporary goes in the **destination's own directory**, because a rename across filesystems is a copy and a copy is not atomic.
+
+`GCU_FILE_SYNC_FULL` is the zero value, so a caller who does not think about it gets durability:  the content is committed before the rename, and a failure there is reported.  The directory entry is committed afterwards on a best-effort basis, because several filesystems refuse the request and failing an otherwise complete replacement over it would be worse.  `GCU_FILE_SYNC_NONE` keeps the atomicity and gives up only the durability.
+
+The design and the reasoning behind each decision are in `documentation/file.md`.
+
 ### Path
 
 Provides path manipulation, split into a lexical half that never touches the filesystem and an environment half that asks the operating system.

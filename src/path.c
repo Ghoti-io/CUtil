@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ghoti.io/cutil/path.h>
+#include "path_internal.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -941,51 +942,6 @@ static const char * path_env(const char * name) {
  * "done" looks like: test-path's environment cases pass, and a path holding
  * non-ASCII characters survives a round trip through gcu_path_cwd(). */
 
-/**
- * Convert a UTF-16 string from Win32 into UTF-8.
- *
- * The wide calls are used rather than the ANSI ones throughout because the
- * ANSI ones go through the process code page, which cannot represent every
- * filename the filesystem accepts.  A path that merely round-trips through
- * them comes back naming a different file, or nothing at all.
- */
-static char * path_from_wide(const GCU_Allocator * allocator,
-    const wchar_t * wide) {
-  int needed = WideCharToMultiByte(CP_UTF8, 0, wide, -1, NULL, 0, NULL, NULL);
-  if (needed <= 0) {
-    return NULL;
-  }
-  char * buffer = (char *)gcu_allocator_malloc(allocator, (size_t)needed);
-  if (!buffer) {
-    return NULL;
-  }
-  if (WideCharToMultiByte(CP_UTF8, 0, wide, -1, buffer, needed, NULL, NULL)
-      <= 0) {
-    gcu_allocator_free(allocator, buffer);
-    return NULL;
-  }
-  return buffer;
-}
-
-static wchar_t * path_to_wide(const GCU_Allocator * allocator,
-    const char * utf8) {
-  int needed = MultiByteToWideChar(CP_UTF8, 0, utf8, -1, NULL, 0);
-  if (needed <= 0) {
-    return NULL;
-  }
-  wchar_t * buffer =
-      (wchar_t *)gcu_allocator_malloc(allocator, (size_t)needed
-          * sizeof(wchar_t));
-  if (!buffer) {
-    return NULL;
-  }
-  if (MultiByteToWideChar(CP_UTF8, 0, utf8, -1, buffer, needed) <= 0) {
-    gcu_allocator_free(allocator, buffer);
-    return NULL;
-  }
-  return buffer;
-}
-
 /** Read an environment variable as UTF-8, through the wide API. */
 static char * path_env_wide(const GCU_Allocator * allocator,
     const wchar_t * name) {
@@ -1003,7 +959,7 @@ static char * path_env_wide(const GCU_Allocator * allocator,
     gcu_allocator_free(allocator, wide);
     return NULL;
   }
-  char * result = path_from_wide(allocator, wide);
+  char * result = gcu_path_internal_from_wide(allocator, wide);
   gcu_allocator_free(allocator, wide);
   return result;
 }
@@ -1028,7 +984,7 @@ GCU_Path_Result gcu_path_cwd(const GCU_Allocator * allocator, char ** out) {
     gcu_allocator_free(allocator, wide);
     return GCU_PATH_ERR_IO;
   }
-  char * utf8 = path_from_wide(allocator, wide);
+  char * utf8 = gcu_path_internal_from_wide(allocator, wide);
   gcu_allocator_free(allocator, wide);
   if (!utf8) {
     return GCU_PATH_ERR_OOM;
@@ -1153,7 +1109,7 @@ GCU_Path_Result gcu_path_temp_dir(const GCU_Allocator * allocator,
     gcu_allocator_free(allocator, wide);
     return GCU_PATH_ERR_IO;
   }
-  char * utf8 = path_from_wide(allocator, wide);
+  char * utf8 = gcu_path_internal_from_wide(allocator, wide);
   gcu_allocator_free(allocator, wide);
   if (!utf8) {
     return GCU_PATH_ERR_OOM;
@@ -1176,7 +1132,7 @@ GCU_Path_Result gcu_path_canonicalize(const char * path,
   if (!allocator) {
     allocator = gcu_allocator_default();
   }
-  wchar_t * wide = path_to_wide(allocator, path);
+  wchar_t * wide = gcu_path_internal_to_wide(allocator, path);
   if (!wide) {
     return GCU_PATH_ERR_OOM;
   }
@@ -1206,7 +1162,7 @@ GCU_Path_Result gcu_path_canonicalize(const char * path,
     gcu_allocator_free(allocator, resolved);
     return GCU_PATH_ERR_IO;
   }
-  char * utf8 = path_from_wide(allocator, resolved);
+  char * utf8 = gcu_path_internal_from_wide(allocator, resolved);
   gcu_allocator_free(allocator, resolved);
   if (!utf8) {
     return GCU_PATH_ERR_OOM;

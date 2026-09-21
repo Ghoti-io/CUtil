@@ -189,6 +189,7 @@ LIBOBJECTS := \
   $(OBJ_DIR)/allocator.o \
 	$(OBJ_DIR)/array.o \
 	$(OBJ_DIR)/debug.o \
+	$(OBJ_DIR)/file.o \
 	$(OBJ_DIR)/hash.o \
 	$(OBJ_DIR)/memory.o \
 	$(OBJ_DIR)/path.o \
@@ -221,7 +222,7 @@ all: $(APP_DIR)/$(TARGET) ## Build the shared library
 # Dependency Inclusion
 ####################################################################
 # Compiler-generated .d files (see -MMD -MP -MF in compile commands).
-TEST_NAMES := test-debug test-type test-memory test-hash test-mutex test-random test-semaphore test-string test-thread test-vector test-array test-allocator test-safemath test-safemath-portable test-pool test-sequencer test-path
+TEST_NAMES := test-debug test-type test-memory test-hash test-mutex test-random test-semaphore test-string test-thread test-vector test-array test-allocator test-safemath test-safemath-portable test-pool test-sequencer test-path test-file
 TEST_BINARIES := $(foreach t,$(TEST_NAMES),$(APP_DIR)/$(t)$(EXE_EXTENSION))
 TEST_DEPFILES := $(addprefix $(APP_DIR)/,$(TEST_NAMES:%=%.d))
 DEPFILES := $(LIBOBJECTS:.o=.d) $(TEST_DEPFILES)
@@ -360,6 +361,11 @@ $(APP_DIR)/test-sequencer$(EXE_EXTENSION): test/test-sequencer.cpp | $(APP_DIR)/
 	@printf "\n### Compiling Sequencer Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-sequencer.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+
+$(APP_DIR)/test-file$(EXE_EXTENSION): test/test-file.cpp | $(APP_DIR)/$(TARGET)
+	@printf "\n### Compiling File Test ###\n"
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-file.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
 $(APP_DIR)/test-path$(EXE_EXTENSION): test/test-path.cpp | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Path Test ###\n"
