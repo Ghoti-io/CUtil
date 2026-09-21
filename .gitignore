@@ -2,8 +2,10 @@ build
 *.session
 *.swp
 submodule
-docs/latex
-docs/html/*.md5
-docs/html/*.map
+# Doxygen output. `Doxyfile` has OUTPUT_DIRECTORY = docs, so everything under
+# here is generated; §9 of the suite conventions says a library with a
+# Doxyfile gitignores it, and the other seven do. This one tracked docs/html
+# instead, ignoring only the three noisiest kinds of file within it.
+docs
 .vscode/
 include/cutil/float.h
