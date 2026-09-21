@@ -87,6 +87,24 @@ Workers are named `<prefix>-<index>` from a caller-supplied `name_prefix`, which
 
 The design and the reasoning behind each decision are in `documentation/thread-pool.md`.
 
+### Path
+
+Provides path manipulation, split into a lexical half that never touches the filesystem and an environment half that asks the operating system.
+
+The lexical half -- `gcu_path_join()`, `gcu_path_normalize()`, `gcu_path_dirname()`, `gcu_path_basename()`, `gcu_path_extension()`, `gcu_path_is_absolute()`, `gcu_path_root_length()`, `gcu_path_relative_to()`, `gcu_path_to_native()`, `gcu_path_to_posix()` -- takes a `GCU_Path_Flavor` rather than reading `#ifdef _WIN32`.  That is what makes the Windows rules testable:  drive letters, UNC shares and the difference between *rooted* and *absolute* are ordinary functions, and every Windows case in `test/test-path.cpp` runs on Linux.
+
+`C:\x` is absolute; `C:x` and `\x` are **not**, though all three have a root.  `gcu_path_root_length()` and `gcu_path_is_absolute()` are separate questions with different answers, and `..` may climb above `C:` but not above `C:\`.
+
+The environment half -- `gcu_path_cwd()`, `gcu_path_home()`, `gcu_path_config_dir()`, `gcu_path_data_dir()`, `gcu_path_cache_dir()`, `gcu_path_temp_dir()`, `gcu_path_absolute()`, `gcu_path_canonicalize()` -- allocates, because the length of an answer from the operating system is not knowable before asking.  Prefer the purpose-specific directories to `gcu_path_home()`:  code that appends `/.myapp` to a home directory is correct on Linux and wrong on Windows and macOS.
+
+`gcu_path_absolute()` resolves a path lexically and `gcu_path_canonicalize()` resolves it through the filesystem, following symbolic links.  They disagree whenever a link is involved, and a containment check written on the lexical one is not a containment check.
+
+Lexical calls write into a caller-supplied buffer and never truncate:  a shortened path is still a valid path, and it names a different file.  Passing `NULL` with size `0` measures.
+
+There is deliberately no `chdir`.  A process has one working directory shared by every thread, and a library that changes it alters the meaning of every relative path in its host application.  Pass a base directory and join onto it.
+
+The design and the reasoning behind each decision are in `documentation/path.md`.
+
 ### Sequencer
 
 Provides `GCU_Sequencer`, a reorder buffer:  items go in, are finished in any order at all, and come back out in the order they went in.
