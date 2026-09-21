@@ -676,9 +676,26 @@ TSAN_TEST_BINARIES := \
 	$(foreach t,$(TSAN_TEST_NAMES),$(TSAN_APP_DIR)/$(t)$(EXE_EXTENSION))
 TSAN_CUTILLIBRARY := -L $(TSAN_APP_DIR) -l$(SUITE)-$(PROJECT)$(BRANCH)-tsan
 
-# Same initialisation-order requirement as the ASan runtime; see the comment
-# on ASAN_RUNTIME.
-TSAN_RUNTIME := $(shell $(CC) -print-file-name=libtsan.so)
+# Deliberately NOT preloaded, unlike the ASan runtime.
+#
+# The two sanitizers look alike here but are not. ASan checks its own
+# initialisation order and refuses to start if anything got in front of it, so
+# an LD_PRELOAD inherited from a desktop session has to be replaced; that is
+# what the ASAN_RUNTIME comment describes. TSan makes no such check. Being
+# first in the executable's own NEEDED list is enough, and it stays first
+# whatever the environment preloads - verified by planting a race and watching
+# TSan still report it with an unrelated .so preloaded.
+#
+# Preloading it is therefore not merely redundant, it is harmful: the shell
+# that system() spawns inherits the preload into an uninstrumented binary and
+# dies of SIGSEGV with no diagnostic at all, so system() returns a raw wait
+# status of 11 whatever it was asked to run. Nothing in cutil's suite execs
+# today - test/test-thread.cpp forks and _exit()s without one - so this is a
+# trap laid for the first test that shells out rather than a present failure.
+# compress hit it for real: 135 failures, none of them races (compress e035f44).
+#
+# LD_PRELOAD is cleared rather than left unset so that a value inherited from
+# the environment cannot reintroduce the problem.
 
 $(TSAN_OBJ_DIR)/%.o: src/%.c \
 		| $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/float.h \
@@ -715,7 +732,7 @@ ifeq ($(OS_NAME), Linux)
 	@printf "\033[0m"
 	@for t in $(TSAN_TEST_BINARIES); do \
 		printf "\n--- $$t ---\n"; \
-		env LD_LIBRARY_PATH="$(TSAN_APP_DIR)" LD_PRELOAD="$(TSAN_RUNTIME)" \
+		env LD_LIBRARY_PATH="$(TSAN_APP_DIR)" LD_PRELOAD= \
 			TSAN_OPTIONS=halt_on_error=1:second_deadlock_stack=1 \
 			$$t --gtest_brief=1 || exit 1; \
 	done
