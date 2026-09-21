@@ -14,12 +14,18 @@ It is built on `path.h` and adds nothing of its own about path syntax.
 
 ## 2. Prior art
 
+**The code quoted in this section has since been replaced.**  It is kept
+because it is the specification this module was written against, and because
+a reader deserves to see what was actually wrong rather than take the claim on
+trust.  What happened when the libraries converted is at the end, and it
+corrects one thing this section originally overstated.
+
 The suite had written this several times before.
 
 **Reading**:  `chron/src/zone/zonedb.c`, `cjelly/src/format/image.c`,
 `ctang/src/tang.c`, `model/src/obj/obj_load.c`, `text/src/text_file_io.c` and
-`text/src/yaml/yaml_file_io.c` each contain a whole-file reader.  Two of them
-had independently converged on the same signature -
+`text/src/yaml/yaml_file_io.c` each contained a whole-file reader.  Two of
+them had independently converged on the same signature -
 
 ```c
 GCHRON_Result gchron_zone_read_file(const char * path, size_t max_bytes,
@@ -31,25 +37,58 @@ wants.  `cjelly`'s has neither, which is the untrusted-input hole the cap
 exists to close.
 
 **Atomic replacement**:  `text/src/text_file_io.c` and
-`text/src/yaml/yaml_file_io.c` hold the same mkstemp/fdopen/rename sequence
-twice, and the copies have already drifted apart.  On the `fdopen` failure
-path:
+`text/src/yaml/yaml_file_io.c` held the same mkstemp/fdopen/rename sequence
+twice, and the copies had drifted apart.  On the `fdopen` failure path:
 
 ```c
-/* text_file_io.c:147 */          /* yaml_file_io.c:108 */
+/* text_file_io.c */              /* yaml_file_io.c */
 _close(fd);                       _close(fd);
 remove(temp_path);                free(temp_path);
 free(temp_path);
 ```
 
-The second forgets to remove the file it just created, in **both** its
-branches, and leaks a `.tmpXXXXXX` onto the disk every time `fdopen` fails.
-Neither copy calls `fsync`, and both carry a comment claiming the content is
-safe once `fflush` has returned, which is not what `fflush` does.
+The second forgot to remove the file it had just created, in **both** its
+branches.  Neither copy called `fsync`, and both carried a comment claiming
+the content was safe once `fflush` had returned, which is not what `fflush`
+does.
 
-Three defects in about 120 duplicated lines.  Those files are in another
-repository and are untouched; converting them is a separate job for whoever
-owns `text`.
+### What the conversion found
+
+`text` converted in `d4763d4`, `chron` in `e0ed78f` and `model` in `83d7c65`.
+Four of the six readers above are now seams onto this module; `cjelly` and
+`ctang` still carry their own.
+
+The conversion turned up a defect neither this section nor the duplication
+itself had predicted, and it is the one that mattered:
+
+- **YAML could not read a stream.**  Its copy read with `fseek`/`ftell`/
+  `fread`, so a pipe, a FIFO, `/dev/stdin` or anything under `/proc` was
+  refused outright with "Failed to seek file" - while `text`'s README had
+  claimed otherwise for all three formats for months.  That is the only
+  difference between the copies a caller could actually see, and it is
+  precisely the failure section 3 describes.  `text` has a test for it that
+  fails against the previous implementation.
+
+Two further differences turned out to be smaller than this section originally
+called them, and the record should say so.  It said "three defects"; two of
+the three are better described as divergences between copies than as bugs
+anyone met, and `text`'s tests for both hold against the old code as well:
+
+- YAML never applied its own `max_total_bytes` to the *file*, so an over-large
+  document was read into memory in full and refused afterwards by the parser.
+  The answer was the same either way; the limit had simply already been spent
+  by the time it was applied.  A capped read closes that by construction.
+- The missing `remove()` on the `fdopen` failure path sits on a path that is
+  close to unreachable.  It was a real difference between two copies of one
+  function, which is the argument for there being one function - but not an
+  incident.
+
+One deliberate behaviour change came with the conversion rather than out of
+it:  `text` now commits the bytes before the rename instead of leaving them to
+writeback.  The hand-written version flushed stdio and renamed, which survives
+a killed process but not a power loss, and these parsers are usually pointed
+at configuration files.  That is `GCU_FILE_SYNC_FULL` being the zero value,
+doing what section 6 says it is for.
 
 ## 3. Reading in chunks, not by size
 
@@ -77,10 +116,14 @@ while discovering this, which is the byte that proves the file is too big.
 
 ## 4. The handle, and the bug it makes impossible
 
-The two hand-written copies hand back a bare `char *` and a `FILE *`, leaving
-every error path to remember `remove()`.  One of nine such paths forgot.  That
-is not carelessness so much as a shape that invites it: cleanup is a thing to
-remember rather than a thing to call.
+The two hand-written copies handed back a bare `char *` and a `FILE *`,
+leaving every error path to remember `remove()`.  One of nine such paths
+forgot.  That is not carelessness so much as a shape that invites it: cleanup
+is a thing to remember rather than a thing to call.  Section 2 records how
+little that particular omission cost in practice - the path is close to
+unreachable - which is the argument for the shape rather than against it.  The
+same shape is what let the *reachable* difference between those copies go
+unnoticed for months.
 
 `GCU_File_Temp` is disposed of by exactly one of two named functions:
 
@@ -139,9 +182,11 @@ a truncated or empty new one.
 the durability is given up.  That is the right choice for output that can be
 regenerated and the wrong one for anything else.
 
-Neither copy in `text` does any of this, which is the third of the three
-defects in section 2, and the one that most deserves to be a single decision
-rather than an omission repeated per call site.
+Neither copy in `text` did any of this: both flushed stdio and renamed, which
+survives a killed process but not a power loss.  It is the part of section 2
+that most deserved to be one decision rather than an omission repeated per
+call site, and converting `text` changed the behaviour of all three of its
+formats accordingly.
 
 ## 7. Taking the name and the file in one step
 
