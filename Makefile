@@ -209,7 +209,7 @@ TESTFLAGS := `PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs --cfla
 # coverage target does, because --coverage links the gcov runtime, whose
 # mangle_path check-symbols is right to reject in a shipping library and
 # wrong to reject in an instrumented one. Spelled as text's TEST_GATES is.
-TEST_GATES ?= check-symbols
+TEST_GATES ?= check-symbols check-win32-parse
 
 
 
@@ -436,7 +436,7 @@ $(APP_DIR)/test-safemath-portable$(EXE_EXTENSION): test/test-safemath-portable.c
 ####################################################################
 
 # General commands
-.PHONY: clean cloc docs docs-pdf coverage check-symbols test-tsan
+.PHONY: clean cloc docs docs-pdf coverage check-symbols check-win32-parse test-tsan
 # Release build commands
 .PHONY: all install test test-asan test-ubsan test-watch uninstall watch
 # Debug build commands
@@ -547,6 +547,18 @@ ifeq ($(OS_NAME), Linux)
 else
 	@printf "check-symbols: skipped (Linux only)\n"
 endif
+
+# Parse the headers' `#ifdef _WIN32` branches on this compiler.
+#
+# Those branches are never tokenised by a Linux build, so a syntax error in
+# one survives indefinitely -- GCU_MAYBE_UNUSED's Windows arm was a syntax
+# error from the initial commit until it was written down. This compiles a TU
+# that *uses* every Windows-only macro against stub declarations; it catches
+# the syntax-error class and says nothing about semantics.
+check-win32-parse: ## Parse-check the headers' Windows branches
+	@printf "\n### Parse-checking Windows branches ###\n"
+	$(CC) -fsyntax-only $(filter-out -fvisibility=hidden -DGHOTIIO_CUTIL_BUILD,$(CFLAGS)) \
+		-I test/win32-stubs $(INCLUDE) test/win32-stubs/parse-check.c
 
 test: ## Make and run the Unit tests
 # Both the prerequisites and the run lines are derived from TEST_NAMES, so

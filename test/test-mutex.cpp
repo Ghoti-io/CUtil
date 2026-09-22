@@ -11,6 +11,26 @@ TEST(Mutex, CreateAndDestroy) {
   GCU_MUTEX_DESTROY(m);
 }
 
+TEST(Mutex, EveryMacroReportsZeroOnSuccess) {
+  // The regression test for the defect this contract was written to close:
+  // the Windows branch expanded UNLOCK to ReleaseMutex and DESTROY to
+  // CloseHandle, both of which return NON-zero on success, while the pthread
+  // branch returned 0.  CREATE and TRYLOCK were already asserted below and
+  // above; LOCK, UNLOCK and DESTROY were called as bare statements, so the
+  // two that inverted were the two nothing checked.
+  //
+  // This can only run the branch this platform compiles.  The other one is
+  // parse-checked by test/win32-stubs/, which cannot check a return value --
+  // so read this as pinning the contract, not as verifying Windows.
+  GCU_MUTEX_T m;
+  ASSERT_EQ(0, GCU_MUTEX_CREATE(m));
+  ASSERT_EQ(0, GCU_MUTEX_LOCK(m));
+  ASSERT_EQ(0, GCU_MUTEX_UNLOCK(m));
+  ASSERT_EQ(0, GCU_MUTEX_TRYLOCK(m));
+  ASSERT_EQ(0, GCU_MUTEX_UNLOCK(m));
+  ASSERT_EQ(0, GCU_MUTEX_DESTROY(m));
+}
+
 TEST(Mutex, LockAndUnlock) {
   GCU_MUTEX_T m;
   ASSERT_EQ(0, GCU_MUTEX_CREATE(m));
