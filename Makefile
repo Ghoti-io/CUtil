@@ -577,7 +577,26 @@ test: $(APP_DIR)/$(TARGET) $(TEST_BINARIES) $(TEST_GATES)
 # The instrumented objects live in their own tree so that an ordinary `make`
 # can never link them by mistake.
 
-ASAN_UBSAN_FLAGS := -fsanitize=address -fsanitize=undefined \
+# One list, used twice.  Two things were wrong here, and the second is the one
+# that made the first invisible:
+#
+#   1. -fno-sanitize-recover was absent entirely, so UBSan printed its
+#      diagnostic and returned 0.  The target reported the bug and passed.
+#      Measured: a signed-overflow and a float-cast-overflow in one program
+#      both printed and the process exited 0.
+#   2. gcc's `undefined` group does not include float-cast-overflow (clang's
+#      does), so `(int)1e30` was not even diagnosed.  Naming the check in
+#      -fsanitize= and forgetting it in -fno-sanitize-recover= reproduces
+#      failure 1 for that one check, which is why both flags read one variable
+#      rather than two lists that can drift apart.
+#
+# Deliberately NOT here: float-divide-by-zero, which IEEE defines and which
+# would fire on correct code that records an inf.  bounds-strict and
+# pointer-overflow are already in gcc's `undefined` and add nothing.
+UBSAN_CHECKS := undefined,float-cast-overflow
+
+ASAN_UBSAN_FLAGS := -fsanitize=address,$(UBSAN_CHECKS) \
+	-fno-sanitize-recover=$(UBSAN_CHECKS) \
 	-fno-omit-frame-pointer -g
 
 ASAN_BUILD_DIR := $(BUILD)-asan
