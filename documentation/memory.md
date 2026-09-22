@@ -211,6 +211,35 @@ required anyway for a different reason: the default allocator hands out
 `malloc()` blocks, so a caller who releases them with `gcu_free()` has a count
 mismatch at best and two allocators arguing at worst.
 
+### The vtable is a policy boundary, not just a source of memory
+
+That advice works for a reason worth stating, because it is not obvious and it
+does not hold everywhere.
+
+The containers that take a `GCU_Allocator` - `GCU_Array`, the thread pool, the
+sequencer, and the file, directory and path functions - **never call the
+wrappers themselves.**  They dispatch through `gcu_allocator_malloc()` and its
+siblings, so the wrapper calls happen in the *caller's* translation unit,
+compiled from the caller's headers.  Which means the caller's allocator decides
+the counting rules, and can hold a stricter rule than the cutil it is linked
+against.  That is what let a consumer keep an accurate count while running
+against a library whose own arithmetic was wrong.
+
+Two containers do not work this way.  `GCU_Vector` and `GCU_Hash` take no
+allocator at all and call `gcu_calloc()`, `gcu_realloc()` and `gcu_free()`
+directly, compiled into cutil's own shared object.  For those, the rules are
+fixed at *cutil's* compile time and are out of a consumer's reach whatever
+allocator it passes elsewhere.  The same is true of the thread registry that
+produces the offset in section 4.
+
+As it happens neither was ever affected, and the reason is instructive.
+`GCU_Vector` guards its first allocation explicitly - `if (!vector->data)` then
+`gcu_calloc()`, reaching `gcu_realloc()` only with a pointer it already has -
+so it never allocated through the path that was miscounted.  `GCU_Array`
+obtains its storage *only* through realloc, which is what exposed the bug.  The
+older container avoided it by hand; the newer one relied on the rule being
+right, and the rule was not.
+
 ## 8. Known wrong
 
 A *failed* allocation is still counted.  `gcu_malloc()` increments before it
