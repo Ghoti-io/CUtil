@@ -54,12 +54,13 @@ does.
 
 ### What the conversion found
 
-`text` converted in `d4763d4`, `chron` in `e0ed78f` and `model` in `83d7c65`.
-Four of the six readers above are now seams onto this module; `cjelly` and
-`ctang` still carry their own.
+All six readers above are now seams onto this module:  `text` converted in
+`d4763d4`, `chron` in `e0ed78f`, `model` in `83d7c65`, `ctang` in `a2c3bf5`
+and `cjelly` in `ec913e5`.
 
 The conversion turned up a defect neither this section nor the duplication
-itself had predicted, and it is the one that mattered:
+itself had predicted, and it is the one that mattered - in three of the six
+copies, which had never shared a line of code:
 
 - **YAML could not read a stream.**  Its copy read with `fseek`/`ftell`/
   `fread`, so a pipe, a FIFO, `/dev/stdin` or anything under `/proc` was
@@ -68,6 +69,22 @@ itself had predicted, and it is the one that mattered:
   difference between the copies a caller could actually see, and it is
   precisely the failure section 3 describes.  `text` has a test for it that
   fails against the previous implementation.
+- **Neither could `cjelly`, and it said the wrong thing about it.**  Its copy
+  sized with `fseek`/`ftell` in the same way, so the same inputs came back
+  empty - and an image reader cannot tell an empty buffer from a bad one, so
+  the failure was reported as a corrupt image rather than as a file that could
+  not be read that way.  It too has a test that fails against the old reader.
+- **`ctang` sized with `ftell` on a stream opened in text mode**, which
+  over-reports on Windows by the number of line endings.  The tail of the
+  buffer was then whatever the allocator last left there, and it was handed to
+  the compiler as source.  That copy also ignored what `fread` returned and
+  leaked the `FILE *` when the allocation failed.
+
+Three copies, written separately, with the same shape at the bottom of each.
+That is a better argument for one implementation than the duplication itself
+was:  duplication predicts that the copies will *differ*, and this section
+originally went looking on exactly those grounds - but what was actually wrong
+is the thing all three agreed on.
 
 Two further differences turned out to be smaller than this section originally
 called them, and the record should say so.  It said "three defects"; two of
