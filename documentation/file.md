@@ -462,7 +462,21 @@ is unchanged and correct as written.
 **Only the library that moved the errnos can find this.**  The question is not
 "what does your code do with the enum" but "for each value I reclassified, who
 names the destination" - and that is a question about the classification table,
-which the caller has never seen.  A library that changes an error vocabulary
+which the caller has never seen.
+
+That question yields *candidates*, not victims, and the difference matters:  the
+first run of it here reported every remaining library as affected, when one of
+them already gave the right answer.  `text` names `ERR_INVALID` but falls it
+through to the same arm as `ERR_IO`, so an over-long path was always going to
+come back as an I/O failure there - correct, and correct by accident of how the
+cases were grouped rather than by decision.  Naming a member is the search;
+what the arm *returns* is the finding.  Which is the "necessary and not
+sufficient" point above, one level up, made twice in the same afternoon.
+
+The worst instance found was `cjelly/src/format/image.c:152`, where
+`ERR_INVALID` maps to `CJELLY_FORMAT_IMAGE_ERR_INVALID_FORMAT`:  a path too
+long for the mount would be reported as a malformed image, and somebody would
+go and debug a PNG that is fine.  A library that changes an error vocabulary
 therefore owes its callers *that* list, not a list of renamed functions.  The
 impact list for this change was wrong eight times, and each time it was wrong
 because it described what had been changed rather than what the change reached.
