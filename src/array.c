@@ -235,6 +235,14 @@ static void * reserve_n(GCU_Array * array, size_t n) {
     if (!set_capacity(array, next_capacity(array->capacity, needed))) {
       // Fall back to the exact size: a 1.5x request can fail on a large array
       // when the precise one would have succeeded.
+      //
+      // So a growing append survives one refused allocation and fails only on
+      // two in a row.  That is the point of the retry, and it is also a trap
+      // for anyone injecting allocation failures at a consumer: a harness
+      // that refuses exactly one request can never reach the error arm of any
+      // append, and reports those arms as unreachable rather than untested.
+      // Found from outside, in the model library's loader sweep, where eleven
+      // per-directive failure arms looked dead for this reason.
       if (!set_capacity(array, needed)) {
         return NULL;
       }
