@@ -378,12 +378,30 @@ companions broke three such switches across the suite - in libraries that never
 called either function whose signature changed, which is why a search for call
 sites did not find them.
 
-`model/src/stream/stream_memory.c` had already worked this out and written it
-down:  its fallback used to be `GMDL_ERR_INTERNAL`, and that was wrong exactly
-because "cutil's enumeration grows", which "turned each addition into 'internal
-library error' for a caller whose file had simply been deleted".
+### A `default:` is necessary and not sufficient
 
-So map a `GCU_File_Result` the way that file does.  Name the members you act on
+Adding one silences `-Wswitch`, so a `switch` that *has* a default keeps
+compiling and changes behaviour without saying anything.  That makes the
+substance of the rule not "have a default" but **what the default maps to**,
+and it means a survey for broken mappings cannot be done with a compiler.
+
+`model/src/stream/stream_memory.c` is the worked example, and the honest
+version of it is that this library broke it rather than that it knew better.
+Its fallback was `GMDL_ERR_INTERNAL` on the reasoning that anything unrecognised
+was a contract violation.  Four new members arrived, `gmdl_obj_load_file()`
+began reporting "internal library error" for a file that had simply been
+deleted, and three of its tests would have gone red - `ObjLoad`, `MtlLoad` and
+`StreamFile` each have a `MissingFileReportsIo`.  It was fixed in `e939765`,
+whose comment says it plainly:  "cutil's enumeration grows", which "turned each
+addition into 'internal library error' for a caller whose file had simply been
+deleted".
+
+That sentence was written *after* this change, not before it.  An earlier draft
+of this section cited it as prior art - as a library that had worked the rule
+out independently - which read better and was false.  It is a reaction, and it
+is worth quoting for its reasoning rather than for its foresight.
+
+So map a `GCU_File_Result` the way that file now does.  Name the members you act on
 and let a `default:` carry the rest onto your own general I/O failure.  That
 keeps the mapping compiling across additions *and* degrades honestly:  a result
 you have never heard of is some kind of I/O problem, which is true, rather than
@@ -401,6 +419,24 @@ opposite of what the owner wants, and the same construct expresses both.
 **Translate defensively, name exhaustively.**  A caller mapping this enum onto
 its own vocabulary wants a `default:`; the function whose job is to name every
 member wants the compiler to fail without one.
+
+### Finding the three shapes
+
+A change to this enum reaches three kinds of caller, and only the first is
+loud.  All three want a different search, which is why the call-site list was
+the wrong instrument:  the affected set is *reads a result*, not *writes a
+file*.
+
+| Shape | Noticed by | How to find it |
+| --- | --- | --- |
+| `switch`, no `default:` | the compiler | any `switch` block naming `GCU_FILE_` without a `default:` |
+| `switch` with a `default:` | nothing | the same blocks, reading what the default arm returns |
+| `== GCU_FILE_ERR_...` | nothing | grep for equality against a specific member |
+
+The middle row is the one that was missed.  Two sweeps were run on this change
+and neither covered it, so `model` was classified safe on the strength of
+having a `default:` at all - which is exactly the reasoning this section now
+warns against.
 
 ### Splitting a code is a decision, not a conversion
 
