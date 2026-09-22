@@ -100,3 +100,16 @@ BOOL  FlsFree(DWORD dwFlsIndex);
 PVOID FlsGetValue(DWORD dwFlsIndex);
 BOOL  FlsSetValue(DWORD dwFlsIndex, PVOID lpFlsData);
 #endif
+
+/* --- appended for env.c --- */
+#ifndef GHOTI_IO_GCU_WIN32_STUBS_ENV
+#define GHOTI_IO_GCU_WIN32_STUBS_ENV
+#define ERROR_SUCCESS            0UL
+#define ERROR_ENVVAR_NOT_FOUND 203UL
+typedef unsigned short WCHAR;
+typedef const WCHAR * LPCWSTR;
+typedef WCHAR * LPWSTR;
+void  SetLastError(DWORD dwErrCode);
+DWORD GetEnvironmentVariableW(LPCWSTR lpName, LPWSTR lpBuffer, DWORD nSize);
+BOOL  SetEnvironmentVariableW(LPCWSTR lpName, LPCWSTR lpValue);
+#endif

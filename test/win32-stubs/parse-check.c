@@ -12,6 +12,7 @@
 #include <ghoti.io/cutil/rwlock.h>
 #include <ghoti.io/cutil/error.h>
 #include <ghoti.io/cutil/tls.h>
+#include <ghoti.io/cutil/env.h>
 
 int main(void) {
   GCU_MUTEX_T m;
@@ -57,6 +58,12 @@ int main(void) {
   rc |= gcu_tls_set(tls, 0);
   rc |= gcu_tls_get(tls) ? 1 : 0;
   rc |= gcu_tls_destroy(&tls);
+
+  char envbuf[64];
+  rc |= (int)gcu_env_get("PATH", envbuf, sizeof(envbuf));
+  rc |= gcu_env_has("PATH") ? 1 : 0;
+  rc |= gcu_env_set("GHOTI_X", "1");
+  rc |= gcu_env_unset("GHOTI_X");
 
   return rc;
 }
