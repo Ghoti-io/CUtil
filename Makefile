@@ -203,6 +203,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/sequencer.o \
 	$(OBJ_DIR)/string.o \
 	$(OBJ_DIR)/thread.o \
+	$(OBJ_DIR)/tls.o \
 	$(OBJ_DIR)/type.o \
 	$(OBJ_DIR)/utf.o \
 	$(OBJ_DIR)/vector.o
@@ -219,7 +220,7 @@ TEST_GATES ?= check-symbols check-win32-parse
 # Sources whose #ifdef _WIN32 bodies are parse-checked. Add a file here in
 # the same commit that gives it a Windows branch, or the branch ships
 # untokenised.
-WIN32_PARSE_SOURCES := src/cond.c src/once.c src/rwlock.c src/error.c
+WIN32_PARSE_SOURCES := src/cond.c src/once.c src/rwlock.c src/error.c src/tls.c
 
 
 
@@ -232,7 +233,7 @@ all: $(APP_DIR)/$(TARGET) ## Build the shared library
 # Dependency Inclusion
 ####################################################################
 # Compiler-generated .d files (see -MMD -MP -MF in compile commands).
-TEST_NAMES := test-macros test-type test-cond test-once test-rwlock test-error test-utf test-memory test-memory-inline test-hash test-mutex test-random test-semaphore test-string test-thread test-vector test-array test-allocator test-safemath test-safemath-portable test-pool test-sequencer test-path test-file test-dir
+TEST_NAMES := test-macros test-type test-cond test-once test-rwlock test-error test-utf test-tls test-memory test-memory-inline test-hash test-mutex test-random test-semaphore test-string test-thread test-vector test-array test-allocator test-safemath test-safemath-portable test-pool test-sequencer test-path test-file test-dir
 TEST_BINARIES := $(foreach t,$(TEST_NAMES),$(APP_DIR)/$(t)$(EXE_EXTENSION))
 TEST_DEPFILES := $(addprefix $(APP_DIR)/,$(TEST_NAMES:%=%.d))
 DEPFILES := $(LIBOBJECTS:.o=.d) $(TEST_DEPFILES)
@@ -337,6 +338,11 @@ endif
 ####################################################################
 
 # Test executables: compile with -MMD -MP -MF so dependency files are generated and -included.
+$(APP_DIR)/test-tls$(EXE_EXTENSION): test/test-tls.cpp | $(APP_DIR)/$(TARGET)
+	@printf "\n### Compiling TLS Test ###\n"
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-tls.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+
 $(APP_DIR)/test-utf$(EXE_EXTENSION): test/test-utf.cpp | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling UTF Test ###\n"
 	@mkdir -p $(@D)
@@ -752,7 +758,7 @@ test-ubsan: test-asan
 # that is here to watch the synchronisation primitives themselves. Add a name
 # here once its test is expected to be clean under TSan.
 
-TSAN_TEST_NAMES := test-mutex test-cond test-once test-rwlock test-semaphore test-thread test-pool test-sequencer
+TSAN_TEST_NAMES := test-mutex test-cond test-once test-rwlock test-tls test-semaphore test-thread test-pool test-sequencer
 
 TSAN_FLAGS := -fsanitize=thread -fno-omit-frame-pointer -g
 

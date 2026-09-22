@@ -11,6 +11,7 @@
 #include <ghoti.io/cutil/once.h>
 #include <ghoti.io/cutil/rwlock.h>
 #include <ghoti.io/cutil/error.h>
+#include <ghoti.io/cutil/tls.h>
 
 int main(void) {
   GCU_MUTEX_T m;
@@ -50,6 +51,12 @@ int main(void) {
   rc |= gcu_error_last();
   rc |= gcu_error_string(2, errbuf, sizeof(errbuf));
   rc |= gcu_error_string_last(errbuf, sizeof(errbuf));
+
+  GCU_TLS tls;
+  rc |= gcu_tls_create(&tls, 0);
+  rc |= gcu_tls_set(tls, 0);
+  rc |= gcu_tls_get(tls) ? 1 : 0;
+  rc |= gcu_tls_destroy(&tls);
 
   return rc;
 }

@@ -89,3 +89,14 @@ typedef char * LPSTR;
 DWORD FormatMessageA(DWORD dwFlags, const void * lpSource, DWORD dwMessageId,
     DWORD dwLanguageId, LPSTR lpBuffer, DWORD nSize, void * Arguments);
 #endif
+
+/* --- appended for tls.c --- */
+#ifndef GHOTI_IO_GCU_WIN32_STUBS_TLS
+#define GHOTI_IO_GCU_WIN32_STUBS_TLS
+#define FLS_OUT_OF_INDEXES 0xFFFFFFFFUL
+typedef void (* PFLS_CALLBACK_FUNCTION)(PVOID);
+DWORD FlsAlloc(PFLS_CALLBACK_FUNCTION lpCallback);
+BOOL  FlsFree(DWORD dwFlsIndex);
+PVOID FlsGetValue(DWORD dwFlsIndex);
+BOOL  FlsSetValue(DWORD dwFlsIndex, PVOID lpFlsData);
+#endif
