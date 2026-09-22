@@ -19,11 +19,6 @@
 #include <gtest/gtest.h>
 #include <ghoti.io/cutil/macros.h>
 
-// debug.h declares nothing of its own -- it is a placeholder that includes
-// macros.h.  Including it here is what keeps it compiling under C++, which is
-// the only thing test-debug.cpp ever checked.
-#include <ghoti.io/cutil/debug.h>
-
 using namespace std;
 
 #define GCU_TEST_STRINGIFY_(X) #X

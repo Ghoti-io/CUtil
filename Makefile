@@ -188,7 +188,6 @@ INCLUDE := -I include/ -I $(BUILD_DIR)/include/
 LIBOBJECTS := \
   $(OBJ_DIR)/allocator.o \
 	$(OBJ_DIR)/array.o \
-	$(OBJ_DIR)/debug.o \
 	$(OBJ_DIR)/dir.o \
 	$(OBJ_DIR)/file.o \
 	$(OBJ_DIR)/hash.o \
