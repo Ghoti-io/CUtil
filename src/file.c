@@ -103,7 +103,7 @@ void gcu_file_free(const GCU_Allocator * allocator, void * data) {
 static FILE * file_open(const char * path, const char * mode,
     const GCU_Allocator * allocator) {
 #ifdef _WIN32
-  /* TODO(windows): never compiled or run on Windows; see WINDOWS-TODO.md. */
+  /* TODO(windows): never compiled or run on Windows. */
   wchar_t * wide_path = gcu_path_internal_to_wide(allocator, path);
   if (!wide_path) {
     return NULL;
@@ -126,7 +126,7 @@ static FILE * file_open(const char * path, const char * mode,
 /** Remove a path whose bytes are UTF-8. */
 static void file_remove(const char * path, const GCU_Allocator * allocator) {
 #ifdef _WIN32
-  /* TODO(windows): never compiled or run on Windows; see WINDOWS-TODO.md. */
+  /* TODO(windows): never compiled or run on Windows. */
   wchar_t * wide = gcu_path_internal_to_wide(allocator, path);
   if (wide) {
     _wremove(wide);
@@ -294,7 +294,7 @@ GCU_File_Result gcu_file_temp_create(GCU_File_Temp * temp, const char * dir,
   memcpy(path + stem, GCU_FILE_TEMPLATE, sizeof GCU_FILE_TEMPLATE);
 
 #ifdef _WIN32
-  /* TODO(windows): never compiled or run on Windows; see WINDOWS-TODO.md.
+  /* TODO(windows): never compiled or run on Windows.
    * _mktemp_s only chooses the name; _O_CREAT | _O_EXCL is what makes taking
    * it a single step that fails rather than following something already
    * there. */
@@ -380,7 +380,7 @@ void gcu_file_temp_abort(GCU_File_Temp * temp) {
  */
 static bool file_sync_stream(FILE * stream) {
 #ifdef _WIN32
-  /* TODO(windows): never compiled or run on Windows; see WINDOWS-TODO.md. */
+  /* TODO(windows): never compiled or run on Windows. */
   return _commit(_fileno(stream)) == 0;
 #else
   return fsync(fileno(stream)) == 0;
@@ -522,7 +522,7 @@ static bool file_apply_perms(FILE * stream, const char * temp_path,
 static bool file_replace(const char * source, const char * dest,
     GCU_File_Sync sync, const GCU_Allocator * allocator) {
 #ifdef _WIN32
-  /* TODO(windows): never compiled or run on Windows; see WINDOWS-TODO.md.
+  /* TODO(windows): never compiled or run on Windows.
    * rename() on Windows refuses an existing destination; MoveFileEx is the
    * call that replaces one, and it is atomic for a same-volume move. */
   wchar_t * wide_source = gcu_path_internal_to_wide(allocator, source);

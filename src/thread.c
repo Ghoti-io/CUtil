@@ -119,7 +119,6 @@ static bool gcu_thread_handle_is_current(GCU_THREAD_T handle) {
 #ifdef _WIN32
   // TODO(windows): never compiled. GetCurrentThread() returns a pseudo-handle
   // and GetThreadId() on one of those wants checking rather than assuming.
-  // See WINDOWS-TODO.md item 5.
   return GetThreadId(handle) == GetThreadId(GetCurrentThread());
 #else
   return pthread_equal(handle, pthread_self()) != 0;

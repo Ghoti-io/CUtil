@@ -956,8 +956,7 @@ static const char * path_env(const char * name) {
 #ifdef _WIN32
 
 /* TODO(windows): none of the branches in this file have been run on Windows.
- * Verifying them needs a MSYS2 MINGW64 machine; see WINDOWS-TODO.md.  What
- * "done" looks like: test-path's environment cases pass, and a path holding
+ * Verifying them needs a MSYS2 MINGW64 machine.  What "done" looks like: test-path's environment cases pass, and a path holding
  * non-ASCII characters survives a round trip through gcu_path_cwd(). */
 
 /** Read an environment variable as UTF-8, through the wide API. */

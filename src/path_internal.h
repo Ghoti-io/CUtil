@@ -43,7 +43,7 @@
 
 #include <windows.h>
 
-/* TODO(windows): never compiled or run on Windows; see WINDOWS-TODO.md.
+/* TODO(windows): never compiled or run on Windows.
  * What "done" looks like: a path holding non-ASCII characters survives a
  * round trip through gcu_path_cwd() and opens through gcu_file_read(). */
 

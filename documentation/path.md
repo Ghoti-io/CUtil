@@ -25,7 +25,7 @@ lets the first half be tested exhaustively.
 Section 11 of `CONVENTIONS.md` says that Linux is where everything is
 verified, that Windows branches get written and marked `TODO(windows):`, and
 that nobody claims they work.  That is the honest position for code that
-cannot be run, and it is how `WINDOWS-TODO.md` came to exist.
+cannot be run, and it is the position this module takes.
 
 But the *rules* of Windows paths are not platform-specific in any deep sense.
 Whether `C:x` is absolute, where the root of `\\server\share\x` ends, whether
