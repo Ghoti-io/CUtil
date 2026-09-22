@@ -102,12 +102,29 @@
 //-----------------------------------------------------------------------------
 
 /**
- * A cross-compiler macro for marking a function parameter as unused.
+ * A cross-compiler macro for marking a declaration as possibly unused.
+ *
+ * It wraps the *declaration*, not a statement, so it goes where the thing is
+ * declared - a parameter in a signature, or a local:
+ *
+ *     int f(GCU_MAYBE_UNUSED(int scratch), int n) { return n; }
+ *     GCU_MAYBE_UNUSED(int probe) = compute();
+ *
+ * This is a development aid: it silences -Wunused-parameter while a function
+ * is half-written, and the wrapper normally comes back off before the change
+ * is committed.
+ *
+ * The MSVC branch used to expand to `(void)(X)`, which is a *statement* and is
+ * a syntax error in either position above.  There is no declaration-position
+ * spelling for MSVC in C mode before C23, so that case falls through to the
+ * identity below: the code still compiles and the warning stays, which is the
+ * right way round for a macro whose whole job is to be removable.
  */
 #if defined(__GNUC__) || defined(__clang__)
 #define GCU_MAYBE_UNUSED(X) __attribute__((unused)) X
-#elif defined(_MSC_VER)
-#define GCU_MAYBE_UNUSED(X) (void)(X)
+#elif (defined(__cplusplus) && __cplusplus >= 201703L) \
+   || (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L)
+#define GCU_MAYBE_UNUSED(X) [[maybe_unused]] X
 #else
 #define GCU_MAYBE_UNUSED(X) X
 #endif

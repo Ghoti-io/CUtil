@@ -10,7 +10,8 @@
  *     already exercised by src/thread.c, whose post-main free is the offset
  *     documented in documentation/memory.md.
  *   - The non-GCC spellings of GCU_MAYBE_UNUSED, GCU_DEPRECATED, GCU_API and
- *     GCU_API_DATA.  Only the branch this compiler takes is compiled at all.
+ *     GCU_API_DATA.  Only the branch this compiler takes is compiled at all,
+ *     which is how GCU_MAYBE_UNUSED's MSVC branch stayed a syntax error.
  */
 
 #include <wchar.h>
@@ -94,6 +95,22 @@ TEST(Macros, HelperMaximaDoNotEscapeTheHeader) {
   FAIL() << "GHOTI_IO_GCU_MAX_UINT16 escaped macros.h";
 #endif
   SUCCEED();
+}
+
+// GCU_MAYBE_UNUSED wraps a declaration, so the check is that this file still
+// compiles: it is built with -Wall -Wextra -Werror, `unread` below is genuinely
+// never read, and -Wextra implies -Wunused-parameter.  If the macro stops
+// suppressing -- or goes back to expanding to a statement -- this file stops
+// building rather than failing at run time.
+static int maybe_unused_parameter(GCU_MAYBE_UNUSED(int unread), int used) {
+  return used;
+}
+
+TEST(Macros, MaybeUnusedWrapsADeclaration) {
+  ASSERT_EQ(maybe_unused_parameter(0, 7), 7);
+
+  // The other position it is documented for: a local nothing goes on to read.
+  GCU_MAYBE_UNUSED(int unread_local) = 3;
 }
 
 TEST(Macros, InitFunctionRunsBeforeMain) {
