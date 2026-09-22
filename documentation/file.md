@@ -328,9 +328,28 @@ in this module, it has never been compiled or run.
 
 `GCU_File_Result` distinguishes four things beyond the obvious:
 `ERR_NOT_FOUND`, `ERR_EXISTS`, `ERR_ACCESS` and `ERR_NOT_EMPTY`.  Everything
-else is `ERR_IO`, because a caller can act on "it is not there" and on "you may
-not", and cannot usefully branch on the difference between `ELOOP` and
-`ENAMETOOLONG`.
+else is `ERR_IO`, because nobody can usefully branch on the difference between
+`EIO` and `ENXIO`.
+
+The dividing line is **determinism**, not severity.  `ERR_IO` means the
+filesystem tried and something went wrong - a condition a caller may reasonably
+retry, or report as a device problem.  A failure to resolve the path is not
+that:  it will never succeed on a retry, and it is a statement about the path
+rather than about the device.  So all three spellings of it come back the same
+way - the path is absent (`ENOENT`), a component of it is not a directory
+(`ENOTDIR`), or it goes round a loop of symbolic links (`ELOOP`).  Grouping a
+deterministic path failure with retryable I/O is the mapping that would
+actually mislead somebody.
+
+`ENAMETOOLONG` looks like it belongs with those and does not.  It is equally
+deterministic, but it says the *caller's argument* cannot name anything on this
+filesystem rather than that nothing is there, and the answer to it is to fix
+the input rather than to create the file.  That is `ERR_INVALID`.
+
+That line was drawn by two readers rather than one.  The first mapping had only
+`ENOENT` and `ENOTDIR` on it, and `ELOOP` and `ENAMETOOLONG` fell through to
+`ERR_IO` - which is the inconsistency you get from listing cases instead of
+naming a principle.
 
 The line was drawn there by watching what happened when it was not.  For a
 while `gcu_file_read()` reported one `ERR_IO` for a path that was absent and
@@ -520,7 +539,7 @@ list of things genuinely decided against.
 
 ## 16. Testing
 
-`test/test-file.cpp`, 63 tests, and `test/test-dir.cpp`, 17.  Both clean under
+`test/test-file.cpp`, 66 tests, and `test/test-dir.cpp`, 17.  Both clean under
 ASan+UBSan and under Valgrind with `--leak-check=full`.  The matcher's tests
 live with the rest of the path work.
 

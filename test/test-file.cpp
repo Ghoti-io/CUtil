@@ -727,6 +727,62 @@ TEST_F(FileMeta, ReadingADirectoryIsNotMistakenForAMissingFile) {
   gcu_file_free(nullptr, data);
 }
 
+TEST_F(FileMeta, EveryDeterministicPathFailureIsNotFoundHoweverItIsSpelled) {
+  void * data = nullptr;
+  size_t len = 0;
+
+  // Absent.
+  EXPECT_EQ(GCU_FILE_ERR_NOT_FOUND,
+      gcu_file_read(at("absent").c_str(), GCU_FILE_UNLIMITED, nullptr, &data,
+          &len));
+
+  // A component in the middle that is not a directory.
+  put(at("plain"), "x");
+  EXPECT_EQ(GCU_FILE_ERR_NOT_FOUND,
+      gcu_file_read(at("plain/under").c_str(), GCU_FILE_UNLIMITED, nullptr,
+          &data, &len));
+
+  // A loop of symbolic links. None of these three will ever succeed on a
+  // retry, and all three are statements about the path rather than about the
+  // device - which is the line between NOT_FOUND and ERR_IO.
+  ASSERT_EQ(0, symlink(at("loop_b").c_str(), at("loop_a").c_str()));
+  ASSERT_EQ(0, symlink(at("loop_a").c_str(), at("loop_b").c_str()));
+  EXPECT_EQ(GCU_FILE_ERR_NOT_FOUND,
+      gcu_file_read(at("loop_a").c_str(), GCU_FILE_UNLIMITED, nullptr, &data,
+          &len));
+
+  GCU_File_Info info;
+  EXPECT_EQ(GCU_FILE_ERR_NOT_FOUND, gcu_file_stat(at("loop_a").c_str(),
+      &info));
+  // The link itself is there, even though what it points at is not.
+  EXPECT_EQ(GCU_FILE_OK, gcu_file_stat_link(at("loop_a").c_str(), &info));
+  EXPECT_EQ(GCU_FILE_TYPE_SYMLINK, info.type);
+}
+
+TEST_F(FileMeta, APathTooLongToNameAnythingIsTheCallersMistakeNotAnAbsence) {
+  // Equally deterministic, but it says the argument cannot name anything on
+  // this filesystem rather than that nothing is there - so the caller's answer
+  // is to fix its input, not to create the file.
+  string huge = dir + "/" + string(5000, 'n');
+  void * data = nullptr;
+  size_t len = 0;
+  EXPECT_EQ(GCU_FILE_ERR_INVALID,
+      gcu_file_read(huge.c_str(), GCU_FILE_UNLIMITED, nullptr, &data, &len));
+  GCU_File_Info info;
+  EXPECT_EQ(GCU_FILE_ERR_INVALID, gcu_file_stat(huge.c_str(), &info));
+}
+
+TEST_F(FileMeta, ARealIoFailureStaysIoRatherThanBecomingNotFound) {
+  // The other side of the line: a directory opens, so this is not a path
+  // resolution failure, and it must not be reported as one.
+  void * data = nullptr;
+  size_t len = 0;
+  GCU_File_Result r = gcu_file_read(dir.c_str(), GCU_FILE_UNLIMITED, nullptr,
+      &data, &len);
+  EXPECT_EQ(GCU_FILE_ERR_IO, r);
+  gcu_file_free(nullptr, data);
+}
+
 TEST_F(FileMeta, RemoveDeletesAFileAndRefusesADirectory) {
   put(at("gone"), "x");
   ASSERT_TRUE(gcu_file_exists(at("gone").c_str()));

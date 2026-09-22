@@ -41,6 +41,7 @@
 #include <string.h>
 #include <ghoti.io/cutil/file.h>
 #include <ghoti.io/cutil/path.h>
+#include "file_internal.h"
 #include "path_internal.h"
 
 #ifdef _WIN32
@@ -99,38 +100,6 @@ void gcu_file_free(const GCU_Allocator * allocator, void * data) {
  * filesystem accepts, so a path merely passing through it opens a different
  * file or none at all.
  */
-/**
- * Turn the platform's own complaint into this library's vocabulary.
- *
- * Only the distinctions this library promises to make.  Everything else is
- * ERR_IO rather than a longer enum:  a caller can act on "it is not there" and
- * on "you may not", and cannot usefully act on the difference between ELOOP
- * and ENAMETOOLONG.
- */
-static GCU_File_Result file_result_from_errno(int code) {
-  switch (code) {
-    case ENOENT:
-    case ENOTDIR:
-      return GCU_FILE_ERR_NOT_FOUND;
-    case EEXIST:
-      return GCU_FILE_ERR_EXISTS;
-    case EACCES:
-    case EPERM:
-    case EROFS:
-      return GCU_FILE_ERR_ACCESS;
-    // Guarded on the value, not merely on the name: some platforms define
-    // ENOTEMPTY as EEXIST, and a duplicate case label does not compile.
-#if defined(ENOTEMPTY) && ENOTEMPTY != EEXIST
-    case ENOTEMPTY:
-      return GCU_FILE_ERR_NOT_EMPTY;
-#endif
-    case ENOMEM:
-      return GCU_FILE_ERR_OOM;
-    default:
-      return GCU_FILE_ERR_IO;
-  }
-}
-
 static FILE * file_open(const char * path, const char * mode,
     const GCU_Allocator * allocator) {
 #ifdef _WIN32
@@ -188,7 +157,7 @@ GCU_File_Result gcu_file_read(const char * path, size_t max_bytes,
     // so that a caller does not have to ask the filesystem a second question
     // afterwards to find out which it was - which is a race as well as a
     // duplicated query.
-    return file_result_from_errno(errno);
+    return gcu_file_internal_from_errno(errno);
   }
 
   // One byte over the limit is enough to know the file exceeds it, so a
@@ -690,13 +659,13 @@ GCU_File_Result gcu_file_open(GCU_File_Handle * handle, const char * path,
   FILE * stream = _wfopen(wide, wide_mode);
   gcu_allocator_free(allocator, wide);
   if (!stream) {
-    return file_result_from_errno(errno);
+    return gcu_file_internal_from_errno(errno);
   }
   (void)create_mode;
 #else
   int fd = open(path, flags, create_mode);
   if (fd < 0) {
-    return file_result_from_errno(errno);
+    return gcu_file_internal_from_errno(errno);
   }
   FILE * stream = fdopen(fd, stdio_mode);
   if (!stream) {
@@ -767,7 +736,7 @@ GCU_File_Result gcu_file_seek(GCU_File_Handle * handle, int64_t offset,
   }
 #else
   if (fseeko(handle->stream, (off_t)offset, whence) != 0) {
-    return file_result_from_errno(errno);
+    return gcu_file_internal_from_errno(errno);
   }
 #endif
   return GCU_FILE_OK;
@@ -894,7 +863,7 @@ static GCU_File_Result file_stat_common(const char * path, GCU_File_Info * out,
   struct stat info;
   int rc = follow ? stat(path, &info) : lstat(path, &info);
   if (rc != 0) {
-    return file_result_from_errno(errno);
+    return gcu_file_internal_from_errno(errno);
   }
   file_info_from_stat(out, &info);
   return GCU_FILE_OK;
@@ -946,7 +915,7 @@ GCU_File_Result gcu_file_remove(const char * path) {
   return ok ? GCU_FILE_OK : GCU_FILE_ERR_IO;
 #else
   if (unlink(path) != 0) {
-    return file_result_from_errno(errno);
+    return gcu_file_internal_from_errno(errno);
   }
   return GCU_FILE_OK;
 #endif
@@ -967,7 +936,7 @@ GCU_File_Result gcu_file_rename(const char * from, const char * to) {
     // EXDEV is the cross-filesystem case, and it is reported rather than
     // quietly turned into a copy: a caller who asked for a rename is usually
     // relying on it being one operation.
-    return file_result_from_errno(errno);
+    return gcu_file_internal_from_errno(errno);
   }
   return GCU_FILE_OK;
 #endif
@@ -985,7 +954,7 @@ GCU_File_Result gcu_file_copy(const char * from, const char * to,
 
   FILE * source = file_open(from, "rb", allocator);
   if (!source) {
-    return file_result_from_errno(errno);
+    return gcu_file_internal_from_errno(errno);
   }
 
   size_t need = 0;

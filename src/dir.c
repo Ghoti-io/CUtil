@@ -37,6 +37,7 @@
 #include <ghoti.io/cutil/dir.h>
 #include <ghoti.io/cutil/path.h>
 
+#include "file_internal.h"
 #include "path_internal.h"
 
 #ifdef _WIN32
@@ -50,34 +51,6 @@
 
 /** The trailing Xs mkdtemp() replaces. */
 #define GCU_DIR_TEMPLATE "XXXXXX"
-
-/**
- * Turn the platform's own complaint into this library's vocabulary.
- *
- * The same mapping file.c uses, and separate from it only because neither
- * module should have to export an internal helper to the other for four lines.
- */
-static GCU_File_Result dir_result_from_errno(int code) {
-  switch (code) {
-    case ENOENT:
-    case ENOTDIR:
-      return GCU_FILE_ERR_NOT_FOUND;
-    case EEXIST:
-      return GCU_FILE_ERR_EXISTS;
-    case EACCES:
-    case EPERM:
-    case EROFS:
-      return GCU_FILE_ERR_ACCESS;
-#if defined(ENOTEMPTY) && ENOTEMPTY != EEXIST
-    case ENOTEMPTY:
-      return GCU_FILE_ERR_NOT_EMPTY;
-#endif
-    case ENOMEM:
-      return GCU_FILE_ERR_OOM;
-    default:
-      return GCU_FILE_ERR_IO;
-  }
-}
 
 GCU_File_Result gcu_dir_create(const char * path) {
   if (!path || !*path) {
@@ -107,7 +80,7 @@ GCU_File_Result gcu_dir_create(const char * path) {
   // own answer rather than one this library invents.  See the permissions
   // section of documentation/file.md.
   if (mkdir(path, 0777) != 0) {
-    return dir_result_from_errno(errno);
+    return gcu_file_internal_from_errno(errno);
   }
   return GCU_FILE_OK;
 #endif
@@ -200,7 +173,7 @@ GCU_File_Result gcu_dir_remove(const char * path) {
   return err == ERROR_ACCESS_DENIED ? GCU_FILE_ERR_ACCESS : GCU_FILE_ERR_IO;
 #else
   if (rmdir(path) != 0) {
-    return dir_result_from_errno(errno);
+    return gcu_file_internal_from_errno(errno);
   }
   return GCU_FILE_OK;
 #endif
@@ -282,7 +255,7 @@ GCU_File_Result gcu_dir_temp_create(const char * parent, const char * prefix,
   // mkdtemp() chooses the name and creates the directory in one step that
   // fails if the name is taken, and creates it 0700.
   if (!mkdtemp(path)) {
-    GCU_File_Result failed = dir_result_from_errno(errno);
+    GCU_File_Result failed = gcu_file_internal_from_errno(errno);
     gcu_allocator_free(allocator, path);
     return failed;
   }
@@ -380,7 +353,7 @@ GCU_File_Result gcu_dir_open(GCU_Dir * dir, const char * path,
 #else
   DIR * d = opendir(path);
   if (!d) {
-    return dir_result_from_errno(errno);
+    return gcu_file_internal_from_errno(errno);
   }
   size_t len = strlen(path);
   dir->path = (char *)gcu_allocator_malloc(allocator, len + 1);
