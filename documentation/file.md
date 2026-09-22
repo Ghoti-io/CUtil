@@ -398,6 +398,10 @@ the build until the name exists.  Deliberately brittle in the one function
 whose job is to be complete, tolerant everywhere else.  A consumer wants the
 opposite of what the owner wants, and the same construct expresses both.
 
+**Translate defensively, name exhaustively.**  A caller mapping this enum onto
+its own vocabulary wants a `default:`; the function whose job is to name every
+member wants the compiler to fail without one.
+
 ### Splitting a code is a decision, not a conversion
 
 The same caution applies in the other direction, and it does not announce
