@@ -242,6 +242,15 @@ GCU_API void * gcu_array_emplace_n(GCU_Array * array, size_t n);
  * gcu_array_emplace_n() instead; the zeroing is the safe default and stays
  * the default.
  *
+ * What it is worth, with both numbers' provenance attached, because they
+ * differ by an order of magnitude and both are honest.  Against a loop that
+ * does nothing but claim and fill spans, it removes 27.8% of the instructions
+ * (48-byte elements, claimed eight at a time).  Against a real workload - the
+ * ctang unicode renderer, 8KB strings, 300 renders - converting its one claim
+ * site removed 2.56%.  The saving is one write of the span, so it scales with
+ * how much of the program is claiming and filling, and the first figure is the
+ * ceiling rather than the expectation.
+ *
  * @param array The array to operate on.
  * @param n The number of elements to add.
  * @return A pointer to the first new element, or `NULL` on failure (in which
