@@ -36,6 +36,9 @@ unsigned char TryAcquireSRWLockExclusive(SRWLOCK * SRWLock);
 typedef unsigned long DWORD;
 typedef int BOOL;
 
+#define TRUE  1
+#define FALSE 0
+
 #define INFINITE      0xFFFFFFFFUL
 #define ERROR_TIMEOUT 1460UL
 
@@ -48,5 +51,22 @@ void WakeConditionVariable(CONDITION_VARIABLE * ConditionVariable);
 void WakeAllConditionVariable(CONDITION_VARIABLE * ConditionVariable);
 BOOL SleepConditionVariableSRW(CONDITION_VARIABLE * ConditionVariable,
     SRWLOCK * SRWLock, DWORD dwMilliseconds, unsigned long Flags);
+
+#endif
+
+/* --- appended for once.h / once.c --- */
+#ifndef GHOTI_IO_GCU_WIN32_STUBS_ONCE
+#define GHOTI_IO_GCU_WIN32_STUBS_ONCE
+
+#define CALLBACK
+#define INIT_ONCE_STATIC_INIT { 0 }
+
+typedef void * PVOID;
+typedef struct _GCU_STUB_INIT_ONCE { void * Ptr; } INIT_ONCE, * PINIT_ONCE;
+
+typedef BOOL (CALLBACK * PINIT_ONCE_FN)(PINIT_ONCE, PVOID, PVOID *);
+
+BOOL InitOnceExecuteOnce(PINIT_ONCE InitOnce, PINIT_ONCE_FN InitFn,
+    PVOID Parameter, PVOID * Context);
 
 #endif

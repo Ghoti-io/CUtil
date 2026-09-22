@@ -286,6 +286,8 @@
 #define GCU_Random_MT64_State GHOTIIO_CUTIL(GCU_Random_MT64_State)
 #define gcu_realloc_debug GHOTIIO_CUTIL(gcu_realloc_debug)
 #define GCU_Cond GHOTIIO_CUTIL(GCU_Cond)
+#define GCU_Once GHOTIIO_CUTIL(GCU_Once)
+#define gcu_once GHOTIIO_CUTIL(gcu_once)
 #define gcu_cond_broadcast GHOTIIO_CUTIL(gcu_cond_broadcast)
 #define gcu_cond_create GHOTIIO_CUTIL(gcu_cond_create)
 #define gcu_cond_destroy GHOTIIO_CUTIL(gcu_cond_destroy)

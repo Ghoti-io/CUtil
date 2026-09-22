@@ -8,6 +8,7 @@
 
 #include <ghoti.io/cutil/mutex.h>
 #include <ghoti.io/cutil/cond.h>
+#include <ghoti.io/cutil/once.h>
 
 int main(void) {
   GCU_MUTEX_T m;
@@ -29,6 +30,9 @@ int main(void) {
   rc |= gcu_cond_wait(&cv, &m);
   rc |= gcu_cond_timedwait(&cv, &m, 10);
   rc |= gcu_cond_destroy(&cv);
+
+  static GCU_Once once = GCU_ONCE_INIT;
+  rc |= gcu_once(&once, 0);
 
   return rc;
 }
