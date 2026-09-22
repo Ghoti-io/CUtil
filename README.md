@@ -19,7 +19,11 @@ Provides `GCU_Allocator`, a small vtable (a user-defined `ctx` pointer plus `mal
 
 ### Memory Library
 
-Provides functions `gcu_malloc()`, `gcu_calloc()`, `gcu_realloc()`, and `gcu_free()` which are used by all other parts of the library.  Calling `gcu_mem_start()` and `gcu_mem_stop()` will cause all calls to the afore-mentioned memory functions to be logged to `stderr`, including the calling location and the memory locations involved, making memory errors easy to track down.
+Provides functions `gcu_malloc()`, `gcu_calloc()`, `gcu_realloc()`, and `gcu_free()` which are used by all other parts of the library.  Compiling with `-DGHOTIIO_CUTIL_ENABLE_MEMORY_DEBUG` causes all calls to the afore-mentioned memory functions to be logged to `stderr`, including the calling location and the memory locations involved, making memory errors easy to track down; `gcu_mem_stop()` and `gcu_mem_start()` bracket a region whose trace is not wanted.
+
+The same functions keep running totals, readable with `gcu_get_alloc_count()` and `gcu_get_free_count()`, so that a program can assert it released everything it took.  The totals count *blocks rather than calls* -- reallocating from `NULL` is an allocation, freeing `NULL` is not a free -- and they are kept whether or not the logging is enabled.  Compare differences rather than the two absolute totals: the library allocates in a constructor before `main()` and releases in a destructor after it returns, so the counts do not start level.
+
+The design and the reasoning behind each decision are in `documentation/memory.md`.
 
 ### String
 
@@ -31,7 +35,7 @@ Provides `GCU_Array`, a generalized growable array.  Unlike the Vector (below), 
 
 The array takes a `GCU_Allocator` (see above), and may be created either on the heap (`gcu_array_create()` / `gcu_array_destroy()`) or in memory the caller already owns (`gcu_array_create_in_place()` / `gcu_array_destroy_in_place()`).
 
-Capacity is managed with `gcu_array_reserve()`, `gcu_array_resize()`, and `gcu_array_shrink_to_fit()`.  Elements may be added by copy with `gcu_array_append()` and `gcu_array_append_n()`, or constructed in place by taking a writable slot from `gcu_array_emplace()` and `gcu_array_emplace_n()`, which avoids a copy.  Elements are read with `gcu_array_at()` and `gcu_array_back()`, and removed with `gcu_array_pop()`, `gcu_array_remove_at()` (order-preserving), and `gcu_array_swap_remove()` (constant-time, does not preserve order).  `gcu_array_steal()` hands the backing buffer to the caller and leaves the array empty.
+Capacity is managed with `gcu_array_reserve()`, `gcu_array_resize()`, and `gcu_array_shrink_to_fit()`.  Elements may be added by copy with `gcu_array_append()` and `gcu_array_append_n()`, or constructed in place by taking a writable slot from `gcu_array_emplace()` and `gcu_array_emplace_n()`, which avoids a copy.  `gcu_array_extend_n()` claims a run of elements without zeroing it, for the caller that is about to write every byte itself; the emplace functions zero, and remain the right default for anything that fills in only some fields.  Elements are read with `gcu_array_at()` and `gcu_array_back()`, and removed with `gcu_array_pop()`, `gcu_array_remove_at()` (order-preserving), and `gcu_array_swap_remove()` (constant-time, does not preserve order).  `gcu_array_steal()` hands the backing buffer to the caller and leaves the array empty.
 
 The programmer may provide a `cleanup` function which will be called when the array is destroyed, and a `supplementary_data` pointer for the cleanup function's use.
 
