@@ -204,6 +204,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/string.o \
 	$(OBJ_DIR)/thread.o \
 	$(OBJ_DIR)/type.o \
+	$(OBJ_DIR)/utf.o \
 	$(OBJ_DIR)/vector.o
 
 TESTFLAGS := `PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs --cflags gtest`
@@ -231,7 +232,7 @@ all: $(APP_DIR)/$(TARGET) ## Build the shared library
 # Dependency Inclusion
 ####################################################################
 # Compiler-generated .d files (see -MMD -MP -MF in compile commands).
-TEST_NAMES := test-macros test-type test-cond test-once test-rwlock test-error test-memory test-memory-inline test-hash test-mutex test-random test-semaphore test-string test-thread test-vector test-array test-allocator test-safemath test-safemath-portable test-pool test-sequencer test-path test-file test-dir
+TEST_NAMES := test-macros test-type test-cond test-once test-rwlock test-error test-utf test-memory test-memory-inline test-hash test-mutex test-random test-semaphore test-string test-thread test-vector test-array test-allocator test-safemath test-safemath-portable test-pool test-sequencer test-path test-file test-dir
 TEST_BINARIES := $(foreach t,$(TEST_NAMES),$(APP_DIR)/$(t)$(EXE_EXTENSION))
 TEST_DEPFILES := $(addprefix $(APP_DIR)/,$(TEST_NAMES:%=%.d))
 DEPFILES := $(LIBOBJECTS:.o=.d) $(TEST_DEPFILES)
@@ -336,6 +337,11 @@ endif
 ####################################################################
 
 # Test executables: compile with -MMD -MP -MF so dependency files are generated and -included.
+$(APP_DIR)/test-utf$(EXE_EXTENSION): test/test-utf.cpp | $(APP_DIR)/$(TARGET)
+	@printf "\n### Compiling UTF Test ###\n"
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-utf.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+
 $(APP_DIR)/test-error$(EXE_EXTENSION): test/test-error.cpp | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Error Test ###\n"
 	@mkdir -p $(@D)
