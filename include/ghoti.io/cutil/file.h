@@ -69,7 +69,18 @@ typedef enum GCU_File_Result {
   GCU_FILE_ERR_EXISTS,    ///< Something is already there.
   GCU_FILE_ERR_ACCESS,    ///< The filesystem refused on permission grounds.
   GCU_FILE_ERR_NOT_EMPTY, ///< A directory still has entries in it.
-  GCU_FILE_RESULT_COUNT,  ///< Closes the enum.  Never returned.
+  /**
+   * One past the last code.  **Its value changes whenever this enum grows**,
+   * which is the point of it - so it is safe to name (a `case` label keeping a
+   * switch exhaustive, a bound in code compiled against this same header) and
+   * unsafe to *keep*.  Never store it, transmit it, or size anything with it
+   * that outlives the compilation: a `names[GCU_FILE_RESULT_COUNT]` sized
+   * against
+   * an older header is indexed past its end by a newer library.
+   *
+   * Never returned.
+   */
+  GCU_FILE_RESULT_COUNT,
 } GCU_File_Result;
 
 /**

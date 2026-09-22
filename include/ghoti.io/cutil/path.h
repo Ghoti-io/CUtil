@@ -82,7 +82,18 @@ typedef enum GCU_Path_Result {
   GCU_PATH_ERR_LIMIT,       ///< The caller's buffer is too small.
   GCU_PATH_ERR_IO,          ///< An operating-system query failed.
   GCU_PATH_ERR_UNSUPPORTED, ///< No answer exists; see the function.
-  GCU_PATH_RESULT_COUNT,    ///< Closes the enum.  Never returned.
+  /**
+   * One past the last code.  **Its value changes whenever this enum grows**,
+   * which is the point of it - so it is safe to name (a `case` label keeping a
+   * switch exhaustive, a bound in code compiled against this same header) and
+   * unsafe to *keep*.  Never store it, transmit it, or size anything with it
+   * that outlives the compilation: a `names[GCU_PATH_RESULT_COUNT]` sized
+   * against
+   * an older header is indexed past its end by a newer library.
+   *
+   * Never returned.
+   */
+  GCU_PATH_RESULT_COUNT,
 } GCU_Path_Result;
 
 /**
