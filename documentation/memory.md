@@ -94,11 +94,26 @@ depends on it being three is already wrong.
 
 It is tempting to read the skew as a wart and to make the constructor allocate
 lazily so that the counts start level.  Do not.  The offset is what makes the
-badly written assertion *fail*, and a correct program can never cancel it:
-under the rules in section 2 a program cannot free a block it never took, so
+badly written assertion *fail*.
+
+For a program that takes **every** block it releases through these wrappers,
 `free` can never exceed `alloc`, so an unreset absolute comparison can only
 come out equal if the program released three more blocks than it acquired -
 which is a double free, not a pass.
+
+That precondition is not decoration.  A program that releases a block it got
+from somewhere else - `gcu_allocator_default()`, which hands out `malloc()`
+blocks, or plain `malloc()` directly - counts the free without ever having
+counted the allocation, and drives the net negative with no bug at all:
+
+```
+default-allocator block released with gcu_free: alloc=0 free=1
+plain malloc released with gcu_free:            alloc=0 free=1
+```
+
+Three of those cancel the offset exactly, and then the badly written assertion
+passes after all.  So the alarm rests on the same discipline section 7 asks
+for, and is not an independent safety net.
 
 That guarantee is newer than the offset, and the two only work together.  Under
 the old counting rules `free` *could* exceed `alloc` for a perfectly correct
