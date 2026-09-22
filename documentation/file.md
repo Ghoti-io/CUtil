@@ -389,14 +389,39 @@ keeps the mapping compiling across additions *and* degrades honestly:  a result
 you have never heard of is some kind of I/O problem, which is true, rather than
 an internal error, which is not.
 
-The same caution applies in the other direction.  A caller that tested
-`result == GCU_FILE_ERR_IO` to mean "it was not there" - which was the only
-spelling available before - now tests something narrower than it did, and the
-branch quietly stops firing.  `chron`'s leap-second reader fell into exactly
-that:  it used `ERR_IO` to decide whether to fall back from `$TZDIR` to the
-system copy, and the fallback would have gone silent rather than failed.
-Compare against what you mean, and where the old code could not say what it
-meant, re-read the condition rather than converting it mechanically.
+### Splitting a code is a decision, not a conversion
+
+The same caution applies in the other direction, and it does not announce
+itself at compile time.  Before this change the open failure was a flat
+`ERR_IO` with no `errno` inspected at all, so `ERR_IO` was the only spelling
+available for *every* reason an open can fail.  Code that tested for it was not
+saying what it meant; it was saying the most it could.
+
+That matters because one old code now maps to several new ones, and choosing
+which of them to test is a **behaviour decision wearing the costume of a
+rename**.  `chron`'s leap-second reader is the worked example.  It falls back
+from `$TZDIR` to the system table on `ERR_IO`, so today it falls back when the
+file is absent, when the path loops, *and* when the file exists but cannot be
+opened for permissions.  Afterwards those are three different codes, and three
+different conditions are defensible:
+
+| Condition | Means |
+| --- | --- |
+| `NOT_FOUND` | nothing was there |
+| `NOT_FOUND \|\| ACCESS` | we never got it open - today's behaviour |
+| `+ INVALID` | the above, plus a path this filesystem cannot use |
+
+The comment above that condition argues for two of the three, which is the
+point:  the original author could not have distinguished them, so the code
+cannot tell you which they wanted.  Only a person can settle it, and the commit
+that settles it should say so - the next reader will otherwise assume it was
+mechanical.
+
+Nobody would have found this by reading the diff of the library that changed.
+It was found by the session that owned the caller, corrected by a third session
+that read the *old* cutil source rather than reasoning about what it must have
+done, and it never stops compiling at any point.  Where the old code could not
+say what it meant, re-read the condition; do not translate it.
 
 ## 10. Asking what is there
 
