@@ -389,6 +389,15 @@ keeps the mapping compiling across additions *and* degrades honestly:  a result
 you have never heard of is some kind of I/O problem, which is true, rather than
 an internal error, which is not.
 
+The rule inverts inside this library, and `gcu_file_result_string()` is the
+demonstration:  its `switch` names every member and has **no** `default:`, on
+purpose.  It is the one place that must not silently cope with a new member -
+a result with no name would print as `"unknown"` to somebody trying to
+diagnose a failure - so the missing `default:` is what makes the compiler stop
+the build until the name exists.  Deliberately brittle in the one function
+whose job is to be complete, tolerant everywhere else.  A consumer wants the
+opposite of what the owner wants, and the same construct expresses both.
+
 ### Splitting a code is a decision, not a conversion
 
 The same caution applies in the other direction, and it does not announce
