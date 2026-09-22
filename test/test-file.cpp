@@ -177,7 +177,8 @@ TEST(FileRead, WorksOnAFileThatReportsNoSize) {
 TEST_F(Scratch, ReadOfAMissingFileFailsAndAllocatesNothing) {
   void * data = (void *)0x1;
   size_t len = 99;
-  EXPECT_EQ(GCU_FILE_ERR_IO,
+  // NOT_FOUND rather than IO since the read learned to tell them apart.
+  EXPECT_EQ(GCU_FILE_ERR_NOT_FOUND,
       gcu_file_read(at("nope").c_str(), GCU_FILE_UNLIMITED, nullptr, &data,
           &len));
   EXPECT_EQ((void *)0x1, data) << "outputs must be untouched on failure";
@@ -650,6 +651,175 @@ TEST_F(FilePerms, AnUnknownValueIsRefusedAndWritesNothing) {
           (GCU_File_Perms)999, nullptr));
   EXPECT_FALSE(exists(at("out")));
   EXPECT_TRUE(entries().empty());
+}
+#endif
+
+#ifndef _WIN32
+using FileMeta = Scratch;
+
+TEST_F(FileMeta, StatReportsTypeSizeAndAPlausibleTime) {
+  put(at("f"), "twelve bytes");
+  GCU_File_Info info;
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_stat(at("f").c_str(), &info));
+  EXPECT_EQ(GCU_FILE_TYPE_REGULAR, info.type);
+  EXPECT_EQ(12u, info.size);
+  // Not compared against a constant: the assertion is that the epoch and the
+  // scale are right, which a wrong one gets wrong by decades.  1600000000 is
+  // 2020; a value in seconds rather than nanoseconds lands far below it.
+  EXPECT_GT(info.mtime_ns, (int64_t)1600000000 * 1000000000);
+  EXPECT_LT(info.mtime_ns, (int64_t)4000000000 * 1000000000);
+}
+
+TEST_F(FileMeta, StatTellsADirectoryFromAFile) {
+  put(at("f"), "x");
+  GCU_File_Info file_info, dir_info;
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_stat(at("f").c_str(), &file_info));
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_stat(dir.c_str(), &dir_info));
+  EXPECT_EQ(GCU_FILE_TYPE_REGULAR, file_info.type);
+  EXPECT_EQ(GCU_FILE_TYPE_DIRECTORY, dir_info.type);
+  EXPECT_TRUE(gcu_file_is_directory(dir.c_str()));
+  EXPECT_FALSE(gcu_file_is_directory(at("f").c_str()));
+}
+
+TEST_F(FileMeta, StatFollowsALinkAndStatLinkDoesNot) {
+  put(at("target"), "content");
+  ASSERT_EQ(0, symlink(at("target").c_str(), at("link").c_str()));
+
+  GCU_File_Info followed, itself;
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_stat(at("link").c_str(), &followed));
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_stat_link(at("link").c_str(), &itself));
+
+  EXPECT_EQ(GCU_FILE_TYPE_REGULAR, followed.type);
+  EXPECT_EQ(7u, followed.size);
+  EXPECT_EQ(GCU_FILE_TYPE_SYMLINK, itself.type);
+}
+
+TEST_F(FileMeta, AMissingPathIsNotFoundRatherThanAnIoFailure) {
+  GCU_File_Info info;
+  EXPECT_EQ(GCU_FILE_ERR_NOT_FOUND,
+      gcu_file_stat(at("nope").c_str(), &info));
+  EXPECT_FALSE(gcu_file_exists(at("nope").c_str()));
+  EXPECT_FALSE(gcu_file_exists(nullptr));
+  put(at("yes"), "x");
+  EXPECT_TRUE(gcu_file_exists(at("yes").c_str()));
+}
+
+TEST_F(FileMeta, ReadingAMissingFileSaysSoInsteadOfSayingIo) {
+  // The distinction cjelly had to recover by asking the filesystem a second
+  // question after the read had already failed.
+  void * data = nullptr;
+  size_t len = 0;
+  EXPECT_EQ(GCU_FILE_ERR_NOT_FOUND,
+      gcu_file_read(at("absent").c_str(), GCU_FILE_UNLIMITED, nullptr, &data,
+          &len));
+  EXPECT_EQ(nullptr, data);
+}
+
+TEST_F(FileMeta, ReadingADirectoryIsNotMistakenForAMissingFile) {
+  // Both are failures; they are different failures, and the point of the new
+  // code is that they do not collapse together.
+  void * data = nullptr;
+  size_t len = 0;
+  GCU_File_Result r = gcu_file_read(dir.c_str(), GCU_FILE_UNLIMITED, nullptr,
+      &data, &len);
+  EXPECT_NE(GCU_FILE_OK, r);
+  EXPECT_NE(GCU_FILE_ERR_NOT_FOUND, r);
+  gcu_file_free(nullptr, data);
+}
+
+TEST_F(FileMeta, RemoveDeletesAFileAndRefusesADirectory) {
+  put(at("gone"), "x");
+  ASSERT_TRUE(gcu_file_exists(at("gone").c_str()));
+  EXPECT_EQ(GCU_FILE_OK, gcu_file_remove(at("gone").c_str()));
+  EXPECT_FALSE(gcu_file_exists(at("gone").c_str()));
+
+  EXPECT_EQ(GCU_FILE_ERR_NOT_FOUND, gcu_file_remove(at("gone").c_str()));
+  // A directory is refused rather than removed, so that passing the wrong
+  // variable cannot silently do the other operation.
+  EXPECT_EQ(GCU_FILE_ERR_INVALID, gcu_file_remove(dir.c_str()));
+  EXPECT_TRUE(gcu_file_is_directory(dir.c_str()));
+}
+
+TEST_F(FileMeta, RemoveTakesTheLinkAndNotWhatItPointsAt) {
+  put(at("target"), "keep me");
+  ASSERT_EQ(0, symlink(at("target").c_str(), at("link").c_str()));
+  EXPECT_EQ(GCU_FILE_OK, gcu_file_remove(at("link").c_str()));
+  EXPECT_TRUE(gcu_file_exists(at("target").c_str()));
+}
+
+TEST_F(FileMeta, RenameMovesAFileAndReplacesTheDestination) {
+  put(at("a"), "first");
+  put(at("b"), "second");
+  EXPECT_EQ(GCU_FILE_OK,
+      gcu_file_rename(at("a").c_str(), at("b").c_str()));
+  EXPECT_FALSE(gcu_file_exists(at("a").c_str()));
+  Read r(at("b"));
+  ASSERT_EQ(GCU_FILE_OK, r.result);
+  EXPECT_EQ("first", r.str());
+  EXPECT_EQ(GCU_FILE_ERR_NOT_FOUND,
+      gcu_file_rename(at("missing").c_str(), at("c").c_str()));
+}
+
+TEST_F(FileMeta, CopyDuplicatesTheContentAndLeavesTheSourceAlone) {
+  put(at("from"), "payload");
+  EXPECT_EQ(GCU_FILE_OK,
+      gcu_file_copy(at("from").c_str(), at("to").c_str(), GCU_FILE_SYNC_FULL,
+          GCU_FILE_PERMS_PRIVATE, nullptr));
+  Read from(at("from")), to(at("to"));
+  ASSERT_EQ(GCU_FILE_OK, from.result);
+  ASSERT_EQ(GCU_FILE_OK, to.result);
+  EXPECT_EQ("payload", from.str());
+  EXPECT_EQ("payload", to.str());
+}
+
+TEST_F(FileMeta, CopyHandlesContentLargerThanOneChunk) {
+  // The copy is streamed, so the interesting case is the one that goes round
+  // the loop more than once.
+  string big;
+  for (int i = 0; i < 5000; ++i) {
+    big += "0123456789";
+  }
+  put(at("from"), big);
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_copy(at("from").c_str(), at("to").c_str(), GCU_FILE_SYNC_NONE,
+          GCU_FILE_PERMS_PRIVATE, nullptr));
+  Read to(at("to"));
+  ASSERT_EQ(GCU_FILE_OK, to.result);
+  EXPECT_EQ(big.size(), to.len);
+  EXPECT_EQ(big, to.str());
+}
+
+TEST_F(FileMeta, CopyOfAMissingSourceFailsAndWritesNothing) {
+  EXPECT_EQ(GCU_FILE_ERR_NOT_FOUND,
+      gcu_file_copy(at("nope").c_str(), at("to").c_str(), GCU_FILE_SYNC_NONE,
+          GCU_FILE_PERMS_PRIVATE, nullptr));
+  EXPECT_FALSE(gcu_file_exists(at("to").c_str()));
+  EXPECT_TRUE(entries().empty());
+}
+
+TEST_F(FileMeta, CopyTakesThePermissionsAskedForNotTheSourcesOwn) {
+  put(at("from"), "x");
+  ASSERT_EQ(0, chmod(at("from").c_str(), 0666));
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_copy(at("from").c_str(), at("to").c_str(), GCU_FILE_SYNC_NONE,
+          GCU_FILE_PERMS_PRIVATE, nullptr));
+  // Not 0666: carrying the source's permissions across would be this library
+  // making the access-model decision it declines to make.
+  EXPECT_EQ(0600, mode_of(at("to")));
+}
+
+TEST_F(FileMeta, NullArgumentsAreRefusedRatherThanFatal) {
+  GCU_File_Info info;
+  EXPECT_EQ(GCU_FILE_ERR_INVALID, gcu_file_stat(nullptr, &info));
+  EXPECT_EQ(GCU_FILE_ERR_INVALID, gcu_file_stat(at("x").c_str(), nullptr));
+  EXPECT_EQ(GCU_FILE_ERR_INVALID, gcu_file_stat_link(nullptr, &info));
+  EXPECT_EQ(GCU_FILE_ERR_INVALID, gcu_file_remove(nullptr));
+  EXPECT_EQ(GCU_FILE_ERR_INVALID, gcu_file_rename(nullptr, at("x").c_str()));
+  EXPECT_EQ(GCU_FILE_ERR_INVALID, gcu_file_rename(at("x").c_str(), nullptr));
+  EXPECT_EQ(GCU_FILE_ERR_INVALID,
+      gcu_file_copy(nullptr, at("x").c_str(), GCU_FILE_SYNC_NONE,
+          GCU_FILE_PERMS_PRIVATE, nullptr));
+  EXPECT_FALSE(gcu_file_is_directory(nullptr));
 }
 #endif
 

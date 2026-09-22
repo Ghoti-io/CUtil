@@ -35,6 +35,7 @@
 #define _POSIX_C_SOURCE 200809L
 #define _GNU_SOURCE
 
+#include <errno.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -67,6 +68,10 @@ const char * gcu_file_result_string(GCU_File_Result result) {
     case GCU_FILE_ERR_OOM:      return "out of memory";
     case GCU_FILE_ERR_LIMIT:    return "file is larger than the limit";
     case GCU_FILE_ERR_IO:       return "file operation failed";
+    case GCU_FILE_ERR_NOT_FOUND: return "no such file or directory";
+    case GCU_FILE_ERR_EXISTS:   return "already exists";
+    case GCU_FILE_ERR_ACCESS:   return "permission denied";
+    case GCU_FILE_ERR_NOT_EMPTY: return "directory is not empty";
     case GCU_FILE_RESULT_COUNT: break;
   }
   return "unknown";
@@ -94,6 +99,38 @@ void gcu_file_free(const GCU_Allocator * allocator, void * data) {
  * filesystem accepts, so a path merely passing through it opens a different
  * file or none at all.
  */
+/**
+ * Turn the platform's own complaint into this library's vocabulary.
+ *
+ * Only the distinctions this library promises to make.  Everything else is
+ * ERR_IO rather than a longer enum:  a caller can act on "it is not there" and
+ * on "you may not", and cannot usefully act on the difference between ELOOP
+ * and ENAMETOOLONG.
+ */
+static GCU_File_Result file_result_from_errno(int code) {
+  switch (code) {
+    case ENOENT:
+    case ENOTDIR:
+      return GCU_FILE_ERR_NOT_FOUND;
+    case EEXIST:
+      return GCU_FILE_ERR_EXISTS;
+    case EACCES:
+    case EPERM:
+    case EROFS:
+      return GCU_FILE_ERR_ACCESS;
+    // Guarded on the value, not merely on the name: some platforms define
+    // ENOTEMPTY as EEXIST, and a duplicate case label does not compile.
+#if defined(ENOTEMPTY) && ENOTEMPTY != EEXIST
+    case ENOTEMPTY:
+      return GCU_FILE_ERR_NOT_EMPTY;
+#endif
+    case ENOMEM:
+      return GCU_FILE_ERR_OOM;
+    default:
+      return GCU_FILE_ERR_IO;
+  }
+}
+
 static FILE * file_open(const char * path, const char * mode,
     const GCU_Allocator * allocator) {
 #ifdef _WIN32
@@ -147,7 +184,11 @@ GCU_File_Result gcu_file_read(const char * path, size_t max_bytes,
 
   FILE * stream = file_open(path, "rb", allocator);
   if (!stream) {
-    return GCU_FILE_ERR_IO;
+    // A path that is not there is told apart from a file that would not open,
+    // so that a caller does not have to ask the filesystem a second question
+    // afterwards to find out which it was - which is a race as well as a
+    // duplicated query.
+    return file_result_from_errno(errno);
   }
 
   // One byte over the limit is enough to know the file exceeds it, so a
@@ -587,6 +628,229 @@ GCU_File_Result gcu_file_temp_commit(GCU_File_Temp * temp, const char * dest,
   gcu_allocator_free(allocator, temp->path);
   memset(temp, 0, sizeof *temp);
   return result;
+}
+
+/** Fill in @p out from a platform stat buffer. */
+#ifdef _WIN32
+static void file_info_from_find(GCU_File_Info * out,
+    const WIN32_FILE_ATTRIBUTE_DATA * data) {
+  /* TODO(windows): never compiled or run on Windows. */
+  if (data->dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
+    out->type = GCU_FILE_TYPE_SYMLINK;
+  }
+  else if (data->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+    out->type = GCU_FILE_TYPE_DIRECTORY;
+  }
+  else {
+    out->type = GCU_FILE_TYPE_REGULAR;
+  }
+  out->size = ((uint64_t)data->nFileSizeHigh << 32) | data->nFileSizeLow;
+  /* FILETIME counts 100-nanosecond ticks from 1601-01-01; the Unix epoch is
+   * 11644473600 seconds later. */
+  uint64_t ticks = ((uint64_t)data->ftLastWriteTime.dwHighDateTime << 32)
+      | data->ftLastWriteTime.dwLowDateTime;
+  out->mtime_ns = (int64_t)(ticks - 116444736000000000ULL) * 100;
+}
+#else
+static void file_info_from_stat(GCU_File_Info * out, const struct stat * info) {
+  if (S_ISDIR(info->st_mode)) {
+    out->type = GCU_FILE_TYPE_DIRECTORY;
+  }
+  else if (S_ISLNK(info->st_mode)) {
+    out->type = GCU_FILE_TYPE_SYMLINK;
+  }
+  else if (S_ISREG(info->st_mode)) {
+    out->type = GCU_FILE_TYPE_REGULAR;
+  }
+  else {
+    out->type = GCU_FILE_TYPE_OTHER;
+  }
+  out->size = (uint64_t)info->st_size;
+  // st_mtim where it exists, st_mtime where it does not. Whole seconds is a
+  // real answer on filesystems that keep nothing finer; the nanoseconds are
+  // reported when the platform has them, not invented when it does not.
+#if defined(__APPLE__)
+  out->mtime_ns = (int64_t)info->st_mtimespec.tv_sec * 1000000000
+      + info->st_mtimespec.tv_nsec;
+#elif defined(st_mtime) || defined(_POSIX_C_SOURCE)
+  out->mtime_ns = (int64_t)info->st_mtim.tv_sec * 1000000000
+      + info->st_mtim.tv_nsec;
+#else
+  out->mtime_ns = (int64_t)info->st_mtime * 1000000000;
+#endif
+}
+#endif
+
+static GCU_File_Result file_stat_common(const char * path, GCU_File_Info * out,
+    bool follow) {
+  if (!path || !out) {
+    return GCU_FILE_ERR_INVALID;
+  }
+#ifdef _WIN32
+  /* TODO(windows): never compiled or run on Windows.  GetFileAttributesExW
+   * always follows a reparse point for size and time, so the link-only query
+   * reports the type from the attribute bits and the target's size. */
+  (void)follow;
+  wchar_t * wide = gcu_path_internal_to_wide(NULL, path);
+  if (!wide) {
+    return GCU_FILE_ERR_OOM;
+  }
+  WIN32_FILE_ATTRIBUTE_DATA data;
+  BOOL ok = GetFileAttributesExW(wide, GetFileExInfoStandard, &data);
+  gcu_allocator_free(NULL, wide);
+  if (!ok) {
+    DWORD err = GetLastError();
+    if (err == ERROR_FILE_NOT_FOUND || err == ERROR_PATH_NOT_FOUND) {
+      return GCU_FILE_ERR_NOT_FOUND;
+    }
+    return err == ERROR_ACCESS_DENIED ? GCU_FILE_ERR_ACCESS : GCU_FILE_ERR_IO;
+  }
+  file_info_from_find(out, &data);
+  return GCU_FILE_OK;
+#else
+  struct stat info;
+  int rc = follow ? stat(path, &info) : lstat(path, &info);
+  if (rc != 0) {
+    return file_result_from_errno(errno);
+  }
+  file_info_from_stat(out, &info);
+  return GCU_FILE_OK;
+#endif
+}
+
+GCU_File_Result gcu_file_stat(const char * path, GCU_File_Info * out) {
+  return file_stat_common(path, out, true);
+}
+
+GCU_File_Result gcu_file_stat_link(const char * path, GCU_File_Info * out) {
+  return file_stat_common(path, out, false);
+}
+
+bool gcu_file_exists(const char * path) {
+  GCU_File_Info info;
+  return gcu_file_stat(path, &info) == GCU_FILE_OK;
+}
+
+bool gcu_file_is_directory(const char * path) {
+  GCU_File_Info info;
+  return gcu_file_stat(path, &info) == GCU_FILE_OK
+      && info.type == GCU_FILE_TYPE_DIRECTORY;
+}
+
+GCU_File_Result gcu_file_remove(const char * path) {
+  if (!path) {
+    return GCU_FILE_ERR_INVALID;
+  }
+  // Refused rather than delegated: remove() on POSIX unlinks a file and also
+  // removes an empty directory, so a caller who passed the wrong variable
+  // would silently get the other operation.
+  GCU_File_Info info;
+  GCU_File_Result looked = gcu_file_stat_link(path, &info);
+  if (looked != GCU_FILE_OK) {
+    return looked;
+  }
+  if (info.type == GCU_FILE_TYPE_DIRECTORY) {
+    return GCU_FILE_ERR_INVALID;
+  }
+#ifdef _WIN32
+  /* TODO(windows): never compiled or run on Windows. */
+  wchar_t * wide = gcu_path_internal_to_wide(NULL, path);
+  if (!wide) {
+    return GCU_FILE_ERR_OOM;
+  }
+  BOOL ok = DeleteFileW(wide);
+  gcu_allocator_free(NULL, wide);
+  return ok ? GCU_FILE_OK : GCU_FILE_ERR_IO;
+#else
+  if (unlink(path) != 0) {
+    return file_result_from_errno(errno);
+  }
+  return GCU_FILE_OK;
+#endif
+}
+
+GCU_File_Result gcu_file_rename(const char * from, const char * to) {
+  if (!from || !to) {
+    return GCU_FILE_ERR_INVALID;
+  }
+#ifdef _WIN32
+  /* TODO(windows): never compiled or run on Windows. */
+  if (!file_replace(from, to, GCU_FILE_SYNC_NONE, NULL)) {
+    return GCU_FILE_ERR_IO;
+  }
+  return GCU_FILE_OK;
+#else
+  if (rename(from, to) != 0) {
+    // EXDEV is the cross-filesystem case, and it is reported rather than
+    // quietly turned into a copy: a caller who asked for a rename is usually
+    // relying on it being one operation.
+    return file_result_from_errno(errno);
+  }
+  return GCU_FILE_OK;
+#endif
+}
+
+GCU_File_Result gcu_file_copy(const char * from, const char * to,
+    GCU_File_Sync sync, GCU_File_Perms perms,
+    const GCU_Allocator * allocator) {
+  if (!from || !to) {
+    return GCU_FILE_ERR_INVALID;
+  }
+  if (!allocator) {
+    allocator = gcu_allocator_default();
+  }
+
+  FILE * source = file_open(from, "rb", allocator);
+  if (!source) {
+    return file_result_from_errno(errno);
+  }
+
+  size_t need = 0;
+  if (gcu_path_dirname(GCU_PATH_NATIVE, to, NULL, 0, &need) != GCU_PATH_OK) {
+    fclose(source);
+    return GCU_FILE_ERR_INVALID;
+  }
+  char * dir = (char *)gcu_allocator_malloc(allocator, need + 1);
+  if (!dir) {
+    fclose(source);
+    return GCU_FILE_ERR_OOM;
+  }
+  if (gcu_path_dirname(GCU_PATH_NATIVE, to, dir, need + 1, NULL)
+      != GCU_PATH_OK) {
+    gcu_allocator_free(allocator, dir);
+    fclose(source);
+    return GCU_FILE_ERR_IO;
+  }
+
+  GCU_File_Temp temp;
+  GCU_File_Result result = gcu_file_temp_create(&temp, dir,
+      gcu_path_basename(GCU_PATH_NATIVE, to), allocator);
+  gcu_allocator_free(allocator, dir);
+  if (result != GCU_FILE_OK) {
+    fclose(source);
+    return result;
+  }
+
+  // Streamed rather than read whole, so that copying a file larger than
+  // memory is a copy rather than an out-of-memory error.
+  char chunk[GCU_FILE_CHUNK];
+  size_t got;
+  while ((got = fread(chunk, 1, sizeof chunk, source)) > 0) {
+    if (fwrite(chunk, 1, got, gcu_file_temp_stream(&temp)) != got) {
+      result = GCU_FILE_ERR_IO;
+      break;
+    }
+  }
+  if (result == GCU_FILE_OK && ferror(source)) {
+    result = GCU_FILE_ERR_IO;
+  }
+  fclose(source);
+
+  if (result != GCU_FILE_OK) {
+    gcu_file_temp_abort(&temp);
+    return result;
+  }
+  return gcu_file_temp_commit(&temp, to, sync, perms);
 }
 
 GCU_File_Result gcu_file_write_atomic(const char * path, const void * data,

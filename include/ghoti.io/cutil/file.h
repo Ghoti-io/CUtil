@@ -32,7 +32,9 @@
 #define GHOTI_IO_GCU_FILE_H
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <ghoti.io/cutil/allocator.h>
 #include <ghoti.io/cutil/macros.h>
 
@@ -54,8 +56,56 @@ typedef enum GCU_File_Result {
   GCU_FILE_ERR_OOM,      ///< The allocator returned NULL.
   GCU_FILE_ERR_LIMIT,    ///< The file is larger than `max_bytes`.
   GCU_FILE_ERR_IO,       ///< Open, read, write, rename or sync failed.
-  GCU_FILE_RESULT_COUNT, ///< Closes the enum.  Never returned.
+  /**
+   * There is nothing at that path.
+   *
+   * Told apart from ::GCU_FILE_ERR_IO deliberately:  a path that is not there
+   * is usually the caller's own mistake, and a disk that will not read is
+   * not.  Collapsing the two forces every caller that cares to ask the
+   * filesystem a second question afterwards, which is a race as well as a
+   * duplication.
+   */
+  GCU_FILE_ERR_NOT_FOUND,
+  GCU_FILE_ERR_EXISTS,    ///< Something is already there.
+  GCU_FILE_ERR_ACCESS,    ///< The filesystem refused on permission grounds.
+  GCU_FILE_ERR_NOT_EMPTY, ///< A directory still has entries in it.
+  GCU_FILE_RESULT_COUNT,  ///< Closes the enum.  Never returned.
 } GCU_File_Result;
+
+/**
+ * What sort of thing is at a path.
+ */
+typedef enum GCU_File_Type {
+  GCU_FILE_TYPE_REGULAR = 0, ///< An ordinary file.
+  GCU_FILE_TYPE_DIRECTORY,   ///< A directory.
+  GCU_FILE_TYPE_SYMLINK,     ///< A symbolic link, from a query that did not
+                             ///< follow it.
+  GCU_FILE_TYPE_OTHER,       ///< A device, socket, FIFO or anything else.
+} GCU_File_Type;
+
+/**
+ * What the filesystem knows about a path.
+ *
+ * Deliberately small.  Ownership, permissions, link counts, device numbers and
+ * the several kinds of timestamp a platform may or may not keep are left out
+ * for the reason given in `documentation/file.md`:  they cannot be described
+ * accurately on both POSIX and Windows, and a struct that pretended otherwise
+ * would be wrong somewhere rather than absent everywhere.
+ */
+typedef struct GCU_File_Info {
+  GCU_File_Type type; ///< What it is.
+  uint64_t size;      ///< Bytes.  Meaningful for a regular file.
+  /**
+   * Last modification, in nanoseconds since 1970-01-01T00:00:00Z.
+   *
+   * A plain integer and not a `chron` type, because `chron` is built on this
+   * library and not the other way round.  The resolution the filesystem
+   * actually keeps varies - many record whole seconds - so this is the value
+   * converted, not the precision promised.  Windows counts 100-nanosecond
+   * ticks from 1601 and is converted at the boundary.
+   */
+  int64_t mtime_ns;
+} GCU_File_Info;
 
 /**
  * Name a result, for diagnostics.
@@ -159,7 +209,8 @@ typedef enum GCU_File_Perms {
  * @param out_len Receives the length, excluding the added NUL.  Written only
  *   on success.
  * @return ::GCU_FILE_OK, ::GCU_FILE_ERR_INVALID, ::GCU_FILE_ERR_OOM,
- *   ::GCU_FILE_ERR_LIMIT or ::GCU_FILE_ERR_IO.
+ *   ::GCU_FILE_ERR_LIMIT, ::GCU_FILE_ERR_NOT_FOUND, ::GCU_FILE_ERR_ACCESS or
+ *   ::GCU_FILE_ERR_IO.
  */
 GCU_API GCU_File_Result gcu_file_read(const char * path, size_t max_bytes,
   const GCU_Allocator * allocator, void ** out_data, size_t * out_len);
@@ -284,6 +335,108 @@ GCU_API GCU_File_Result gcu_file_temp_commit(GCU_File_Temp * temp,
  *   accepted and ignored.
  */
 GCU_API void gcu_file_temp_abort(GCU_File_Temp * temp);
+
+/**
+ * Ask the filesystem what is at a path.
+ *
+ * Follows symbolic links, so a link to a directory reports
+ * ::GCU_FILE_TYPE_DIRECTORY.  Use ::gcu_file_stat_link() to ask about the link
+ * itself.
+ *
+ * @param path The path to ask about.
+ * @param out Filled in on success; untouched otherwise.
+ * @return ::GCU_FILE_OK, ::GCU_FILE_ERR_INVALID, ::GCU_FILE_ERR_NOT_FOUND,
+ *   ::GCU_FILE_ERR_ACCESS or ::GCU_FILE_ERR_IO.
+ */
+GCU_API GCU_File_Result gcu_file_stat(const char * path, GCU_File_Info * out);
+
+/**
+ * Ask about a path without following a symbolic link at the end of it.
+ *
+ * The distinction matters to anything that walks a tree:  following links is
+ * how a walk leaves the tree it was asked about, and how a recursive delete
+ * removes something it was never pointed at.
+ *
+ * @param path The path to ask about.
+ * @param out Filled in on success; untouched otherwise.
+ * @return As ::gcu_file_stat().
+ */
+GCU_API GCU_File_Result gcu_file_stat_link(const char * path,
+  GCU_File_Info * out);
+
+/**
+ * Whether anything exists at a path.
+ *
+ * Convenience over ::gcu_file_stat(), and it answers "no" both for a path that
+ * is absent and for one the caller is not allowed to look at.  When that
+ * difference matters - and for anything security-shaped it does - ask
+ * ::gcu_file_stat() instead and read the result.
+ *
+ * Note also that the answer is history by the time it is returned:  anything
+ * may create or remove that path immediately afterwards.  Use it to give a
+ * better error message, not to decide that a later operation will succeed.
+ *
+ * @param path The path to test.  NULL is "no".
+ * @return true if something is there.
+ */
+GCU_API bool gcu_file_exists(const char * path);
+
+/**
+ * Whether a path names a directory, following symbolic links.
+ *
+ * Carries the same caveats as ::gcu_file_exists().
+ *
+ * @param path The path to test.  NULL is "no".
+ * @return true if it is a directory.
+ */
+GCU_API bool gcu_file_is_directory(const char * path);
+
+/**
+ * Delete a file.
+ *
+ * Not a directory:  ::gcu_dir_remove() is that, and keeping them apart means a
+ * caller cannot delete a whole directory by passing the wrong variable.
+ *
+ * @param path The file to delete.
+ * @return ::GCU_FILE_OK, ::GCU_FILE_ERR_INVALID, ::GCU_FILE_ERR_NOT_FOUND,
+ *   ::GCU_FILE_ERR_ACCESS or ::GCU_FILE_ERR_IO.
+ */
+GCU_API GCU_File_Result gcu_file_remove(const char * path);
+
+/**
+ * Move a file, replacing anything already at the destination.
+ *
+ * Atomic only within one filesystem; across filesystems this fails rather than
+ * silently becoming a copy, because a copy is not atomic and a caller who
+ * asked for a rename is usually relying on that.  ::gcu_file_copy() followed
+ * by ::gcu_file_remove() is the explicit spelling of the other thing.
+ *
+ * @param from The existing path.
+ * @param to The path to move it to.
+ * @return ::GCU_FILE_OK, ::GCU_FILE_ERR_INVALID, ::GCU_FILE_ERR_NOT_FOUND,
+ *   ::GCU_FILE_ERR_ACCESS or ::GCU_FILE_ERR_IO.
+ */
+GCU_API GCU_File_Result gcu_file_rename(const char * from, const char * to);
+
+/**
+ * Copy a file's contents to another path.
+ *
+ * Goes through ::gcu_file_temp_create() and ::gcu_file_temp_commit(), so the
+ * destination appears whole or not at all and a failed copy leaves no
+ * half-written file behind.  @p perms and @p sync mean what they mean there;
+ * the source's own permissions are *not* carried across, because that would be
+ * this library making the access-model decision it declines to make.
+ *
+ * @param from The file to read.
+ * @param to The path to write.  Replaced if it exists.
+ * @param sync How hard to try to reach the disk.
+ * @param perms What permissions the copy should carry.
+ * @param allocator Allocator for working memory, or NULL for the default.
+ * @return ::GCU_FILE_OK, ::GCU_FILE_ERR_INVALID, ::GCU_FILE_ERR_NOT_FOUND,
+ *   ::GCU_FILE_ERR_OOM, ::GCU_FILE_ERR_ACCESS or ::GCU_FILE_ERR_IO.
+ */
+GCU_API GCU_File_Result gcu_file_copy(const char * from, const char * to,
+  GCU_File_Sync sync, GCU_File_Perms perms, const GCU_Allocator * allocator);
 
 /**
  * Replace a file's contents, atomically.
