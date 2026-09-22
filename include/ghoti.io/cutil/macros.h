@@ -135,6 +135,9 @@
 
 /**
  * Indicate whether the `wchar` type is signed in this implementation.
+ *
+ * Expands to the literal `1` or `0`, so it is usable both in an expression and
+ * in an `#if`.
  */
 #define GCU_WCHAR_SIGNED
 #endif // DOXYGEN
@@ -150,20 +153,40 @@
 #define GHOTI_IO_GCU_MAX_INT32  0x7FFFFFFF
 #define GHOTI_IO_GCU_MAX_INT16  0x7FFF
 
+// Both macros below expand to a literal.  GCU_WCHAR_SIGNED used to expand to
+// `(WCHAR_MAX == GHOTI_IO_GCU_MAX_INT32)`, which is evaluated where the macro
+// is *used* rather than here - and by then the #undef at the bottom of this
+// block has removed the helper.  In an expression that is a compile error; in
+// an `#if` the undefined identifier becomes 0, so the test silently degraded
+// to `WCHAR_MAX == 0` and answered "unsigned" on every platform, including the
+// ones where wchar_t is signed.  Resolving the comparison here, while the
+// helpers still exist, is what keeps the answer usable after they are gone.
 #if (WCHAR_MAX == GHOTI_IO_GCU_MAX_UINT64) || (WCHAR_MAX == GHOTI_IO_GCU_MAX_INT64)
-// 64-bit signed
+// 64-bit
 #define GCU_WCHAR_WIDTH 8
-#define GCU_WCHAR_SIGNED (WCHAR_MAX == GHOTI_IO_GCU_MAX_INT64)
+#if WCHAR_MAX == GHOTI_IO_GCU_MAX_INT64
+#define GCU_WCHAR_SIGNED 1
+#else
+#define GCU_WCHAR_SIGNED 0
+#endif
 
 #elif (WCHAR_MAX == GHOTI_IO_GCU_MAX_UINT32) || (WCHAR_MAX == GHOTI_IO_GCU_MAX_INT32)
-// 32-bit signed
+// 32-bit
 #define GCU_WCHAR_WIDTH 4
-#define GCU_WCHAR_SIGNED (WCHAR_MAX == GHOTI_IO_GCU_MAX_INT32)
+#if WCHAR_MAX == GHOTI_IO_GCU_MAX_INT32
+#define GCU_WCHAR_SIGNED 1
+#else
+#define GCU_WCHAR_SIGNED 0
+#endif
 
 #elif (WCHAR_MAX == GHOTI_IO_GCU_MAX_UINT16) || (WCHAR_MAX == GHOTI_IO_GCU_MAX_INT16)
-// 16-bit signed
+// 16-bit
 #define GCU_WCHAR_WIDTH 2
-#define GCU_WCHAR_SIGNED (WCHAR_MAX == GHOTI_IO_GCU_MAX_INT16)
+#if WCHAR_MAX == GHOTI_IO_GCU_MAX_INT16
+#define GCU_WCHAR_SIGNED 1
+#else
+#define GCU_WCHAR_SIGNED 0
+#endif
 
 #else
 #error "Could not determine GCU_WCHAR_WIDTH and GCU_WCHAR_SIGNED"
