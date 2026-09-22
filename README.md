@@ -99,6 +99,8 @@ Provides whole-file reading and atomic whole-file replacement.  Built on the Pat
 
 `GCU_FILE_SYNC_FULL` is the zero value, so a caller who does not think about it gets durability:  the content is committed before the rename, and a failure there is reported.  The directory entry is committed afterwards on a best-effort basis, because several filesystems refuse the request and failing an otherwise complete replacement over it would be worse.  `GCU_FILE_SYNC_NONE` keeps the atomicity and gives up only the durability.
 
+`GCU_File_Perms` says what permissions the finished file carries, because the destination used to inherit the temporary file's owner-only mode and nothing said so.  `GCU_FILE_PERMS_PRIVATE` is the zero value and keeps the file to its owner; `GCU_FILE_PERMS_DEFAULT` gives it what an ordinary `fopen()` here would have produced, asked of the operating system rather than computed, because a default ACL on the directory overrides the umask; `GCU_FILE_PERMS_PRESERVE` keeps whatever the destination already had, so rewriting a file somebody deliberately narrowed does not widen it.  Three values and not a `mode_t`:  ownership, ACLs and the rest of an access model cannot be described honestly on both POSIX and Windows, and remain the caller's business.  The temporary stays owner-only until the moment it is renamed, whichever is chosen.
+
 The design and the reasoning behind each decision are in `documentation/file.md`.
 
 ### Path

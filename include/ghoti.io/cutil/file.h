@@ -90,6 +90,55 @@ typedef enum GCU_File_Sync {
 } GCU_File_Sync;
 
 /**
+ * What permissions the finished file should carry.
+ *
+ * Deliberately three values and not a `mode_t`.  An access model cannot be
+ * described accurately across platforms - POSIX derives a new file's
+ * permissions from the process umask, Windows inherits access control entries
+ * from the parent directory and has no umask at all - so this library does not
+ * try to model one.  It asks the only question it can answer on both: should
+ * the file be readable by anyone other than its owner?  Anything finer is the
+ * caller's to do, with its own platform's own API.
+ *
+ * The temporary file is owner-only for its whole life regardless of this
+ * setting.  The choice is applied immediately before the rename, so content is
+ * never readable before it is complete.
+ */
+typedef enum GCU_File_Perms {
+  /**
+   * Only the owner may read or write it.
+   *
+   * This is the zero value, so a caller who does not think about it does not
+   * publish anything by omission.  It is the right choice for a token, a
+   * key, a session cache - anything a caller would not put in a world-
+   * readable directory on purpose.
+   */
+  GCU_FILE_PERMS_PRIVATE = 0,
+  /**
+   * Whatever this platform would have given a newly created file.
+   *
+   * The same permissions an ordinary `fopen()` of the destination would have
+   * produced, which on POSIX means the umask is honoured and a default ACL on
+   * the containing directory overrides it.  This library does not compute
+   * that - it asks the operating system, because the rules that combine the
+   * umask with an inherited ACL are the operating system's and reproducing
+   * them here would only reproduce them wrongly.
+   */
+  GCU_FILE_PERMS_DEFAULT,
+  /**
+   * The permissions the destination already has, or ::GCU_FILE_PERMS_DEFAULT
+   * if it does not exist yet.
+   *
+   * The right choice for replacing a file rather than creating one:  a
+   * configuration file somebody has deliberately narrowed should not be
+   * widened by being rewritten, and one they have deliberately widened should
+   * not be narrowed.  Replacing a file is not the same act as creating it,
+   * and this is the value that says so.
+   */
+  GCU_FILE_PERMS_PRESERVE,
+} GCU_File_Perms;
+
+/**
  * Read an entire file into memory.
  *
  * The file is read in chunks rather than sized first, so it works on inputs
@@ -209,13 +258,20 @@ GCU_API const char * gcu_file_temp_path(const GCU_File_Temp * temp);
  * failing an otherwise complete replacement over it would be worse than the
  * weaker promise.  `documentation/file.md` says what that promise is.
  *
+ * The temporary file is owner-only until this call, whatever @p perms says.
+ * The permissions are applied immediately before the rename, so no reader can
+ * see the content until all of it is there.  A refusal to apply them fails
+ * the call and leaves @p dest untouched, because handing back a file with
+ * permissions other than the ones asked for is worse than not writing it.
+ *
  * @param temp The handle, from ::gcu_file_temp_create().
  * @param dest The path to replace.  It need not already exist.
  * @param sync How hard to try to reach the disk.
+ * @param perms What permissions the finished file should carry.
  * @return ::GCU_FILE_OK, ::GCU_FILE_ERR_INVALID or ::GCU_FILE_ERR_IO.
  */
 GCU_API GCU_File_Result gcu_file_temp_commit(GCU_File_Temp * temp,
-  const char * dest, GCU_File_Sync sync);
+  const char * dest, GCU_File_Sync sync, GCU_File_Perms perms);
 
 /**
  * Close and delete a temporary file.
@@ -241,13 +297,16 @@ GCU_API void gcu_file_temp_abort(GCU_File_Temp * temp);
  * @param data The bytes to write.  May be NULL only if @p len is 0.
  * @param len How many bytes.
  * @param sync How hard to try to reach the disk.
+ * @param perms What permissions the finished file should carry.  Note that
+ *   the zero value is ::GCU_FILE_PERMS_PRIVATE, not the permissions a plain
+ *   `fopen()` would have produced; pass ::GCU_FILE_PERMS_DEFAULT for those.
  * @param allocator Allocator for working memory, or NULL for the default.
  *   Nothing is handed back to free.
  * @return ::GCU_FILE_OK, ::GCU_FILE_ERR_INVALID, ::GCU_FILE_ERR_OOM or
  *   ::GCU_FILE_ERR_IO.
  */
 GCU_API GCU_File_Result gcu_file_write_atomic(const char * path,
-  const void * data, size_t len, GCU_File_Sync sync,
+  const void * data, size_t len, GCU_File_Sync sync, GCU_File_Perms perms,
   const GCU_Allocator * allocator);
 
 #ifdef __cplusplus

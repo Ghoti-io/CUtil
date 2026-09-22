@@ -315,7 +315,7 @@ TEST_F(Scratch, TempAbortIsSafeOnAHandleThatWasNeverOpenedOrIsAlreadySpent) {
       gcu_file_temp_create(&committed, dir.c_str(), "t", nullptr));
   ASSERT_EQ(GCU_FILE_OK,
       gcu_file_temp_commit(&committed, at("done").c_str(),
-          GCU_FILE_SYNC_FULL));
+          GCU_FILE_SYNC_FULL, GCU_FILE_PERMS_PRIVATE));
   gcu_file_temp_abort(&committed);
   EXPECT_TRUE(exists(at("done"))) << "abort after commit deleted the result";
 }
@@ -328,7 +328,7 @@ TEST_F(Scratch, TempCommitMovesTheContentIntoPlaceAndLeavesNoTemporary) {
   ASSERT_EQ(5u, fwrite("abcde", 1, 5, gcu_file_temp_stream(&temp)));
 
   ASSERT_EQ(GCU_FILE_OK,
-      gcu_file_temp_commit(&temp, at("out").c_str(), GCU_FILE_SYNC_FULL));
+      gcu_file_temp_commit(&temp, at("out").c_str(), GCU_FILE_SYNC_FULL, GCU_FILE_PERMS_PRIVATE));
 
   EXPECT_FALSE(exists(temp_path));
   Read r(at("out"));
@@ -344,7 +344,7 @@ TEST_F(Scratch, TempCommitReplacesAFileThatAlreadyExists) {
       gcu_file_temp_create(&temp, dir.c_str(), "t", nullptr));
   ASSERT_EQ(3u, fwrite("new", 1, 3, gcu_file_temp_stream(&temp)));
   ASSERT_EQ(GCU_FILE_OK,
-      gcu_file_temp_commit(&temp, at("out").c_str(), GCU_FILE_SYNC_FULL));
+      gcu_file_temp_commit(&temp, at("out").c_str(), GCU_FILE_SYNC_FULL, GCU_FILE_PERMS_PRIVATE));
 
   Read r(at("out"));
   ASSERT_EQ(GCU_FILE_OK, r.result);
@@ -356,15 +356,15 @@ TEST_F(Scratch, CommitIsRefusedOnAHandleWithNothingOpen) {
   GCU_File_Temp zeroed;
   memset(&zeroed, 0, sizeof zeroed);
   EXPECT_EQ(GCU_FILE_ERR_INVALID,
-      gcu_file_temp_commit(&zeroed, at("x").c_str(), GCU_FILE_SYNC_FULL));
+      gcu_file_temp_commit(&zeroed, at("x").c_str(), GCU_FILE_SYNC_FULL, GCU_FILE_PERMS_PRIVATE));
   EXPECT_EQ(GCU_FILE_ERR_INVALID,
-      gcu_file_temp_commit(nullptr, at("x").c_str(), GCU_FILE_SYNC_FULL));
+      gcu_file_temp_commit(nullptr, at("x").c_str(), GCU_FILE_SYNC_FULL, GCU_FILE_PERMS_PRIVATE));
 
   GCU_File_Temp temp;
   ASSERT_EQ(GCU_FILE_OK,
       gcu_file_temp_create(&temp, dir.c_str(), "t", nullptr));
   EXPECT_EQ(GCU_FILE_ERR_INVALID,
-      gcu_file_temp_commit(&temp, nullptr, GCU_FILE_SYNC_FULL));
+      gcu_file_temp_commit(&temp, nullptr, GCU_FILE_SYNC_FULL, GCU_FILE_PERMS_PRIVATE));
   gcu_file_temp_abort(&temp);
 }
 
@@ -380,7 +380,7 @@ TEST_F(Scratch, CommitIntoAMissingDirectoryFailsAndRemovesTheTemporary) {
 
   EXPECT_EQ(GCU_FILE_ERR_IO,
       gcu_file_temp_commit(&temp, (dir + "/no/such/dir/out").c_str(),
-          GCU_FILE_SYNC_FULL));
+          GCU_FILE_SYNC_FULL, GCU_FILE_PERMS_PRIVATE));
 
   EXPECT_FALSE(exists(temp_path)) << "a failed commit left its temporary";
   EXPECT_TRUE(entries().empty());
@@ -397,7 +397,7 @@ TEST_F(Scratch, WriteAtomicRoundTripsAndLeavesNothingBehind) {
   string payload("some\0bytes", 10);
   ASSERT_EQ(GCU_FILE_OK,
       gcu_file_write_atomic(at("out").c_str(), payload.data(), payload.size(),
-          GCU_FILE_SYNC_FULL, nullptr));
+          GCU_FILE_SYNC_FULL, GCU_FILE_PERMS_PRIVATE, nullptr));
   Read r(at("out"));
   ASSERT_EQ(GCU_FILE_OK, r.result);
   EXPECT_EQ(payload, r.str());
@@ -409,7 +409,7 @@ TEST_F(Scratch, WriteAtomicReplacesAnExistingFileAndAcceptsZeroLength) {
   put(at("out"), "previous");
   ASSERT_EQ(GCU_FILE_OK,
       gcu_file_write_atomic(at("out").c_str(), nullptr, 0,
-          GCU_FILE_SYNC_FULL, nullptr));
+          GCU_FILE_SYNC_FULL, GCU_FILE_PERMS_PRIVATE, nullptr));
   Read r(at("out"));
   ASSERT_EQ(GCU_FILE_OK, r.result);
   EXPECT_EQ(0u, r.len);
@@ -419,7 +419,7 @@ TEST_F(Scratch, WriteAtomicReplacesAnExistingFileAndAcceptsZeroLength) {
 TEST_F(Scratch, WriteAtomicWritesTheContentWithoutSyncingToo) {
   // SYNC_NONE changes only the durability promise, never the content.
   ASSERT_EQ(GCU_FILE_OK,
-      gcu_file_write_atomic(at("out").c_str(), "xyz", 3, GCU_FILE_SYNC_NONE,
+      gcu_file_write_atomic(at("out").c_str(), "xyz", 3, GCU_FILE_SYNC_NONE, GCU_FILE_PERMS_PRIVATE,
           nullptr));
   Read r(at("out"));
   ASSERT_EQ(GCU_FILE_OK, r.result);
@@ -429,7 +429,7 @@ TEST_F(Scratch, WriteAtomicWritesTheContentWithoutSyncingToo) {
 TEST_F(Scratch, WriteAtomicIntoAMissingDirectoryFailsAndLeavesNoLitter) {
   EXPECT_NE(GCU_FILE_OK,
       gcu_file_write_atomic((dir + "/no/such/dir/out").c_str(), "x", 1,
-          GCU_FILE_SYNC_FULL, nullptr));
+          GCU_FILE_SYNC_FULL, GCU_FILE_PERMS_PRIVATE, nullptr));
   EXPECT_TRUE(entries().empty());
 }
 
@@ -445,7 +445,7 @@ TEST_F(Scratch, WriteAtomicDoesNotUseTheSystemTemporaryDirectory) {
   setenv("TMPDIR", "/no/such/temporary/directory", 1);
 
   GCU_File_Result result = gcu_file_write_atomic(at("out").c_str(), "abc", 3,
-      GCU_FILE_SYNC_FULL, nullptr);
+      GCU_FILE_SYNC_FULL, GCU_FILE_PERMS_PRIVATE, nullptr);
 
   if (saved) {
     setenv("TMPDIR", restore.c_str(), 1);
@@ -476,15 +476,182 @@ TEST_F(Scratch, NullArgumentsAreRefusedRatherThanFatal) {
   EXPECT_EQ(GCU_FILE_ERR_INVALID,
       gcu_file_temp_create(nullptr, nullptr, nullptr, nullptr));
   EXPECT_EQ(GCU_FILE_ERR_INVALID,
-      gcu_file_write_atomic(nullptr, "x", 1, GCU_FILE_SYNC_FULL, nullptr));
+      gcu_file_write_atomic(nullptr, "x", 1, GCU_FILE_SYNC_FULL, GCU_FILE_PERMS_PRIVATE, nullptr));
   // Bytes may only be NULL when there are none of them.
   EXPECT_EQ(GCU_FILE_ERR_INVALID,
-      gcu_file_write_atomic(at("x").c_str(), nullptr, 5, GCU_FILE_SYNC_FULL,
+      gcu_file_write_atomic(at("x").c_str(), nullptr, 5, GCU_FILE_SYNC_FULL, GCU_FILE_PERMS_PRIVATE,
           nullptr));
   EXPECT_EQ(nullptr, gcu_file_temp_stream(nullptr));
   EXPECT_EQ(nullptr, gcu_file_temp_path(nullptr));
   gcu_file_free(nullptr, nullptr);
 }
+
+#ifndef _WIN32
+/** The permission bits of a path, or -1 if it is not there. */
+int mode_of(const string & path) {
+  struct stat info;
+  if (stat(path.c_str(), &info) != 0) {
+    return -1;
+  }
+  return (int)(info.st_mode & 07777);
+}
+
+/** What an ordinary fopen() in this directory produces, right now. */
+int reference_mode(const string & dir) {
+  string probe = dir + "/reference-probe";
+  put(probe, "x");
+  int mode = mode_of(probe);
+  remove(probe.c_str());
+  return mode;
+}
+
+using FilePerms = Scratch;
+
+TEST_F(FilePerms, PrivateIsTheZeroValueAndKeepsTheFileToItsOwner) {
+  // Asserted against the zero value spelled as 0, not as the enumerator,
+  // because the guarantee being made is about what a caller who passes
+  // nothing thoughtful gets.
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_write_atomic(at("secret").c_str(), "s", 1, GCU_FILE_SYNC_FULL,
+          (GCU_File_Perms)0, nullptr));
+  EXPECT_EQ(0600, mode_of(at("secret")));
+}
+
+TEST_F(FilePerms, DefaultMatchesWhatAnOrdinaryOpenWouldHaveProduced) {
+  // The reference is measured rather than written down: it depends on the
+  // umask this test happens to run under, and on any default ACL on the
+  // temporary directory, neither of which the test may assume.
+  int reference = reference_mode(dir);
+  ASSERT_NE(-1, reference);
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_write_atomic(at("out").c_str(), "o", 1, GCU_FILE_SYNC_FULL,
+          GCU_FILE_PERMS_DEFAULT, nullptr));
+  EXPECT_EQ(reference, mode_of(at("out")));
+}
+
+TEST_F(FilePerms, DefaultFollowsAChangedUmaskRatherThanAFixedNumber) {
+  // Two writes under two umasks. If the mode were a constant in the source,
+  // or read once and cached, these would agree; they must not.
+  mode_t saved = umask(0077);
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_write_atomic(at("tight").c_str(), "t", 1, GCU_FILE_SYNC_FULL,
+          GCU_FILE_PERMS_DEFAULT, nullptr));
+  int tight = mode_of(at("tight"));
+  umask(0022);
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_write_atomic(at("loose").c_str(), "l", 1, GCU_FILE_SYNC_FULL,
+          GCU_FILE_PERMS_DEFAULT, nullptr));
+  int loose = mode_of(at("loose"));
+  umask(saved);
+
+  EXPECT_EQ(0600, tight);
+  EXPECT_EQ(0644, loose);
+}
+
+TEST_F(FilePerms, PreserveKeepsTheModeTheDestinationAlreadyHad) {
+  put(at("config"), "old");
+  ASSERT_EQ(0, chmod(at("config").c_str(), 0640));
+
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_write_atomic(at("config").c_str(), "new", 3,
+          GCU_FILE_SYNC_FULL, GCU_FILE_PERMS_PRESERVE, nullptr));
+
+  EXPECT_EQ(0640, mode_of(at("config")));
+  Read r(at("config"));
+  ASSERT_EQ(GCU_FILE_OK, r.result);
+  EXPECT_EQ("new", r.str());
+}
+
+TEST_F(FilePerms, PreserveDoesNotWidenAFileSomebodyNarrowedOnPurpose) {
+  // The case that motivates the value existing: a umask that would have
+  // produced 0644 must not undo a deliberate chmod 600.
+  mode_t saved = umask(0022);
+  put(at("key"), "old");
+  ASSERT_EQ(0, chmod(at("key").c_str(), 0600));
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_write_atomic(at("key").c_str(), "new", 3, GCU_FILE_SYNC_FULL,
+          GCU_FILE_PERMS_PRESERVE, nullptr));
+  umask(saved);
+  EXPECT_EQ(0600, mode_of(at("key")));
+}
+
+TEST_F(FilePerms, PreserveOnAFileThatIsNotThereYetCreatesItTheOrdinaryWay) {
+  int reference = reference_mode(dir);
+  ASSERT_NE(-1, reference);
+  ASSERT_EQ(-1, mode_of(at("fresh")));
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_write_atomic(at("fresh").c_str(), "f", 1, GCU_FILE_SYNC_FULL,
+          GCU_FILE_PERMS_PRESERVE, nullptr));
+  EXPECT_EQ(reference, mode_of(at("fresh")));
+}
+
+TEST_F(FilePerms, TheTemporaryStaysPrivateEvenWhenTheResultWillNotBe) {
+  // The window this closes: between create and commit the temporary holds
+  // the whole content under a name in a directory others may read.
+  mode_t saved = umask(0022);
+  GCU_File_Temp temp;
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_temp_create(&temp, dir.c_str(), "wide", nullptr));
+  ASSERT_EQ(0600, mode_of(gcu_file_temp_path(&temp)));
+  fputs("content", gcu_file_temp_stream(&temp));
+  // Still private with the content in it, not merely at the moment of
+  // creation.
+  EXPECT_EQ(0600, mode_of(gcu_file_temp_path(&temp)));
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_temp_commit(&temp, at("wide").c_str(), GCU_FILE_SYNC_FULL,
+          GCU_FILE_PERMS_DEFAULT));
+  umask(saved);
+  EXPECT_EQ(0644, mode_of(at("wide")));
+}
+
+TEST_F(FilePerms, TheProbeLeavesNothingBehind) {
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_write_atomic(at("out").c_str(), "x", 1, GCU_FILE_SYNC_FULL,
+          GCU_FILE_PERMS_DEFAULT, nullptr));
+  EXPECT_EQ(vector<string>{"out"}, entries());
+}
+
+TEST_F(FilePerms, TheProbeRefusesANameSomebodyElseAlreadyHolds) {
+  // White-box, deliberately: the probe is created beside the temporary file,
+  // at its name plus one character.  Planting a symbolic link there is the
+  // attack the probe's O_EXCL exists to refuse - without it the probe would
+  // follow the link and truncate whatever it points at, with the permissions
+  // of whoever is running this.
+  //
+  // It is also the only way the suite can reach "the permissions could not be
+  // settled" in isolation.  Making the directory unwritable instead breaks
+  // the rename as well, so the call fails either way and the assertion holds
+  // for the wrong reason.
+  put(at("victim"), "must not be touched");
+
+  GCU_File_Temp temp;
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_temp_create(&temp, dir.c_str(), "t", nullptr));
+  string blocker = string(gcu_file_temp_path(&temp)) + "p";
+  ASSERT_EQ(0, symlink(at("victim").c_str(), blocker.c_str()));
+  fputs("replacement", gcu_file_temp_stream(&temp));
+
+  GCU_File_Result result = gcu_file_temp_commit(&temp, at("dest").c_str(),
+      GCU_FILE_SYNC_FULL, GCU_FILE_PERMS_DEFAULT);
+  remove(blocker.c_str());
+
+  EXPECT_EQ(GCU_FILE_ERR_IO, result);
+  // Nothing was renamed into place: permissions that could not be settled
+  // mean a replacement that did not happen.
+  EXPECT_FALSE(exists(at("dest")));
+  Read v(at("victim"));
+  ASSERT_EQ(GCU_FILE_OK, v.result);
+  EXPECT_EQ("must not be touched", v.str());
+}
+
+TEST_F(FilePerms, AnUnknownValueIsRefusedAndWritesNothing) {
+  EXPECT_NE(GCU_FILE_OK,
+      gcu_file_write_atomic(at("out").c_str(), "x", 1, GCU_FILE_SYNC_FULL,
+          (GCU_File_Perms)999, nullptr));
+  EXPECT_FALSE(exists(at("out")));
+  EXPECT_TRUE(entries().empty());
+}
+#endif
 
 TEST(FileResultString, NamesEveryValueAndRefusesNone) {
   for (int i = 0; i < GCU_FILE_RESULT_COUNT; ++i) {

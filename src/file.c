@@ -50,6 +50,7 @@
 #include <windows.h>
 #else
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #endif
 
@@ -412,6 +413,101 @@ static void file_sync_directory(const char * path,
 #endif
 }
 
+/**
+ * Ask the operating system what permissions a new file here would get.
+ *
+ * By creating one and looking, rather than by reading the umask and combining
+ * it with the directory's mode.  Two reasons.  The umask is process-global and
+ * can only be read by setting it - `umask(0)` followed by putting it back -
+ * which is a window in which every other thread creating a file gets 0666.
+ * And the answer is not a function of the umask anyway:  a default ACL on the
+ * containing directory overrides the umask entirely, so a computed answer is
+ * wrong on exactly the systems that went to the trouble of configuring one.
+ *
+ * The probe is created beside the temporary file, so it lands in the same
+ * directory under the same ACL.  O_EXCL because a name in a directory somebody
+ * else can write to is not a file until it has been created as one.
+ *
+ * @return true and the mode, or false if the probe could not be made.
+ */
+static bool file_probe_new_file_mode(const char * temp_path,
+    const GCU_Allocator * allocator, mode_t * out_mode) {
+  size_t len = strlen(temp_path);
+  char * probe = (char *)gcu_allocator_malloc(allocator, len + 2);
+  if (!probe) {
+    return false;
+  }
+  memcpy(probe, temp_path, len);
+  // The temporary's own name is unique already, so a suffix of it is a name
+  // nothing else in this directory holds.
+  probe[len] = 'p';
+  probe[len + 1] = '\0';
+
+  bool found = false;
+  int fd = open(probe, O_CREAT | O_EXCL | O_WRONLY, 0666);
+  if (fd >= 0) {
+    struct stat info;
+    if (fstat(fd, &info) == 0) {
+      *out_mode = info.st_mode & 07777;
+      found = true;
+    }
+    close(fd);
+    (void)remove(probe);
+  }
+  gcu_allocator_free(allocator, probe);
+  return found;
+}
+
+/**
+ * Put the requested permissions on the temporary file, before it is renamed.
+ *
+ * Before, and not after, because the rename is the moment the file becomes
+ * reachable under a name anybody else knows.  Doing it afterwards would leave
+ * a window in which the destination exists with the temporary file's own
+ * owner-only permissions, which is a different file from the one that was
+ * asked for.
+ */
+static bool file_apply_perms(FILE * stream, const char * temp_path,
+    const char * dest, GCU_File_Perms perms, const GCU_Allocator * allocator) {
+#ifdef _WIN32
+  /* TODO(windows): never compiled or run on Windows.  _wchmod moves only the
+   * read-only attribute, and the access control entries that actually decide
+   * this are inherited from the destination's directory at creation time.
+   * PRESERVE and DEFAULT therefore both already hold; PRIVATE does not, and
+   * making it hold needs SetSecurityInfo and a constructed DACL. */
+  (void)stream;
+  (void)temp_path;
+  (void)dest;
+  (void)perms;
+  (void)allocator;
+  return true;
+#else
+  if (perms == GCU_FILE_PERMS_PRIVATE) {
+    // Which is what mkstemp() already made it.
+    return true;
+  }
+  if (perms != GCU_FILE_PERMS_DEFAULT && perms != GCU_FILE_PERMS_PRESERVE) {
+    return false;
+  }
+
+  mode_t mode = 0;
+  bool known = false;
+  if (perms == GCU_FILE_PERMS_PRESERVE) {
+    struct stat info;
+    if (stat(dest, &info) == 0) {
+      mode = info.st_mode & 07777;
+      known = true;
+    }
+    // Otherwise there is no destination to preserve, so this is a creation
+    // after all and the answer is the same one DEFAULT wants.
+  }
+  if (!known && !file_probe_new_file_mode(temp_path, allocator, &mode)) {
+    return false;
+  }
+  return fchmod(fileno(stream), mode) == 0;
+#endif
+}
+
 /** Move @p source over @p dest, replacing it. */
 static bool file_replace(const char * source, const char * dest,
     GCU_File_Sync sync, const GCU_Allocator * allocator) {
@@ -440,7 +536,7 @@ static bool file_replace(const char * source, const char * dest,
 }
 
 GCU_File_Result gcu_file_temp_commit(GCU_File_Temp * temp, const char * dest,
-    GCU_File_Sync sync) {
+    GCU_File_Sync sync, GCU_File_Perms perms) {
   if (!temp || !temp->path || !temp->stream || !dest) {
     return GCU_FILE_ERR_INVALID;
   }
@@ -454,6 +550,13 @@ GCU_File_Result gcu_file_temp_commit(GCU_File_Temp * temp, const char * dest,
   // These are the bytes, so a refusal here is reported.
   if (result == GCU_FILE_OK && sync == GCU_FILE_SYNC_FULL
       && !file_sync_stream(temp->stream)) {
+    result = GCU_FILE_ERR_IO;
+  }
+  // While there is still a descriptor to do it through, and before the rename
+  // publishes the file under a name somebody else can open.  A file with the
+  // wrong permissions is the wrong file, so failing here fails the call.
+  if (result == GCU_FILE_OK
+      && !file_apply_perms(temp->stream, temp->path, dest, perms, allocator)) {
     result = GCU_FILE_ERR_IO;
   }
   // Closed before the rename: Windows will not move a file that is open.
@@ -487,7 +590,8 @@ GCU_File_Result gcu_file_temp_commit(GCU_File_Temp * temp, const char * dest,
 }
 
 GCU_File_Result gcu_file_write_atomic(const char * path, const void * data,
-    size_t len, GCU_File_Sync sync, const GCU_Allocator * allocator) {
+    size_t len, GCU_File_Sync sync, GCU_File_Perms perms,
+    const GCU_Allocator * allocator) {
   if (!path || (!data && len)) {
     return GCU_FILE_ERR_INVALID;
   }
@@ -526,5 +630,5 @@ GCU_File_Result gcu_file_write_atomic(const char * path, const void * data,
     return GCU_FILE_ERR_IO;
   }
 
-  return gcu_file_temp_commit(&temp, path, sync);
+  return gcu_file_temp_commit(&temp, path, sync, perms);
 }

@@ -221,7 +221,99 @@ trusting the name it was handed.
 permissions are the half that a refactor can quietly lose:  the file is
 usually the place a secret is being written *through*.
 
-## 8. Encoding
+That is the temporary file, for its whole life.  What the *destination* ends
+up with is the next section, and is a separate question - it was not always,
+and that is what the next section is about.
+
+## 8. Permissions, and who decides them
+
+For a while this module answered that question by not asking it.  The
+destination was renamed from a `mkstemp` temporary and inherited its `0600`,
+so five libraries got owner-only files without anybody choosing that:
+`cjelly`'s captured screenshots came out `-rw-------` where the `fopen` they
+replaced had made them `-rw-rw-r--`.  The behaviour was not obviously wrong -
+it is the conservative direction - but it was not written down anywhere, and a
+contract nobody stated is one nobody can be said to have accepted.
+
+The design says permissions are the caller's business.  An access model cannot
+be described honestly across platforms:  POSIX derives a new file's
+permissions from a process-global umask, Windows has no umask at all and
+inherits access control entries from the parent directory.  A library that
+claimed to model both would be lying on at least one.  So this module does not
+model them - but a caller can only take on a responsibility it has been told
+about, which is what the silence prevented.
+
+`GCU_File_Perms` is therefore three values and not a `mode_t`.  It asks the
+only question that can be answered on both platforms:
+
+| Value | The finished file |
+| --- | --- |
+| `GCU_FILE_PERMS_PRIVATE` | Owner-only.  The zero value. |
+| `GCU_FILE_PERMS_DEFAULT` | What an ordinary `fopen()` here would have made. |
+| `GCU_FILE_PERMS_PRESERVE` | What the destination already had, else `DEFAULT`. |
+
+`PRIVATE` is the zero value for the same reason `SYNC_FULL` is:  a caller who
+does not think about it should not publish something by omission.  It also
+means the change that introduced this enum altered nobody's behaviour - the
+five libraries that had already converted kept exactly what they had, and got
+a way to say otherwise.
+
+`PRESERVE` is the one worth arguing for.  Replacing a file is not the same act
+as creating one:  somebody who runs `chmod 600` on a configuration file has
+said something, and rewriting that file is not an occasion to un-say it.  The
+reverse holds too - a file deliberately made group-readable should not become
+private because it was edited.  Neither of the other two values can express
+"leave this as the operator left it".
+
+### Asking rather than computing
+
+`DEFAULT` does not calculate `0666 & ~umask`.  It creates an empty file beside
+the temporary, asks the kernel what mode it got, removes it, and uses that.
+
+Two reasons, and the second is the one that decided it.  The umask is
+process-global and the only portable way to read it is to set it -
+`umask(0)` and then put it back - which is a window in which every other
+thread creating a file gets `0666`.  And the answer is not a function of the
+umask anyway.  A *default ACL* on the containing directory overrides the umask
+entirely; on this machine, a directory carrying one produced a `0664` file
+under `umask 0077`.  A computed answer is wrong on exactly the systems whose
+administrator went to the trouble of configuring one, which is the worst
+possible place to be wrong.
+
+The probe is opened `O_CREAT | O_EXCL`, for the same reason the temporary file
+is:  a name in a directory other people can write to is not a file until it
+has been created as one.  `TheProbeRefusesANameSomebodyElseAlreadyHolds`
+plants a symbolic link at the name the probe will use and checks that the
+target is untouched and the call fails.
+
+### Before the rename, not after
+
+The permissions are applied while the temporary is still a temporary, through
+its own descriptor, immediately before the move.  The rename is the moment the
+file becomes reachable under a name somebody else knows, so doing it
+afterwards would leave a window in which the destination exists with the
+*wrong* permissions - and on a file whose content is already complete.
+
+A failure to apply them fails the call and leaves the destination alone.  A
+file with permissions other than the ones asked for is a different file from
+the one requested, and quietly handing it over would be the same class of
+silence this section exists to end.
+
+### What is deliberately missing
+
+Ownership, ACLs, extended attributes, inherited groups, the read-only
+attribute on Windows, and anything expressed as a `mode_t`.  Those are the
+caller's, with its own platform's API.  What changed is that the caller is now
+told what it is starting from.
+
+On Windows none of this is implemented:  `_wchmod` moves only the read-only
+attribute, and the entries that actually decide access are inherited from the
+destination's directory when the file is created - so `DEFAULT` and `PRESERVE`
+already hold there and `PRIVATE` does **not**.  Making it hold needs
+`SetSecurityInfo` and a constructed DACL.  Like the rest of the Windows branch
+in this module, it has never been compiled or run.
+
+## 9. Encoding
 
 Paths are UTF-8, converted to UTF-16 at the Win32 boundary, exactly as in
 `path.h` - `_wfopen`, not `fopen`.  The conversion helpers live in
@@ -230,7 +322,7 @@ one implementation rather than each carrying a copy of Windows-only code
 nobody here can compile.  A second copy of that is precisely the thing this
 module exists to stop.
 
-## 9. What it does not do
+## 10. What it does not do
 
 - **No streams.**  Section 5 of `CONVENTIONS.md` gives parsing libraries their
   own `<PREFIX>_Stream`.  This is not that:  it is whole-file reading and
@@ -242,9 +334,9 @@ module exists to stop.
   separate set of platform lies attached to it.
 - **No partial reads or writes.**  There is no seek, no offset and no append.
 
-## 10. Testing
+## 11. Testing
 
-`test/test-file.cpp`, 26 tests, clean under ASan+UBSan and under Valgrind with
+`test/test-file.cpp`, 36 tests, clean under ASan+UBSan and under Valgrind with
 `--leak-check=full`.
 
 Checked by sabotage.  Each invariant was broken in the source and the suite
@@ -261,6 +353,14 @@ confirmed to fail:
 | `write_atomic` uses the system temporary directory | 1 |
 | the temporary file is left world-readable | 1 |
 | the read is sized by seeking rather than read in chunks | 1 |
+| `PRIVATE` widens the file instead of leaving it alone | 1 |
+| `DEFAULT` uses a hardcoded `0644` rather than asking | 3 |
+| `PRESERVE` stats the destination and discards the answer | 2 |
+| the probe file is left behind | 1 |
+| the probe follows a name that is already there | 1 |
+| a probe that could not be made is ignored | 1 |
+| a failure to settle the permissions does not fail the commit | 1 |
+| an unrecognised `GCU_File_Perms` is accepted rather than refused | 1 |
 
 Two of those failed nothing on the first attempt.  There was no test in which
 `temp_create` succeeded and the *rename* then failed - the only path on which
@@ -268,3 +368,24 @@ Two of those failed nothing on the first attempt.  There was no test in which
 `write_atomic` put its temporary file.  Both gaps are now closed by the two
 tests named in sections 4 and 5, and both were found by the sabotage rather
 than by reading the code.
+
+The permissions work repeated that.  The first test written for "the
+permissions could not be settled" made the directory unwritable, which also
+breaks the `rename`, so the call failed either way and the test passed against
+a build that ignored the failure entirely.  It was replaced by one that blocks
+only the probe, by planting a symbolic link at the name the probe will take -
+which reaches the branch in isolation and pins the `O_EXCL` at the same time.
+
+Two mutations are recorded here as *not* caught, rather than left to look like
+coverage:
+
+- **Applying the permissions after the rename instead of before.**  The
+  finished file has the same mode either way; what differs is a window in
+  which the destination is readable with the wrong permissions.  A
+  single-threaded test cannot observe it, and the mutation survives every
+  assertion in the suite.  It is section 8's reasoning, not a tested property.
+- **Ignoring what `fchmod` returns.**  It cannot be made to fail for a
+  descriptor the test owns, and a read-only filesystem is not something a test
+  may assume it can arrange.  The neighbouring failure - a probe that cannot
+  be created - *is* covered, so the reporting path around it is exercised even
+  though this one call's return value is not.
