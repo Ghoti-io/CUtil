@@ -476,7 +476,37 @@ sufficient" point above, one level up, made twice in the same afternoon.
 The worst instance found was `cjelly/src/format/image.c:152`, where
 `ERR_INVALID` maps to `CJELLY_FORMAT_IMAGE_ERR_INVALID_FORMAT`:  a path too
 long for the mount would be reported as a malformed image, and somebody would
-go and debug a PNG that is fine.  A library that changes an error vocabulary
+go and debug a PNG that is fine.
+
+### And a fifth, which is the fourth one's consequence
+
+A mislabelled result is bad.  A result that some *other* part of the same
+library branches on is worse, because the mapping change then reaches code that
+never mentions this enum at all.
+
+`chron` found the instance.  `gchron_zonedb_zone()` consults the tzdb's
+backward-compatibility link table only when the read comes back
+`GCHRON_ERR_IO`.  Once an over-long directory path started arriving as
+`GCHRON_ERR_INVALID` instead, that lookup was skipped - so `US/Eastern` and
+`Asia/Calcutta` stopped resolving, on a path whose only fault was its length.
+A change to an error mapping silently disabled a feature two hundred lines
+away, and it is reachable from the public API:
+
+```
+gchron_zonedb_directory(<5000 chars>, ...)   -> GCHRON_OK
+gchron_zonedb_zone(db, "Europe/Paris", &z)   -> GCHRON_ERR_INVALID
+```
+
+So the question after "what does this arm now report" is **"what else in this
+library branches on the value it used to report"**.  That one the caller *can*
+ask, and only the caller can - it is a question about their own code, not about
+this classification table.  The two halves of the search live on opposite sides
+of the library boundary, which is why neither side found this alone.
+
+It was checked in the others and is chron's alone:  `compress` maps only
+`!= GCU_FILE_OK`, and `cjelly`'s own codes are compared in tests but never
+branched on in library code.  That is a negative worth recording, because a
+shape found once looks like the first of many until somebody looks.  A library that changes an error vocabulary
 therefore owes its callers *that* list, not a list of renamed functions.  The
 impact list for this change was wrong eight times, and each time it was wrong
 because it described what had been changed rather than what the change reached.
