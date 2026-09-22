@@ -13,6 +13,7 @@
 #include <ghoti.io/cutil/error.h>
 #include <ghoti.io/cutil/tls.h>
 #include <ghoti.io/cutil/env.h>
+#include <ghoti.io/cutil/library.h>
 
 int main(void) {
   GCU_MUTEX_T m;
@@ -64,6 +65,13 @@ int main(void) {
   rc |= gcu_env_has("PATH") ? 1 : 0;
   rc |= gcu_env_set("GHOTI_X", "1");
   rc |= gcu_env_unset("GHOTI_X");
+
+  GCU_Library dyn;
+  char libmsg[128];
+  rc |= gcu_library_open(&dyn, "x");
+  rc |= gcu_library_symbol(dyn, "y") ? 1 : 0;
+  rc |= gcu_library_error(libmsg, sizeof(libmsg));
+  rc |= gcu_library_close(&dyn);
 
   return rc;
 }

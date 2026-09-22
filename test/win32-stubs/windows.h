@@ -113,3 +113,14 @@ void  SetLastError(DWORD dwErrCode);
 DWORD GetEnvironmentVariableW(LPCWSTR lpName, LPWSTR lpBuffer, DWORD nSize);
 BOOL  SetEnvironmentVariableW(LPCWSTR lpName, LPCWSTR lpValue);
 #endif
+
+/* --- appended for library.c --- */
+#ifndef GHOTI_IO_GCU_WIN32_STUBS_LIBRARY
+#define GHOTI_IO_GCU_WIN32_STUBS_LIBRARY
+#define ERROR_INVALID_NAME 123UL
+typedef struct _GCU_STUB_HINSTANCE * HMODULE;
+typedef int (* FARPROC)(void);
+HMODULE LoadLibraryW(LPCWSTR lpLibFileName);
+BOOL    FreeLibrary(HMODULE hLibModule);
+FARPROC GetProcAddress(HMODULE hModule, const char * lpProcName);
+#endif

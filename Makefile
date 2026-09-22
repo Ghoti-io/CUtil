@@ -194,6 +194,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/env.o \
 	$(OBJ_DIR)/file.o \
 	$(OBJ_DIR)/hash.o \
+	$(OBJ_DIR)/library.o \
 	$(OBJ_DIR)/memory.o \
 	$(OBJ_DIR)/once.o \
 	$(OBJ_DIR)/path.o \
@@ -221,7 +222,7 @@ TEST_GATES ?= check-symbols check-win32-parse
 # Sources whose #ifdef _WIN32 bodies are parse-checked. Add a file here in
 # the same commit that gives it a Windows branch, or the branch ships
 # untokenised.
-WIN32_PARSE_SOURCES := src/cond.c src/once.c src/rwlock.c src/error.c src/tls.c src/env.c
+WIN32_PARSE_SOURCES := src/cond.c src/once.c src/rwlock.c src/error.c src/tls.c src/env.c src/library.c
 
 
 
@@ -234,7 +235,7 @@ all: $(APP_DIR)/$(TARGET) ## Build the shared library
 # Dependency Inclusion
 ####################################################################
 # Compiler-generated .d files (see -MMD -MP -MF in compile commands).
-TEST_NAMES := test-macros test-type test-cond test-once test-rwlock test-error test-utf test-tls test-env test-memory test-memory-inline test-hash test-mutex test-random test-semaphore test-string test-thread test-vector test-array test-allocator test-safemath test-safemath-portable test-pool test-sequencer test-path test-file test-dir
+TEST_NAMES := test-macros test-type test-cond test-once test-rwlock test-error test-utf test-tls test-env test-library test-memory test-memory-inline test-hash test-mutex test-random test-semaphore test-string test-thread test-vector test-array test-allocator test-safemath test-safemath-portable test-pool test-sequencer test-path test-file test-dir
 TEST_BINARIES := $(foreach t,$(TEST_NAMES),$(APP_DIR)/$(t)$(EXE_EXTENSION))
 TEST_DEPFILES := $(addprefix $(APP_DIR)/,$(TEST_NAMES:%=%.d))
 DEPFILES := $(LIBOBJECTS:.o=.d) $(TEST_DEPFILES)
@@ -339,6 +340,42 @@ endif
 ####################################################################
 
 # Test executables: compile with -MMD -MP -MF so dependency files are generated and -included.
+# The plugin the dynamic-loading tests load.  Built as its own shared object
+# with default visibility -- not linked into anything -- so that those tests
+# open a real library with known symbols instead of reopening cutil, which is
+# already in the process and would let a broken loader look like it worked.
+#
+# One per tree.  The ASan tree gets its own rather than borrowing the ordinary
+# one, so the object the loader opens was built with the same flags as the
+# process opening it.
+$(APP_DIR)/libtest-plugin.$(LIB_EXTENSION): test/test-plugin.c
+	@printf "\n### Compiling Test Plugin ###\n"
+	@mkdir -p $(@D)
+	$(CC) $(filter-out -fvisibility=hidden,$(CFLAGS)) -shared -fPIC -o $@ $<
+
+$(APP_DIR)/libtest-plugin-broken.$(LIB_EXTENSION): test/test-plugin-broken.c
+	@printf "\n### Compiling Test Plugin (unresolvable) ###\n"
+	@mkdir -p $(@D)
+	$(CC) $(filter-out -fvisibility=hidden,$(CFLAGS)) -shared -fPIC -o $@ $<
+
+# Extra flags for one test, looked up by name.  Spelled this way because the
+# ASan and TSan binaries are built from a generated rule that cannot carry a
+# per-test flag any other way -- and a test needing a define in one tree and
+# not the others is how test-library first built clean and then failed only
+# under ASan.  Adding a test here covers every tree at once.
+TEST_CPPFLAGS_test-library = \
+	-DGCU_TEST_PLUGIN_PATH='"$(1)/libtest-plugin.$(LIB_EXTENSION)"' \
+	-DGCU_TEST_BROKEN_PLUGIN_PATH='"$(1)/libtest-plugin-broken.$(LIB_EXTENSION)"'
+TEST_PREREQS_test-library  = $(1)/libtest-plugin.$(LIB_EXTENSION) \
+	$(1)/libtest-plugin-broken.$(LIB_EXTENSION)
+
+$(APP_DIR)/test-library$(EXE_EXTENSION): test/test-library.cpp \
+		$(call TEST_PREREQS_test-library,$(APP_DIR)) | $(APP_DIR)/$(TARGET)
+	@printf "\n### Compiling Library Test ###\n"
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(call TEST_CPPFLAGS_test-library,$(APP_DIR)) \
+		-MMD -MP -MF $(APP_DIR)/test-library.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+
 $(APP_DIR)/test-env$(EXE_EXTENSION): test/test-env.cpp | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Env Test ###\n"
 	@mkdir -p $(@D)
@@ -710,13 +747,25 @@ $(ASAN_APP_DIR)/$(ASAN_TARGET): $(ASAN_LIBOBJECTS)
 # One rule per test, generated from TEST_NAMES for the same reason the ordinary
 # test list is: a hand-maintained second list is a list that can silently omit
 # a test.
+$(ASAN_APP_DIR)/libtest-plugin.$(LIB_EXTENSION): test/test-plugin.c
+	@printf "\n### Compiling (ASan+UBSan) Test Plugin ###\n"
+	@mkdir -p $(@D)
+	$(CC) $(filter-out -fvisibility=hidden,$(ASAN_CFLAGS)) -shared -fPIC -o $@ $<
+
+$(ASAN_APP_DIR)/libtest-plugin-broken.$(LIB_EXTENSION): test/test-plugin-broken.c
+	@printf "\n### Compiling (ASan+UBSan) Test Plugin (unresolvable) ###\n"
+	@mkdir -p $(@D)
+	$(CC) $(filter-out -fvisibility=hidden,$(ASAN_CFLAGS)) -shared -fPIC -o $@ $<
+
 define ASAN_TEST_RULE
 $(ASAN_APP_DIR)/$(1)$(EXE_EXTENSION): test/$(1).cpp \
+		$(call TEST_PREREQS_$(1),$(ASAN_APP_DIR)) \
 		| $(ASAN_APP_DIR)/$(ASAN_TARGET)
 	@printf "\n### Compiling (ASan+UBSan) $$@ ###\n"
 	@mkdir -p $$(@D)
-	$$(CXX) $$(ASAN_CXXFLAGS) $$(INCLUDE) -I test/ -o $$@ $$< $$(ASAN_LDFLAGS) \
-		$$(TESTFLAGS) $$(ASAN_CUTILLIBRARY)
+	$$(CXX) $$(ASAN_CXXFLAGS) $$(INCLUDE) -I test/ \
+		$(call TEST_CPPFLAGS_$(1),$(ASAN_APP_DIR)) \
+		-o $$@ $$< $$(ASAN_LDFLAGS) $$(TESTFLAGS) $$(ASAN_CUTILLIBRARY)
 endef
 $(foreach t,$(TEST_NAMES),$(eval $(call ASAN_TEST_RULE,$(t))))
 
