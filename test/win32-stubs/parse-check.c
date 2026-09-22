@@ -15,6 +15,8 @@
 #include <ghoti.io/cutil/env.h>
 #include <ghoti.io/cutil/library.h>
 #include <ghoti.io/cutil/filelock.h>
+#include <ghoti.io/cutil/mmap.h>
+#include <ghoti.io/cutil/atomic.h>
 
 int main(void) {
   GCU_MUTEX_T m;
@@ -77,6 +79,16 @@ int main(void) {
   GCU_File_Lock flock_handle;
   rc |= gcu_file_lock(&flock_handle, "x", 1, 0);
   rc |= gcu_file_unlock(&flock_handle);
+
+  GCU_Mapped_File mapped;
+  rc |= gcu_mmap_open(&mapped, "x", 0);
+  rc |= gcu_mmap_sync(&mapped);
+  rc |= gcu_mmap_close(&mapped);
+
+  GCU_Atomic_Int counter;
+  gcu_atomic_int_init(&counter, 0);
+  rc |= gcu_atomic_int_fetch_add(&counter, 1);
+  rc |= gcu_atomic_int_load(&counter);
 
   return rc;
 }

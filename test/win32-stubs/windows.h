@@ -154,3 +154,23 @@ BOOL UnlockFileEx(HANDLE hFile, DWORD dwReserved,
     DWORD nNumberOfBytesToUnlockLow, DWORD nNumberOfBytesToUnlockHigh,
     OVERLAPPED * lpOverlapped);
 #endif
+
+/* --- appended for mmap.c --- */
+#ifndef GHOTI_IO_GCU_WIN32_STUBS_MMAP
+#define GHOTI_IO_GCU_WIN32_STUBS_MMAP
+#define OPEN_EXISTING   3UL
+#define PAGE_READONLY   0x02UL
+#define PAGE_READWRITE  0x04UL
+#define FILE_MAP_READ   0x0004UL
+#define FILE_MAP_WRITE  0x0002UL
+typedef union _GCU_STUB_LARGE_INTEGER { long long QuadPart; } LARGE_INTEGER;
+BOOL   GetFileSizeEx(HANDLE hFile, LARGE_INTEGER * lpFileSize);
+HANDLE CreateFileMappingW(HANDLE hFile, void * lpAttributes,
+    DWORD flProtect, DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow,
+    LPCWSTR lpName);
+LPVOID MapViewOfFile(HANDLE hFileMappingObject, DWORD dwDesiredAccess,
+    DWORD dwFileOffsetHigh, DWORD dwFileOffsetLow, size_t dwNumberOfBytesToMap);
+BOOL   UnmapViewOfFile(LPVOID lpBaseAddress);
+BOOL   FlushViewOfFile(LPVOID lpBaseAddress, size_t dwNumberOfBytesToFlush);
+BOOL   FlushFileBuffers(HANDLE hFile);
+#endif
