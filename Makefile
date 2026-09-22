@@ -314,7 +314,16 @@ $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/float.h: \
 
 # Pattern rule: compile .c to .o and generate dependency file (compiler tracks headers).
 # float.h is generated; ensure it exists before compiling any .c that may include it (e.g. type.h).
-$(OBJ_DIR)/%.o: src/%.c | $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/float.h $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/libver_gen.h
+# Makefile is a real prerequisite, not decoration: every flag these objects
+# were built with comes from this file, and `make` otherwise sees a .o newer
+# than its .c and reuses it after a flag change. That is silent and it is
+# specifically dangerous for the instrumented trees, where the flags *are* the
+# semantics -- a sanitizer arm rebuilt without the flag you just added reports
+# clean because the check was never compiled in. Two sessions in this
+# workspace measured "no hazard" that way on 2026-09-22 before noticing they
+# were comparing a binary with itself. The cost is a full rebuild whenever
+# this file changes, which is the correct price.
+$(OBJ_DIR)/%.o: src/%.c Makefile | $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/float.h $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/libver_gen.h
 	@printf "\n### Compiling $@ ###\n"
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@ $(OS_SPECIFIC_CXX_FLAGS)
@@ -753,7 +762,7 @@ ASAN_RUNTIME := $(shell $(CC) -print-file-name=libasan.so)
 # copy of the generator. That also keeps the generator itself uninstrumented:
 # it is a build tool that runs at build time, and instrumenting it only made
 # it inherit the startup problem described above.
-$(ASAN_OBJ_DIR)/%.o: src/%.c \
+$(ASAN_OBJ_DIR)/%.o: src/%.c Makefile \
 		| $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/float.h \
 		  $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/libver_gen.h
 	@printf "\n### Compiling (ASan+UBSan): $@ ###\n"
@@ -875,7 +884,7 @@ TSAN_CUTILLIBRARY := -L $(TSAN_APP_DIR) -l$(SUITE)-$(PROJECT)$(BRANCH)-tsan
 # LD_PRELOAD is cleared rather than left unset so that a value inherited from
 # the environment cannot reintroduce the problem.
 
-$(TSAN_OBJ_DIR)/%.o: src/%.c \
+$(TSAN_OBJ_DIR)/%.o: src/%.c Makefile \
 		| $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/float.h \
 		  $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/libver_gen.h
 	@printf "\n### Compiling (TSan): $@ ###\n"
