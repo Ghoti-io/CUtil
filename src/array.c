@@ -212,7 +212,16 @@ void gcu_array_clear(GCU_Array * array) {
   }
 }
 
-void * gcu_array_emplace_n(GCU_Array * array, size_t n) {
+/**
+ * Grow `array` by `n` elements and return the first of them, without touching
+ * their contents.
+ *
+ * This is the half of gcu_array_emplace_n() that every caller needs.  The
+ * zeroing is the half only some of them do: a caller that overwrites the span
+ * in full - which is what appending is - pays for a write of the whole span
+ * that the next statement discards.
+ */
+static void * reserve_n(GCU_Array * array, size_t n) {
   if (!array || !array->element_size) {
     return NULL;
   }
@@ -239,9 +248,14 @@ void * gcu_array_emplace_n(GCU_Array * array, size_t n) {
   }
 
   void * first = element_ptr(array, array->count);
-  if (n) {
+  array->count = needed;
+  return first;
+}
+
+void * gcu_array_emplace_n(GCU_Array * array, size_t n) {
+  void * first = reserve_n(array, n);
+  if (first && n) {
     memset(first, 0, n * array->element_size);
-    array->count = needed;
   }
   return first;
 }
@@ -254,7 +268,9 @@ bool gcu_array_append(GCU_Array * array, const void * element) {
   if (!element) {
     return false;
   }
-  void * slot = gcu_array_emplace_n(array, 1);
+  // Reserved rather than emplaced: the memcpy() below writes every byte of
+  // the slot, so zeroing it first is a write of the whole element thrown away.
+  void * slot = reserve_n(array, 1);
   if (!slot) {
     return false;
   }
@@ -272,7 +288,8 @@ bool gcu_array_append_n(GCU_Array * array, const void * elements, size_t n) {
   if (!elements) {
     return false;
   }
-  void * slot = gcu_array_emplace_n(array, n);
+  // As in gcu_array_append(), and for the same reason, multiplied by n.
+  void * slot = reserve_n(array, n);
   if (!slot) {
     return false;
   }
