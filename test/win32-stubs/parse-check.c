@@ -6,6 +6,8 @@
 
 #define _WIN32 1
 
+#include <string.h>
+
 #include <ghoti.io/cutil/mutex.h>
 #include <ghoti.io/cutil/cond.h>
 #include <ghoti.io/cutil/once.h>
@@ -17,6 +19,7 @@
 #include <ghoti.io/cutil/filelock.h>
 #include <ghoti.io/cutil/mmap.h>
 #include <ghoti.io/cutil/atomic.h>
+#include <ghoti.io/cutil/subprocess.h>
 
 int main(void) {
   GCU_MUTEX_T m;
@@ -89,6 +92,17 @@ int main(void) {
   gcu_atomic_int_init(&counter, 0);
   rc |= gcu_atomic_int_fetch_add(&counter, 1);
   rc |= gcu_atomic_int_load(&counter);
+
+  static const char * const spawn_argv[] = {"x", NULL};
+  GCU_Subprocess_Options spawn;
+  memset(&spawn, 0, sizeof(spawn));
+  spawn.argv = spawn_argv;
+  spawn.timeout = 10;
+  GCU_Subprocess_Result spawned;
+  rc |= gcu_subprocess_run(&spawn, &spawned);
+  rc |= (int)spawned.outcome;
+  rc |= GCU_SUBPROCESS_NOT_STARTED;
+  gcu_subprocess_result_free(&spawned);
 
   return rc;
 }

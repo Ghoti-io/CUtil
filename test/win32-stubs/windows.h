@@ -174,3 +174,64 @@ BOOL   UnmapViewOfFile(LPVOID lpBaseAddress);
 BOOL   FlushViewOfFile(LPVOID lpBaseAddress, size_t dwNumberOfBytesToFlush);
 BOOL   FlushFileBuffers(HANDLE hFile);
 #endif
+
+/* --- appended for subprocess.c --- */
+#ifndef GHOTI_IO_GCU_WIN32_STUBS_SUBPROCESS
+#define GHOTI_IO_GCU_WIN32_STUBS_SUBPROCESS
+#define WINAPI
+#define ERROR_INVALID_PARAMETER     87UL
+#define HANDLE_FLAG_INHERIT         0x00000001UL
+#define STARTF_USESTDHANDLES        0x00000100UL
+#define CREATE_UNICODE_ENVIRONMENT  0x00000400UL
+#define WAIT_OBJECT_0               0x00000000UL
+typedef long LONG;
+typedef unsigned long long ULONGLONG;
+typedef HANDLE * PHANDLE;
+
+typedef struct _GCU_STUB_SECURITY_ATTRIBUTES {
+  DWORD nLength;
+  LPVOID lpSecurityDescriptor;
+  BOOL bInheritHandle;
+} SECURITY_ATTRIBUTES, * LPSECURITY_ATTRIBUTES;
+
+typedef struct _GCU_STUB_STARTUPINFOW {
+  DWORD cb;
+  DWORD dwFlags;
+  HANDLE hStdInput;
+  HANDLE hStdOutput;
+  HANDLE hStdError;
+} STARTUPINFOW;
+
+typedef struct _GCU_STUB_PROCESS_INFORMATION {
+  HANDLE hProcess;
+  HANDLE hThread;
+  DWORD dwProcessId;
+  DWORD dwThreadId;
+} PROCESS_INFORMATION;
+
+typedef DWORD (WINAPI * LPTHREAD_START_ROUTINE)(LPVOID lpParameter);
+
+BOOL CreatePipe(PHANDLE hReadPipe, PHANDLE hWritePipe,
+    LPSECURITY_ATTRIBUTES lpPipeAttributes, DWORD nSize);
+BOOL SetHandleInformation(HANDLE hObject, DWORD dwMask, DWORD dwFlags);
+BOOL CreateProcessW(LPCWSTR lpApplicationName, LPWSTR lpCommandLine,
+    LPSECURITY_ATTRIBUTES lpProcessAttributes,
+    LPSECURITY_ATTRIBUTES lpThreadAttributes, BOOL bInheritHandles,
+    DWORD dwCreationFlags, LPVOID lpEnvironment,
+    LPCWSTR lpCurrentDirectory, STARTUPINFOW * lpStartupInfo,
+    PROCESS_INFORMATION * lpProcessInformation);
+BOOL ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead,
+    DWORD * lpNumberOfBytesRead, void * lpOverlapped);
+BOOL WriteFile(HANDLE hFile, const void * lpBuffer,
+    DWORD nNumberOfBytesToWrite, DWORD * lpNumberOfBytesWritten,
+    void * lpOverlapped);
+HANDLE CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes,
+    size_t dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress,
+    LPVOID lpParameter, DWORD dwCreationFlags, DWORD * lpThreadId);
+DWORD WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds);
+BOOL TerminateProcess(HANDLE hProcess, unsigned int uExitCode);
+BOOL GetExitCodeProcess(HANDLE hProcess, DWORD * lpExitCode);
+ULONGLONG GetTickCount64(void);
+LONG InterlockedExchangeAdd(LONG volatile * Addend, LONG Value);
+LONG InterlockedExchange(LONG volatile * Target, LONG Value);
+#endif

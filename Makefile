@@ -207,6 +207,7 @@ LIBOBJECTS := \
 	$(OBJ_DIR)/semaphore.o \
 	$(OBJ_DIR)/sequencer.o \
 	$(OBJ_DIR)/string.o \
+	$(OBJ_DIR)/subprocess.o \
 	$(OBJ_DIR)/thread.o \
 	$(OBJ_DIR)/tls.o \
 	$(OBJ_DIR)/type.o \
@@ -225,7 +226,7 @@ TEST_GATES ?= check-symbols check-win32-parse
 # Sources whose #ifdef _WIN32 bodies are parse-checked. Add a file here in
 # the same commit that gives it a Windows branch, or the branch ships
 # untokenised.
-WIN32_PARSE_SOURCES := src/cond.c src/once.c src/rwlock.c src/error.c src/tls.c src/env.c src/library.c src/filelock.c src/mmap.c
+WIN32_PARSE_SOURCES := src/cond.c src/once.c src/rwlock.c src/error.c src/tls.c src/env.c src/library.c src/filelock.c src/mmap.c src/subprocess.c
 
 
 
@@ -238,7 +239,7 @@ all: $(APP_DIR)/$(TARGET) ## Build the shared library
 # Dependency Inclusion
 ####################################################################
 # Compiler-generated .d files (see -MMD -MP -MF in compile commands).
-TEST_NAMES := test-macros test-type test-cond test-once test-rwlock test-error test-utf test-tls test-env test-library test-filelock test-atomic test-mmap test-memory test-memory-inline test-hash test-mutex test-random test-semaphore test-string test-thread test-vector test-array test-allocator test-safemath test-safemath-portable test-pool test-sequencer test-path test-file test-dir
+TEST_NAMES := test-macros test-type test-cond test-once test-rwlock test-error test-utf test-tls test-env test-library test-filelock test-atomic test-mmap test-subprocess test-memory test-memory-inline test-hash test-mutex test-random test-semaphore test-string test-thread test-vector test-array test-allocator test-safemath test-safemath-portable test-pool test-sequencer test-path test-file test-dir
 TEST_BINARIES := $(foreach t,$(TEST_NAMES),$(APP_DIR)/$(t)$(EXE_EXTENSION))
 TEST_DEPFILES := $(addprefix $(APP_DIR)/,$(TEST_NAMES:%=%.d))
 DEPFILES := $(LIBOBJECTS:.o=.d) $(TEST_DEPFILES)
@@ -384,6 +385,7 @@ TEST_PREREQS_test-library  = $(1)/libtest-plugin.$(LIB_EXTENSION) \
 # The lock tests create files; they go in the build tree, not the source tree.
 TEST_CPPFLAGS_test-filelock = -DGCU_TEST_LOCK_DIR='"$(1)"'
 TEST_CPPFLAGS_test-mmap     = -DGCU_TEST_MMAP_DIR='"$(1)"'
+TEST_CPPFLAGS_test-subprocess = -DGCU_TEST_SUBPROCESS_DIR='"$(1)"'
 
 $(APP_DIR)/test-library$(EXE_EXTENSION): test/test-library.cpp \
 		$(call TEST_PREREQS_test-library,$(APP_DIR)) | $(APP_DIR)/$(TARGET)
@@ -397,6 +399,12 @@ $(APP_DIR)/test-mmap$(EXE_EXTENSION): test/test-mmap.cpp | $(APP_DIR)/$(TARGET)
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(call TEST_CPPFLAGS_test-mmap,$(APP_DIR)) \
 		-MMD -MP -MF $(APP_DIR)/test-mmap.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+
+$(APP_DIR)/test-subprocess$(EXE_EXTENSION): test/test-subprocess.cpp | $(APP_DIR)/$(TARGET)
+	@printf "\n### Compiling Subprocess Test ###\n"
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(call TEST_CPPFLAGS_test-subprocess,$(APP_DIR)) \
+		-MMD -MP -MF $(APP_DIR)/test-subprocess.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
 $(APP_DIR)/test-atomic$(EXE_EXTENSION): test/test-atomic.cpp | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Atomic Test ###\n"
