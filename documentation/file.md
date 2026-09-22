@@ -348,6 +348,37 @@ duplication, since the file may appear or vanish between the two.  That is a
 consumer working around a missing primitive, and it is the clearest signal in
 this repository that the missing thing was missing.
 
+### Map this enum with a `default:`
+
+`GCU_File_Result` grew by four members in one commit, and it will grow again.
+In C that is a **source-breaking change for every exhaustive `switch` over
+it**:  `-Wall` implies `-Wswitch`, every library here builds `-Werror`, and a
+`switch` that names each member and has no `default:` stops compiling the
+moment a member is added.  Adding `GCU_FILE_ERR_NOT_FOUND` and its three
+companions broke three such switches across the suite - in libraries that never
+called either function whose signature changed, which is why a search for call
+sites did not find them.
+
+`model/src/stream/stream_memory.c` had already worked this out and written it
+down:  its fallback used to be `GMDL_ERR_INTERNAL`, and that was wrong exactly
+because "cutil's enumeration grows", which "turned each addition into 'internal
+library error' for a caller whose file had simply been deleted".
+
+So map a `GCU_File_Result` the way that file does.  Name the members you act on
+and let a `default:` carry the rest onto your own general I/O failure.  That
+keeps the mapping compiling across additions *and* degrades honestly:  a result
+you have never heard of is some kind of I/O problem, which is true, rather than
+an internal error, which is not.
+
+The same caution applies in the other direction.  A caller that tested
+`result == GCU_FILE_ERR_IO` to mean "it was not there" - which was the only
+spelling available before - now tests something narrower than it did, and the
+branch quietly stops firing.  `chron`'s leap-second reader fell into exactly
+that:  it used `ERR_IO` to decide whether to fall back from `$TZDIR` to the
+system copy, and the fallback would have gone silent rather than failed.
+Compare against what you mean, and where the old code could not say what it
+meant, re-read the condition rather than converting it mechanically.
+
 ## 10. Asking what is there
 
 `gcu_file_stat()` fills in a `GCU_File_Info`:  a type, a size, and a
