@@ -7,6 +7,7 @@
 #define _WIN32 1
 
 #include <ghoti.io/cutil/mutex.h>
+#include <ghoti.io/cutil/cond.h>
 
 int main(void) {
   GCU_MUTEX_T m;
@@ -17,5 +18,17 @@ int main(void) {
   rc |= GCU_MUTEX_TRYLOCK(m);
   rc |= GCU_MUTEX_UNLOCK(m);
   rc |= GCU_MUTEX_DESTROY(m);
+
+  // cond.h's Windows branch: the typedef and the declarations.  The bodies
+  // live in src/cond.c, which the check-win32-parse rule compiles separately
+  // with -fsyntax-only against these same stubs.
+  GCU_Cond cv;
+  rc |= gcu_cond_create(&cv);
+  rc |= gcu_cond_signal(&cv);
+  rc |= gcu_cond_broadcast(&cv);
+  rc |= gcu_cond_wait(&cv, &m);
+  rc |= gcu_cond_timedwait(&cv, &m, 10);
+  rc |= gcu_cond_destroy(&cv);
+
   return rc;
 }

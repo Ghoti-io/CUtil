@@ -28,3 +28,25 @@ void ReleaseSRWLockExclusive(SRWLOCK * SRWLock);
 unsigned char TryAcquireSRWLockExclusive(SRWLOCK * SRWLock);
 
 #endif // GHOTI_IO_GCU_WIN32_STUBS_WINDOWS_H
+
+/* --- appended for cond.h / cond.c --- */
+#ifndef GHOTI_IO_GCU_WIN32_STUBS_COND
+#define GHOTI_IO_GCU_WIN32_STUBS_COND
+
+typedef unsigned long DWORD;
+typedef int BOOL;
+
+#define INFINITE      0xFFFFFFFFUL
+#define ERROR_TIMEOUT 1460UL
+
+DWORD GetLastError(void);
+
+typedef struct _GCU_STUB_CONDITION_VARIABLE { void * Ptr; } CONDITION_VARIABLE;
+
+void InitializeConditionVariable(CONDITION_VARIABLE * ConditionVariable);
+void WakeConditionVariable(CONDITION_VARIABLE * ConditionVariable);
+void WakeAllConditionVariable(CONDITION_VARIABLE * ConditionVariable);
+BOOL SleepConditionVariableSRW(CONDITION_VARIABLE * ConditionVariable,
+    SRWLOCK * SRWLock, DWORD dwMilliseconds, unsigned long Flags);
+
+#endif
