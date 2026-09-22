@@ -3,6 +3,7 @@
  * Tests for the generic fixed-size-element array.
  */
 
+#include <cstdint>
 #include <cstring>
 #include <gtest/gtest.h>
 
@@ -220,6 +221,72 @@ TEST(EmplaceN, ZeroesTheWholeRun) {
     EXPECT_EQ(block[i], 0) << "index " << i;
   }
   gcu_array_destroy_in_place(&a);
+}
+
+TEST(ExtendN, GrowsTheCountAndReturnsTheOldEnd) {
+  GCU_Array a;
+  ASSERT_TRUE(gcu_array_create_in_place(&a, sizeof(int), 0, nullptr));
+
+  int value = 11;
+  ASSERT_TRUE(gcu_array_append(&a, &value));
+
+  int * block = (int *)gcu_array_extend_n(&a, 8);
+  ASSERT_NE(block, nullptr);
+  EXPECT_EQ(gcu_array_count(&a), 9u);
+  EXPECT_EQ(block, (int *)gcu_array_at(&a, 1)) << "the span starts at the old end";
+  EXPECT_EQ(*(int *)gcu_array_at(&a, 0), 11) << "existing elements are untouched";
+
+  gcu_array_destroy_in_place(&a);
+}
+
+TEST(ExtendN, ReusedSlotIsNotRezeroed) {
+  // The contents are documented as unspecified, which cannot be asserted
+  // directly.  Reused storage is the one case where they are deterministic,
+  // and it is exactly the case Emplace.ReusedSlotIsRezeroed pins the other
+  // way -- so this is the test that would catch extend_n quietly becoming
+  // another name for emplace_n.
+  GCU_Array a;
+  ASSERT_TRUE(gcu_array_create_in_place(&a, sizeof(int), 4, nullptr));
+
+  int * first = (int *)gcu_array_extend_n(&a, 1);
+  ASSERT_NE(first, nullptr);
+  *first = 12345;
+  gcu_array_clear(&a);
+
+  int * again = (int *)gcu_array_extend_n(&a, 1);
+  ASSERT_EQ(again, first) << "capacity should have been reused";
+  EXPECT_EQ(*again, 12345) << "extend_n must not spend a write zeroing the slot";
+
+  gcu_array_destroy_in_place(&a);
+}
+
+TEST(ExtendN, ZeroCountDoesNotGrow) {
+  GCU_Array a;
+  ASSERT_TRUE(gcu_array_create_in_place(&a, sizeof(int), 4, nullptr));
+  int value = 3;
+  ASSERT_TRUE(gcu_array_append(&a, &value));
+
+  void * end = gcu_array_extend_n(&a, 0);
+  EXPECT_NE(end, nullptr) << "the array has storage, so the end is addressable";
+  EXPECT_EQ(gcu_array_count(&a), 1u);
+
+  gcu_array_destroy_in_place(&a);
+}
+
+TEST(ExtendN, RejectsAnOverflowingCount) {
+  GCU_Array a;
+  ASSERT_TRUE(gcu_array_create_in_place(&a, sizeof(int), 4, nullptr));
+  int value = 3;
+  ASSERT_TRUE(gcu_array_append(&a, &value));
+
+  EXPECT_EQ(gcu_array_extend_n(&a, SIZE_MAX), nullptr);
+  EXPECT_EQ(gcu_array_count(&a), 1u) << "a refused request leaves the count alone";
+
+  gcu_array_destroy_in_place(&a);
+}
+
+TEST(ExtendN, RejectsANullArray) {
+  EXPECT_EQ(gcu_array_extend_n(nullptr, 4), nullptr);
 }
 
 // ---------------------------------------------------------------------------

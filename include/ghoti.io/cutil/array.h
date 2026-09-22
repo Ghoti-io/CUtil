@@ -225,6 +225,32 @@ GCU_API void * gcu_array_emplace(GCU_Array * array);
 GCU_API void * gcu_array_emplace_n(GCU_Array * array, size_t n);
 
 /**
+ * Grow the array by `n` elements whose contents are unspecified, and return a
+ * pointer to the first.
+ *
+ * This is gcu_array_emplace_n() without the zeroing, for the caller who is
+ * about to write every byte of the span anyway - building into an output
+ * buffer, decoding into a run of elements, rendering a glyph run.  For that
+ * caller the zeroing is a write of the whole span that the next statement
+ * discards.
+ *
+ * The bytes are not merely unset but genuinely unspecified: the array reuses
+ * its storage, so they are as likely to be a previous element as they are to
+ * be zero.  **Reading one before writing it is a bug**, and one that ordinary
+ * testing hides, because a fresh allocation usually happens to be zero.  If
+ * the caller fills in some fields and leaves others, it wants
+ * gcu_array_emplace_n() instead; the zeroing is the safe default and stays
+ * the default.
+ *
+ * @param array The array to operate on.
+ * @param n The number of elements to add.
+ * @return A pointer to the first new element, or `NULL` on failure (in which
+ *   case the count is unchanged).  Returns a non-`NULL` pointer to the end of
+ *   the array when `n` is 0 and the array has storage.
+ */
+GCU_API void * gcu_array_extend_n(GCU_Array * array, size_t n);
+
+/**
  * Remove the last element, optionally copying it out.
  *
  * @param array The array to operate on.

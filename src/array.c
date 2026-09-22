@@ -260,6 +260,10 @@ void * gcu_array_emplace_n(GCU_Array * array, size_t n) {
   return first;
 }
 
+void * gcu_array_extend_n(GCU_Array * array, size_t n) {
+  return reserve_n(array, n);
+}
+
 void * gcu_array_emplace(GCU_Array * array) {
   return gcu_array_emplace_n(array, 1);
 }

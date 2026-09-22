@@ -63,6 +63,7 @@
 #define gcu_array_destroy_in_place GHOTIIO_CUTIL(gcu_array_destroy_in_place)
 #define gcu_array_emplace GHOTIIO_CUTIL(gcu_array_emplace)
 #define gcu_array_emplace_n GHOTIIO_CUTIL(gcu_array_emplace_n)
+#define gcu_array_extend_n GHOTIIO_CUTIL(gcu_array_extend_n)
 #define gcu_array_pop GHOTIIO_CUTIL(gcu_array_pop)
 #define gcu_array_remove_at GHOTIIO_CUTIL(gcu_array_remove_at)
 #define gcu_array_reserve GHOTIIO_CUTIL(gcu_array_reserve)
