@@ -90,6 +90,36 @@ ASSERT_EQ(gcu_get_alloc_count() - alloc, gcu_get_free_count() - freed);
 The exact number is an implementation detail and may change.  Code that
 depends on it being three is already wrong.
 
+### The offset is load-bearing
+
+It is tempting to read the skew as a wart and to make the constructor allocate
+lazily so that the counts start level.  Do not.  The offset is what makes the
+badly written assertion *fail*, and a correct program can never cancel it:
+under the rules in section 2 a program cannot free a block it never took, so
+`free` can never exceed `alloc`, so an unreset absolute comparison can only
+come out equal if the program released three more blocks than it acquired -
+which is a double free, not a pass.
+
+That guarantee is newer than the offset, and the two only work together.  Under
+the old counting rules `free` *could* exceed `alloc` for a perfectly correct
+program, because each container buffer contributed an uncounted allocation and
+a counted release.  Three arrays cancelled the offset exactly:
+
+```c
+int main(void) {                       // no gcu_memory_reset_counts()
+  for (int i = 0; i < 3; ++i) {        // three correct arrays, nothing leaked
+    GCU_Array * a = gcu_array_create(sizeof(int), 4, &counted);
+    int v = i; gcu_array_append(a, &v); gcu_array_destroy(a);
+  }
+  // old rules: alloc=6 free=6  -> an unreset ASSERT_EQ(alloc, free) PASSES
+  // new rules: alloc=9 free=6  -> it fails, as it always should have
+}
+```
+
+Three is an ordinary number of arrays, not a contrived one.  So the alarm was
+there all along and could be silenced by accident; fixing what the counters
+count is what turned it into an alarm that holds.
+
 ## 5. The counting is on whether or not you asked for debugging
 
 `GHOTIIO_CUTIL_ENABLE_MEMORY_DEBUG` adds the `stderr` tracing.  It does not
@@ -126,7 +156,18 @@ shows `(nil)` as its old pointer.  `gcu_mem_stop()` and `gcu_mem_start()`
 bracket a region whose trace you do not want.
 
 The define has to be in effect where the *call* is compiled, not where the
-library was, because these are macros.  A build that instruments only `src/`
+library was, because these are macros.
+
+The same fact has a sharper edge when comparing versions.  All four wrappers
+are **macros or inline functions in the header**, so the counting rules are
+baked into every translation unit that calls them, not into the shared object.
+Swapping `libghoti.io-cutil-0.so` alone does not swap the behaviour: a program
+built against new headers keeps the new rules no matter which library it
+loads, and only the code compiled *into* the `.so` changes.  To compare one
+version's counting against another's, point `-I` at the matching headers as
+well.  (The pre-`main` offset in section 4 is the exception, because it comes
+from a constructor inside the `.so`, so for that one a library swap really is
+enough.)  A build that instruments only `src/`
 and not the tests will miss any allocation the tests perform directly - and a
 probe that sees nothing looks exactly like a program that does nothing wrong.
 Whatever the mechanism, confirm it fires on a case you know is there before
