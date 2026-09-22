@@ -188,6 +188,7 @@ INCLUDE := -I include/ -I $(BUILD_DIR)/include/
 LIBOBJECTS := \
   $(OBJ_DIR)/allocator.o \
 	$(OBJ_DIR)/array.o \
+	$(OBJ_DIR)/atomic.o \
 	$(OBJ_DIR)/cond.o \
 	$(OBJ_DIR)/dir.o \
 	$(OBJ_DIR)/error.o \
@@ -236,7 +237,7 @@ all: $(APP_DIR)/$(TARGET) ## Build the shared library
 # Dependency Inclusion
 ####################################################################
 # Compiler-generated .d files (see -MMD -MP -MF in compile commands).
-TEST_NAMES := test-macros test-type test-cond test-once test-rwlock test-error test-utf test-tls test-env test-library test-filelock test-memory test-memory-inline test-hash test-mutex test-random test-semaphore test-string test-thread test-vector test-array test-allocator test-safemath test-safemath-portable test-pool test-sequencer test-path test-file test-dir
+TEST_NAMES := test-macros test-type test-cond test-once test-rwlock test-error test-utf test-tls test-env test-library test-filelock test-atomic test-memory test-memory-inline test-hash test-mutex test-random test-semaphore test-string test-thread test-vector test-array test-allocator test-safemath test-safemath-portable test-pool test-sequencer test-path test-file test-dir
 TEST_BINARIES := $(foreach t,$(TEST_NAMES),$(APP_DIR)/$(t)$(EXE_EXTENSION))
 TEST_DEPFILES := $(addprefix $(APP_DIR)/,$(TEST_NAMES:%=%.d))
 DEPFILES := $(LIBOBJECTS:.o=.d) $(TEST_DEPFILES)
@@ -379,6 +380,11 @@ $(APP_DIR)/test-library$(EXE_EXTENSION): test/test-library.cpp \
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(call TEST_CPPFLAGS_test-library,$(APP_DIR)) \
 		-MMD -MP -MF $(APP_DIR)/test-library.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
+
+$(APP_DIR)/test-atomic$(EXE_EXTENSION): test/test-atomic.cpp | $(APP_DIR)/$(TARGET)
+	@printf "\n### Compiling Atomic Test ###\n"
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-atomic.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
 $(APP_DIR)/test-filelock$(EXE_EXTENSION): test/test-filelock.cpp | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling File Lock Test ###\n"
@@ -823,7 +829,7 @@ test-ubsan: test-asan
 # that is here to watch the synchronisation primitives themselves. Add a name
 # here once its test is expected to be clean under TSan.
 
-TSAN_TEST_NAMES := test-mutex test-cond test-once test-rwlock test-tls test-semaphore test-thread test-pool test-sequencer
+TSAN_TEST_NAMES := test-mutex test-cond test-once test-rwlock test-tls test-atomic test-semaphore test-thread test-pool test-sequencer
 
 TSAN_FLAGS := -fsanitize=thread -fno-omit-frame-pointer -g
 
