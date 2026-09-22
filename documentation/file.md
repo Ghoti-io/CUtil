@@ -438,6 +438,45 @@ and neither covered it, so `model` was classified safe on the strength of
 having a `default:` at all - which is exactly the reasoning this section now
 warns against.
 
+### A fourth shape, which the caller cannot find at all
+
+There is a fourth, and it is worse than the three above because nothing in the
+caller's code changes and nothing in the caller's code can reveal it.  A member
+the caller already *names* can have its **input set widened** while the name
+stays put.
+
+The old `gcu_file_read()` inspected no `errno`:  every open failure was a flat
+`ERR_IO`.  Classifying them moved two errnos onto members that already existed:
+
+| errno | was | is |
+| --- | --- | --- |
+| `ENAMETOOLONG` | `ERR_IO` | `GCU_FILE_ERR_INVALID` |
+| `ENOMEM` | `ERR_IO` | `GCU_FILE_ERR_OOM` |
+
+A caller with `case GCU_FILE_ERR_INVALID:` still compiles, still has a
+`default:`, has no equality test, and now answers "the caller's argument is
+wrong" for a path that is merely too long for this filesystem.  Searching that
+caller for switches, defaults or comparisons finds nothing, because the caller
+is unchanged and correct as written.
+
+**Only the library that moved the errnos can find this.**  The question is not
+"what does your code do with the enum" but "for each value I reclassified, who
+names the destination" - and that is a question about the classification table,
+which the caller has never seen.  A library that changes an error vocabulary
+therefore owes its callers *that* list, not a list of renamed functions.  The
+impact list for this change was wrong eight times, and each time it was wrong
+because it described what had been changed rather than what the change reached.
+
+`model` found this one, in `3f42591`, after having already been fixed once for
+the shape above.  Its resolution is worth recording:  it maps `ERR_INVALID` to
+`GMDL_ERR_IO` rather than to its own `GMDL_ERR_INVALID`, because `NAME_MAX` is
+per-filesystem - the same path is too long on one mount and fine on another,
+which is not a caller misusing an API.  It also records the precondition that
+makes reading `ERR_INVALID` as "bad path" safe at all:  its own entry point
+rejects NULL before calling, so this library is never reporting an argument
+`model` passed.  A caller without that precondition must not do the same, or a
+real argument bug and an over-long path become the same answer.
+
 ### Splitting a code is a decision, not a conversion
 
 The same caution applies in the other direction, and it does not announce
