@@ -78,3 +78,14 @@ void AcquireSRWLockShared(SRWLOCK * SRWLock);
 void ReleaseSRWLockShared(SRWLOCK * SRWLock);
 unsigned char TryAcquireSRWLockShared(SRWLOCK * SRWLock);
 #endif
+
+/* --- appended for error.c --- */
+#ifndef GHOTI_IO_GCU_WIN32_STUBS_ERROR
+#define GHOTI_IO_GCU_WIN32_STUBS_ERROR
+#define FORMAT_MESSAGE_FROM_SYSTEM     0x00001000UL
+#define FORMAT_MESSAGE_IGNORE_INSERTS  0x00000200UL
+typedef void * LPVOID;
+typedef char * LPSTR;
+DWORD FormatMessageA(DWORD dwFlags, const void * lpSource, DWORD dwMessageId,
+    DWORD dwLanguageId, LPSTR lpBuffer, DWORD nSize, void * Arguments);
+#endif

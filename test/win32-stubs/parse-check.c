@@ -10,6 +10,7 @@
 #include <ghoti.io/cutil/cond.h>
 #include <ghoti.io/cutil/once.h>
 #include <ghoti.io/cutil/rwlock.h>
+#include <ghoti.io/cutil/error.h>
 
 int main(void) {
   GCU_MUTEX_T m;
@@ -44,6 +45,11 @@ int main(void) {
   rc |= gcu_rwlock_write_trylock(&rw);
   rc |= gcu_rwlock_write_unlock(&rw);
   rc |= gcu_rwlock_destroy(&rw);
+
+  char errbuf[GCU_ERROR_STRING_MAX];
+  rc |= gcu_error_last();
+  rc |= gcu_error_string(2, errbuf, sizeof(errbuf));
+  rc |= gcu_error_string_last(errbuf, sizeof(errbuf));
 
   return rc;
 }
