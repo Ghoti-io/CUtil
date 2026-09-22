@@ -823,6 +823,238 @@ TEST_F(FileMeta, NullArgumentsAreRefusedRatherThanFatal) {
 }
 #endif
 
+#ifndef _WIN32
+using FileHandle = Scratch;
+
+TEST_F(FileHandle, WriteThenReadBackThroughAHandle) {
+  GCU_File_Handle h;
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_open(&h, at("f").c_str(), GCU_FILE_OPEN_WRITE,
+          GCU_FILE_PERMS_DEFAULT, nullptr));
+  EXPECT_EQ(GCU_FILE_OK, gcu_file_write_bytes(&h, "hello world", 11));
+  EXPECT_EQ(GCU_FILE_OK, gcu_file_close(&h));
+
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_open(&h, at("f").c_str(), GCU_FILE_OPEN_READ,
+          GCU_FILE_PERMS_DEFAULT, nullptr));
+  char buf[32] = {0};
+  size_t got = 0;
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_read_bytes(&h, buf, sizeof buf, &got));
+  EXPECT_EQ(11u, got);
+  EXPECT_EQ(string("hello world"), string(buf, got));
+  EXPECT_EQ(GCU_FILE_OK, gcu_file_close(&h));
+}
+
+TEST_F(FileHandle, SeekAndTellReachTheMiddleOfAFile) {
+  put(at("f"), "0123456789");
+  GCU_File_Handle h;
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_open(&h, at("f").c_str(), GCU_FILE_OPEN_READ,
+          GCU_FILE_PERMS_DEFAULT, nullptr));
+
+  int64_t where = -1;
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_seek(&h, 4, GCU_FILE_SEEK_SET));
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_tell(&h, &where));
+  EXPECT_EQ(4, where);
+
+  char buf[3] = {0};
+  size_t got = 0;
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_read_bytes(&h, buf, 2, &got));
+  EXPECT_EQ(2u, got);
+  EXPECT_EQ(string("45"), string(buf, got));
+
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_seek(&h, -3, GCU_FILE_SEEK_END));
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_tell(&h, &where));
+  EXPECT_EQ(7, where);
+
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_seek(&h, 1, GCU_FILE_SEEK_CUR));
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_tell(&h, &where));
+  EXPECT_EQ(8, where);
+  EXPECT_EQ(GCU_FILE_OK, gcu_file_close(&h));
+}
+
+TEST_F(FileHandle, AShortReadIsTheEndOfTheFileAndNotAFailure) {
+  put(at("f"), "abc");
+  GCU_File_Handle h;
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_open(&h, at("f").c_str(), GCU_FILE_OPEN_READ,
+          GCU_FILE_PERMS_DEFAULT, nullptr));
+  char buf[16];
+  size_t got = 0;
+  EXPECT_EQ(GCU_FILE_OK, gcu_file_read_bytes(&h, buf, sizeof buf, &got));
+  EXPECT_EQ(3u, got);
+  // eof answers the read that already happened, which is the only question it
+  // can answer.
+  EXPECT_TRUE(gcu_file_eof(&h));
+
+  EXPECT_EQ(GCU_FILE_OK, gcu_file_read_bytes(&h, buf, sizeof buf, &got));
+  EXPECT_EQ(0u, got) << "reading past the end is zero bytes, not an error";
+  EXPECT_EQ(GCU_FILE_OK, gcu_file_close(&h));
+}
+
+TEST_F(FileHandle, AppendGoesToTheEndAndWriteEmptiesFirst) {
+  put(at("f"), "first");
+  GCU_File_Handle h;
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_open(&h, at("f").c_str(), GCU_FILE_OPEN_APPEND,
+          GCU_FILE_PERMS_DEFAULT, nullptr));
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_write_bytes(&h, "-second", 7));
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_close(&h));
+  {
+    Read r(at("f"));
+    ASSERT_EQ(GCU_FILE_OK, r.result);
+    EXPECT_EQ("first-second", r.str());
+  }
+
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_open(&h, at("f").c_str(), GCU_FILE_OPEN_WRITE,
+          GCU_FILE_PERMS_DEFAULT, nullptr));
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_write_bytes(&h, "new", 3));
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_close(&h));
+  Read r(at("f"));
+  ASSERT_EQ(GCU_FILE_OK, r.result);
+  EXPECT_EQ("new", r.str());
+}
+
+TEST_F(FileHandle, UpdateWritesIntoTheMiddleWithoutTruncating) {
+  put(at("f"), "0123456789");
+  GCU_File_Handle h;
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_open(&h, at("f").c_str(), GCU_FILE_OPEN_UPDATE,
+          GCU_FILE_PERMS_DEFAULT, nullptr));
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_seek(&h, 3, GCU_FILE_SEEK_SET));
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_write_bytes(&h, "XY", 2));
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_close(&h));
+
+  Read r(at("f"));
+  ASSERT_EQ(GCU_FILE_OK, r.result);
+  EXPECT_EQ("012XY56789", r.str());
+}
+
+TEST_F(FileHandle, ReadAndUpdateRefuseAFileThatIsNotThere) {
+  GCU_File_Handle h;
+  EXPECT_EQ(GCU_FILE_ERR_NOT_FOUND,
+      gcu_file_open(&h, at("absent").c_str(), GCU_FILE_OPEN_READ,
+          GCU_FILE_PERMS_DEFAULT, nullptr));
+  EXPECT_EQ(GCU_FILE_ERR_NOT_FOUND,
+      gcu_file_open(&h, at("absent").c_str(), GCU_FILE_OPEN_UPDATE,
+          GCU_FILE_PERMS_DEFAULT, nullptr));
+  // Zeroed by a failed open, so closing it is safe and says nothing failed.
+  EXPECT_EQ(GCU_FILE_OK, gcu_file_close(&h));
+}
+
+TEST_F(FileHandle, PermissionsApplyToAFileThisCallCreates) {
+  mode_t saved = umask(0022);
+  GCU_File_Handle h;
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_open(&h, at("private").c_str(), GCU_FILE_OPEN_WRITE,
+          GCU_FILE_PERMS_PRIVATE, nullptr));
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_close(&h));
+  EXPECT_EQ(0600, mode_of(at("private")));
+
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_open(&h, at("ordinary").c_str(), GCU_FILE_OPEN_WRITE,
+          GCU_FILE_PERMS_DEFAULT, nullptr));
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_close(&h));
+  umask(saved);
+  // No probe needed on this path: open() applies the umask itself.
+  EXPECT_EQ(0644, mode_of(at("ordinary")));
+}
+
+TEST_F(FileHandle, OpeningAnExistingFileDoesNotChangeItsPermissions) {
+  put(at("f"), "x");
+  ASSERT_EQ(0, chmod(at("f").c_str(), 0640));
+  GCU_File_Handle h;
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_open(&h, at("f").c_str(), GCU_FILE_OPEN_WRITE,
+          GCU_FILE_PERMS_PRIVATE, nullptr));
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_close(&h));
+  EXPECT_EQ(0640, mode_of(at("f")));
+}
+
+TEST_F(FileHandle, SeekingPastTheEndMakesAGapThatReadsBackAsZeroes) {
+  GCU_File_Handle h;
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_open(&h, at("sparse").c_str(), GCU_FILE_OPEN_WRITE,
+          GCU_FILE_PERMS_DEFAULT, nullptr));
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_seek(&h, 8, GCU_FILE_SEEK_SET));
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_write_bytes(&h, "end", 3));
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_close(&h));
+
+  Read r(at("sparse"));
+  ASSERT_EQ(GCU_FILE_OK, r.result);
+  ASSERT_EQ(11u, r.len);
+  EXPECT_EQ(0, memcmp(r.chars(), "\0\0\0\0\0\0\0\0end", 11));
+}
+
+TEST_F(FileHandle, SeekingBeforeTheBeginningIsRefused) {
+  put(at("f"), "abc");
+  GCU_File_Handle h;
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_open(&h, at("f").c_str(), GCU_FILE_OPEN_READ,
+          GCU_FILE_PERMS_DEFAULT, nullptr));
+  EXPECT_NE(GCU_FILE_OK, gcu_file_seek(&h, -1, GCU_FILE_SEEK_SET));
+  EXPECT_EQ(GCU_FILE_OK, gcu_file_close(&h));
+}
+
+TEST_F(FileHandle, FlushAndSyncBothReportSuccessOnAWritableFile) {
+  GCU_File_Handle h;
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_open(&h, at("f").c_str(), GCU_FILE_OPEN_WRITE,
+          GCU_FILE_PERMS_DEFAULT, nullptr));
+  ASSERT_EQ(GCU_FILE_OK, gcu_file_write_bytes(&h, "durable", 7));
+  EXPECT_EQ(GCU_FILE_OK, gcu_file_flush(&h));
+  EXPECT_EQ(GCU_FILE_OK, gcu_file_sync(&h));
+  EXPECT_EQ(GCU_FILE_OK, gcu_file_close(&h));
+  Read r(at("f"));
+  ASSERT_EQ(GCU_FILE_OK, r.result);
+  EXPECT_EQ("durable", r.str());
+}
+
+TEST_F(FileHandle, CloseIsSafeTwiceAndOnAZeroedHandle) {
+  GCU_File_Handle zeroed;
+  memset(&zeroed, 0, sizeof zeroed);
+  EXPECT_EQ(GCU_FILE_OK, gcu_file_close(&zeroed));
+  EXPECT_EQ(GCU_FILE_OK, gcu_file_close(nullptr));
+
+  GCU_File_Handle h;
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_open(&h, at("f").c_str(), GCU_FILE_OPEN_WRITE,
+          GCU_FILE_PERMS_DEFAULT, nullptr));
+  EXPECT_EQ(GCU_FILE_OK, gcu_file_close(&h));
+  EXPECT_EQ(GCU_FILE_OK, gcu_file_close(&h));
+}
+
+TEST_F(FileHandle, NullArgumentsAreRefusedRatherThanFatal) {
+  char buf[4];
+  size_t got = 0;
+  int64_t where = 0;
+  GCU_File_Handle zeroed;
+  memset(&zeroed, 0, sizeof zeroed);
+
+  EXPECT_EQ(GCU_FILE_ERR_INVALID,
+      gcu_file_open(nullptr, at("f").c_str(), GCU_FILE_OPEN_READ,
+          GCU_FILE_PERMS_DEFAULT, nullptr));
+  GCU_File_Handle h;
+  EXPECT_EQ(GCU_FILE_ERR_INVALID,
+      gcu_file_open(&h, nullptr, GCU_FILE_OPEN_READ, GCU_FILE_PERMS_DEFAULT,
+          nullptr));
+  EXPECT_EQ(GCU_FILE_ERR_INVALID,
+      gcu_file_open(&h, at("f").c_str(), (GCU_File_Open_Mode)99,
+          GCU_FILE_PERMS_DEFAULT, nullptr));
+  EXPECT_EQ(GCU_FILE_ERR_INVALID,
+      gcu_file_read_bytes(&zeroed, buf, sizeof buf, &got));
+  EXPECT_EQ(GCU_FILE_ERR_INVALID, gcu_file_write_bytes(&zeroed, "x", 1));
+  EXPECT_EQ(GCU_FILE_ERR_INVALID,
+      gcu_file_seek(&zeroed, 0, GCU_FILE_SEEK_SET));
+  EXPECT_EQ(GCU_FILE_ERR_INVALID, gcu_file_tell(&zeroed, &where));
+  EXPECT_EQ(GCU_FILE_ERR_INVALID, gcu_file_flush(&zeroed));
+  EXPECT_EQ(GCU_FILE_ERR_INVALID, gcu_file_sync(&zeroed));
+  EXPECT_FALSE(gcu_file_eof(nullptr));
+  EXPECT_FALSE(gcu_file_eof(&zeroed));
+}
+#endif
+
 TEST(FileResultString, NamesEveryValueAndRefusesNone) {
   for (int i = 0; i < GCU_FILE_RESULT_COUNT; ++i) {
     const char * text = gcu_file_result_string((GCU_File_Result)i);

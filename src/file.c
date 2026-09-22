@@ -630,6 +630,189 @@ GCU_File_Result gcu_file_temp_commit(GCU_File_Temp * temp, const char * dest,
   return result;
 }
 
+GCU_File_Result gcu_file_open(GCU_File_Handle * handle, const char * path,
+    GCU_File_Open_Mode mode, GCU_File_Perms perms,
+    const GCU_Allocator * allocator) {
+  if (!handle) {
+    return GCU_FILE_ERR_INVALID;
+  }
+  memset(handle, 0, sizeof *handle);
+  if (!path) {
+    return GCU_FILE_ERR_INVALID;
+  }
+  if (!allocator) {
+    allocator = gcu_allocator_default();
+  }
+
+  int flags;
+  const char * stdio_mode;
+  switch (mode) {
+    case GCU_FILE_OPEN_READ:
+      flags = O_RDONLY;
+      stdio_mode = "rb";
+      break;
+    case GCU_FILE_OPEN_WRITE:
+      flags = O_WRONLY | O_CREAT | O_TRUNC;
+      stdio_mode = "wb";
+      break;
+    case GCU_FILE_OPEN_APPEND:
+      flags = O_WRONLY | O_CREAT | O_APPEND;
+      stdio_mode = "ab";
+      break;
+    case GCU_FILE_OPEN_UPDATE:
+      flags = O_RDWR;
+      stdio_mode = "r+b";
+      break;
+    default:
+      return GCU_FILE_ERR_INVALID;
+  }
+
+  // Unlike the temporary-file path, no probe is needed to honour the umask
+  // here: open() applies it at creation, so asking for 0666 gets whatever the
+  // platform would have given any other new file, ACL included.  The probe
+  // exists over there only because mkstemp() forces 0600 and the mode has to
+  // be recovered afterwards.
+  int create_mode = (perms == GCU_FILE_PERMS_PRIVATE) ? 0600 : 0666;
+
+#ifdef _WIN32
+  /* TODO(windows): never compiled or run on Windows. */
+  (void)flags;
+  wchar_t * wide = gcu_path_internal_to_wide(allocator, path);
+  if (!wide) {
+    return GCU_FILE_ERR_OOM;
+  }
+  wchar_t wide_mode[8];
+  size_t mi = 0;
+  for (const char * m = stdio_mode; *m && mi < 7; ++m) {
+    wide_mode[mi++] = (wchar_t)*m;
+  }
+  wide_mode[mi] = L'\0';
+  FILE * stream = _wfopen(wide, wide_mode);
+  gcu_allocator_free(allocator, wide);
+  if (!stream) {
+    return file_result_from_errno(errno);
+  }
+  (void)create_mode;
+#else
+  int fd = open(path, flags, create_mode);
+  if (fd < 0) {
+    return file_result_from_errno(errno);
+  }
+  FILE * stream = fdopen(fd, stdio_mode);
+  if (!stream) {
+    close(fd);
+    return GCU_FILE_ERR_IO;
+  }
+#endif
+
+  handle->stream = stream;
+  handle->allocator = allocator;
+  return GCU_FILE_OK;
+}
+
+GCU_File_Result gcu_file_close(GCU_File_Handle * handle) {
+  if (!handle || !handle->stream) {
+    return GCU_FILE_OK;
+  }
+  // Reported, because this is where buffered output finally reaches the
+  // operating system and therefore where a full disk is discovered.
+  int closed = fclose(handle->stream);
+  memset(handle, 0, sizeof *handle);
+  return closed == 0 ? GCU_FILE_OK : GCU_FILE_ERR_IO;
+}
+
+GCU_File_Result gcu_file_read_bytes(GCU_File_Handle * handle, void * buffer,
+    size_t size, size_t * out_got) {
+  if (!handle || !handle->stream || (!buffer && size) || !out_got) {
+    return GCU_FILE_ERR_INVALID;
+  }
+  *out_got = fread(buffer, 1, size, handle->stream);
+  // A short read is the end of the file, not a failure; only ferror says a
+  // failure happened.
+  if (*out_got != size && ferror(handle->stream)) {
+    return GCU_FILE_ERR_IO;
+  }
+  return GCU_FILE_OK;
+}
+
+GCU_File_Result gcu_file_write_bytes(GCU_File_Handle * handle,
+    const void * data, size_t len) {
+  if (!handle || !handle->stream || (!data && len)) {
+    return GCU_FILE_ERR_INVALID;
+  }
+  if (len && fwrite(data, 1, len, handle->stream) != len) {
+    // Unlike a read, there is no benign reason for a short write.
+    return GCU_FILE_ERR_IO;
+  }
+  return GCU_FILE_OK;
+}
+
+GCU_File_Result gcu_file_seek(GCU_File_Handle * handle, int64_t offset,
+    GCU_File_Seek_From from) {
+  if (!handle || !handle->stream) {
+    return GCU_FILE_ERR_INVALID;
+  }
+  int whence;
+  switch (from) {
+    case GCU_FILE_SEEK_SET: whence = SEEK_SET; break;
+    case GCU_FILE_SEEK_CUR: whence = SEEK_CUR; break;
+    case GCU_FILE_SEEK_END: whence = SEEK_END; break;
+    default: return GCU_FILE_ERR_INVALID;
+  }
+#ifdef _WIN32
+  /* TODO(windows): never compiled or run on Windows.  fseek takes a long,
+   * which is 32 bits here, so a file over 2 GB needs the 64-bit form. */
+  if (_fseeki64(handle->stream, offset, whence) != 0) {
+    return GCU_FILE_ERR_IO;
+  }
+#else
+  if (fseeko(handle->stream, (off_t)offset, whence) != 0) {
+    return file_result_from_errno(errno);
+  }
+#endif
+  return GCU_FILE_OK;
+}
+
+GCU_File_Result gcu_file_tell(GCU_File_Handle * handle, int64_t * out_offset) {
+  if (!handle || !handle->stream || !out_offset) {
+    return GCU_FILE_ERR_INVALID;
+  }
+#ifdef _WIN32
+  /* TODO(windows): never compiled or run on Windows. */
+  __int64 where = _ftelli64(handle->stream);
+#else
+  off_t where = ftello(handle->stream);
+#endif
+  if (where < 0) {
+    return GCU_FILE_ERR_IO;
+  }
+  *out_offset = (int64_t)where;
+  return GCU_FILE_OK;
+}
+
+bool gcu_file_eof(const GCU_File_Handle * handle) {
+  return handle && handle->stream && feof(handle->stream);
+}
+
+GCU_File_Result gcu_file_flush(GCU_File_Handle * handle) {
+  if (!handle || !handle->stream) {
+    return GCU_FILE_ERR_INVALID;
+  }
+  return fflush(handle->stream) == 0 ? GCU_FILE_OK : GCU_FILE_ERR_IO;
+}
+
+GCU_File_Result gcu_file_sync(GCU_File_Handle * handle) {
+  if (!handle || !handle->stream) {
+    return GCU_FILE_ERR_INVALID;
+  }
+  // Flushed first, because fsync commits what the operating system has and
+  // stdio may still be holding the last of it.
+  if (fflush(handle->stream) != 0) {
+    return GCU_FILE_ERR_IO;
+  }
+  return file_sync_stream(handle->stream) ? GCU_FILE_OK : GCU_FILE_ERR_IO;
+}
+
 /** Fill in @p out from a platform stat buffer. */
 #ifdef _WIN32
 static void file_info_from_find(GCU_File_Info * out,

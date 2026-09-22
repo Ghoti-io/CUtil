@@ -337,6 +337,183 @@ GCU_API GCU_File_Result gcu_file_temp_commit(GCU_File_Temp * temp,
 GCU_API void gcu_file_temp_abort(GCU_File_Temp * temp);
 
 /**
+ * How an open file may be used.
+ */
+typedef enum GCU_File_Open_Mode {
+  GCU_FILE_OPEN_READ = 0, ///< Read only.  The file must already exist.
+  GCU_FILE_OPEN_WRITE,    ///< Write only.  Created, or emptied if it exists.
+  GCU_FILE_OPEN_APPEND,   ///< Write only, always at the end.  Created if
+                          ///< absent.
+  GCU_FILE_OPEN_UPDATE,   ///< Read and write.  The file must already exist.
+} GCU_File_Open_Mode;
+
+/**
+ * Where an offset is measured from.
+ */
+typedef enum GCU_File_Seek_From {
+  GCU_FILE_SEEK_SET = 0, ///< From the beginning.
+  GCU_FILE_SEEK_CUR,     ///< From where the file is now.
+  GCU_FILE_SEEK_END,     ///< From the end; a negative offset goes backwards.
+} GCU_File_Seek_From;
+
+/**
+ * An open file.
+ *
+ * Opaque, and disposed of by ::gcu_file_close().  Treat the members as
+ * private.
+ */
+typedef struct GCU_File_Handle {
+  FILE * stream;                   ///< Private.
+  const GCU_Allocator * allocator; ///< Private.
+} GCU_File_Handle;
+
+/**
+ * Open a file for reading, writing or both.
+ *
+ * This module is mostly about whole files, and deliberately so.  What this
+ * adds is the case that whole-file reading cannot serve:  a file too large to
+ * hold, or one whose interesting part is somewhere in the middle.
+ *
+ * It is a thin layer over stdio, because `fopen` and `fread` are already
+ * standard C and wrapping them again would buy nothing.  What it fixes is the
+ * three things stdio does *not* get right across platforms:
+ *
+ * - **UTF-8 paths.**  `fopen` on Windows cannot open a path whose bytes are
+ *   UTF-8; this opens through the wide entry point, as the rest of the module
+ *   does.
+ * - **Offsets past 2 GB.**  `ftell` returns `long`, which is 32 bits on
+ *   64-bit Windows, so seeking a large file through plain stdio silently
+ *   stops working at two gigabytes.  ::gcu_file_seek() and ::gcu_file_tell()
+ *   are 64-bit everywhere.
+ * - **Line endings.**  Always binary.  A text-mode read on Windows rewrites
+ *   the bytes and makes `ftell` disagree with how many there are.
+ *
+ * @param handle Receives the open file.  Zeroed before anything can fail, so
+ *   a handle from a failed open is safe to pass to ::gcu_file_close().
+ * @param path The file to open.
+ * @param mode What it will be used for.
+ * @param perms Permissions for a file this call creates; ignored for one that
+ *   already exists, whose permissions are never changed by opening it.
+ *   ::GCU_FILE_PERMS_PRESERVE and ::GCU_FILE_PERMS_DEFAULT are the same thing
+ *   here, since there is nothing to preserve when the file is new.
+ * @param allocator Allocator for working memory, or NULL for the default.
+ * @return ::GCU_FILE_OK, ::GCU_FILE_ERR_INVALID, ::GCU_FILE_ERR_NOT_FOUND,
+ *   ::GCU_FILE_ERR_ACCESS, ::GCU_FILE_ERR_OOM or ::GCU_FILE_ERR_IO.
+ */
+GCU_API GCU_File_Result gcu_file_open(GCU_File_Handle * handle,
+  const char * path, GCU_File_Open_Mode mode, GCU_File_Perms perms,
+  const GCU_Allocator * allocator);
+
+/**
+ * Close an open file.
+ *
+ * Returns a result, and the result is worth reading:  on a buffered write the
+ * close is where buffered bytes finally reach the operating system, so it is
+ * the call that reports a full disk.  Ignoring it is how a program loses the
+ * last few kilobytes of what it wrote and never finds out.
+ *
+ * The handle is spent either way, and closing an already-closed or zeroed
+ * handle is accepted and does nothing - so this may sit on an unconditional
+ * cleanup path.
+ *
+ * @param handle The handle.  NULL is accepted and ignored.
+ * @return ::GCU_FILE_OK, or ::GCU_FILE_ERR_IO if buffered output could not be
+ *   written.
+ */
+GCU_API GCU_File_Result gcu_file_close(GCU_File_Handle * handle);
+
+/**
+ * Read up to @p size bytes.
+ *
+ * A short read is not an error:  @p out_got says how many arrived, and zero
+ * with ::GCU_FILE_OK means the end of the file.  Anything reading a stream
+ * has to cope with this, which is why the count is reported rather than
+ * demanded.
+ *
+ * @param handle The handle.
+ * @param buffer Where to put them.
+ * @param size How many at most.
+ * @param out_got Receives how many were read.
+ * @return ::GCU_FILE_OK, ::GCU_FILE_ERR_INVALID or ::GCU_FILE_ERR_IO.
+ */
+GCU_API GCU_File_Result gcu_file_read_bytes(GCU_File_Handle * handle,
+  void * buffer, size_t size, size_t * out_got);
+
+/**
+ * Write @p len bytes.
+ *
+ * Unlike a read, a short write *is* an error:  there is no reason for one
+ * except a failure, and a caller that carried on would be building a file
+ * with a hole in it.
+ *
+ * @param handle The handle.
+ * @param data The bytes.  May be NULL only if @p len is 0.
+ * @param len How many.
+ * @return ::GCU_FILE_OK, ::GCU_FILE_ERR_INVALID or ::GCU_FILE_ERR_IO.
+ */
+GCU_API GCU_File_Result gcu_file_write_bytes(GCU_File_Handle * handle,
+  const void * data, size_t len);
+
+/**
+ * Move to another position in the file.
+ *
+ * Seeking past the end is allowed and is how a sparse file is made:  the gap
+ * reads back as zeroes once something has been written beyond it.  Seeking to
+ * before the beginning is refused.
+ *
+ * @param handle The handle.
+ * @param offset How far, in bytes.  64-bit on every platform.
+ * @param from Where @p offset is measured from.
+ * @return ::GCU_FILE_OK, ::GCU_FILE_ERR_INVALID or ::GCU_FILE_ERR_IO.
+ */
+GCU_API GCU_File_Result gcu_file_seek(GCU_File_Handle * handle,
+  int64_t offset, GCU_File_Seek_From from);
+
+/**
+ * Say where in the file the handle is.
+ *
+ * @param handle The handle.
+ * @param out_offset Receives the position, in bytes from the beginning.
+ * @return ::GCU_FILE_OK, ::GCU_FILE_ERR_INVALID or ::GCU_FILE_ERR_IO.
+ */
+GCU_API GCU_File_Result gcu_file_tell(GCU_File_Handle * handle,
+  int64_t * out_offset);
+
+/**
+ * Whether a previous read reached the end of the file.
+ *
+ * Only ever true after a read has already come up short.  Testing it before
+ * reading answers the previous question, not the next one, which is the
+ * mistake this flag invites in every language that has it.
+ *
+ * @param handle The handle.  NULL is false.
+ * @return true if the end has been reached.
+ */
+GCU_API bool gcu_file_eof(const GCU_File_Handle * handle);
+
+/**
+ * Push buffered output to the operating system.
+ *
+ * Not to the disk.  ::gcu_file_sync() is that, and the difference is the one
+ * section 6 of `documentation/file.md` is about.
+ *
+ * @param handle The handle.
+ * @return ::GCU_FILE_OK, ::GCU_FILE_ERR_INVALID or ::GCU_FILE_ERR_IO.
+ */
+GCU_API GCU_File_Result gcu_file_flush(GCU_File_Handle * handle);
+
+/**
+ * Ask the operating system to commit the file to the disk.
+ *
+ * Flushes first, so a caller need not do both.  This is the call that survives
+ * a power loss; a flush alone survives only a killed process.
+ *
+ * @param handle The handle.
+ * @return ::GCU_FILE_OK, ::GCU_FILE_ERR_INVALID or ::GCU_FILE_ERR_IO.
+ */
+GCU_API GCU_File_Result gcu_file_sync(GCU_File_Handle * handle);
+
+/**
  * Ask the filesystem what is at a path.
  *
  * Follows symbolic links, so a link to a directory reports
