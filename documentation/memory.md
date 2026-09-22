@@ -15,10 +15,16 @@ everything below is about the ways it can quietly stop meaning anything.
 This is the rule the whole facility rests on:
 
 > `gcu_get_alloc_count()` minus `gcu_get_free_count()` is the number of blocks
-> still outstanding.
+> still outstanding - **provided every block released with `gcu_free()` was
+> acquired through these same wrappers.**
 
-Which means the counting follows what happened to the heap, not what the
-caller wrote:
+The proviso is not a hedge, it is the precondition the whole document assumes.
+Release a block that came from somewhere else and the difference stops meaning
+anything at all: it can run negative, with no bug present.  Section 7 is about
+how a caller keeps the precondition true, and section 4 depends on it.
+
+Given it, the counting follows what happened to the heap, not what the caller
+wrote:
 
 | call | counted as |
 |---|---|
@@ -96,12 +102,11 @@ It is tempting to read the skew as a wart and to make the constructor allocate
 lazily so that the counts start level.  Do not.  The offset is what makes the
 badly written assertion *fail*.
 
-For a program that takes **every** block it releases through these wrappers,
-`free` can never exceed `alloc`, so an unreset absolute comparison can only
-come out equal if the program released three more blocks than it acquired -
-which is a double free, not a pass.
+Given section 2's precondition, `free` can never exceed `alloc`, so an unreset
+absolute comparison can only come out equal if the program released three more
+blocks than it acquired - which is a double free, not a pass.
 
-That precondition is not decoration.  A program that releases a block it got
+Without it, the offset is cancellable.  A program that releases a block it got
 from somewhere else - `gcu_allocator_default()`, which hands out `malloc()`
 blocks, or plain `malloc()` directly - counts the free without ever having
 counted the allocation, and drives the net negative with no bug at all:
