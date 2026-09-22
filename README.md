@@ -89,7 +89,7 @@ The design and the reasoning behind each decision are in `documentation/thread-p
 
 ### File
 
-Provides whole-file reading and atomic whole-file replacement.  Built on the Path library below; it adds nothing of its own about path syntax.
+Provides what a program needs from a filesystem:  whole-file reading, atomic whole-file replacement, metadata, the ordinary file operations, and an open handle for the cases whole-file reading cannot serve.  Built on the Path library below; it adds nothing of its own about path syntax.
 
 `gcu_file_read()` reads a file into an allocator-owned buffer.  It reads in **chunks rather than sizing the file first**, so it works on inputs that report no size at all -- pipes, character devices, and everything under `/proc`, where a seek-and-tell implementation silently returns an empty buffer.  The buffer carries a NUL one byte past `out_len` that is not counted in it, so a text caller can use the result as a C string without copying and a binary caller can ignore it.  `max_bytes` is a promise:  a file over the limit gives `GCU_FILE_ERR_LIMIT` and nothing is allocated, never a truncation.
 
@@ -101,7 +101,23 @@ Provides whole-file reading and atomic whole-file replacement.  Built on the Pat
 
 `GCU_File_Perms` says what permissions the finished file carries, because the destination used to inherit the temporary file's owner-only mode and nothing said so.  `GCU_FILE_PERMS_PRIVATE` is the zero value and keeps the file to its owner; `GCU_FILE_PERMS_DEFAULT` gives it what an ordinary `fopen()` here would have produced, asked of the operating system rather than computed, because a default ACL on the directory overrides the umask; `GCU_FILE_PERMS_PRESERVE` keeps whatever the destination already had, so rewriting a file somebody deliberately narrowed does not widen it.  Three values and not a `mode_t`:  ownership, ACLs and the rest of an access model cannot be described honestly on both POSIX and Windows, and remain the caller's business.  The temporary stays owner-only until the moment it is renamed, whichever is chosen.
 
+`gcu_file_stat()` reports what is at a path -- type, size, and a modification time as nanoseconds since the Unix epoch (a plain integer rather than a `chron` type, because `chron` is built on this library).  `gcu_file_stat_link()` does not follow a symbolic link at the end, which is what a tree walk needs.  `gcu_file_exists()` and `gcu_file_is_directory()` are the convenient forms, and say plainly what they cannot tell you.  `gcu_file_remove()`, `gcu_file_rename()` and `gcu_file_copy()` are the rest.  Two refusals are deliberate:  remove will not delete a directory even though POSIX `remove()` would, and rename reports the cross-filesystem case rather than quietly becoming a copy.
+
+`GCU_File_Result` distinguishes `NOT_FOUND`, `EXISTS`, `ACCESS` and `NOT_EMPTY` from a general `ERR_IO`, because a caller can act on those and cannot usefully act on the difference between `ELOOP` and `ENAMETOOLONG`.
+
+`gcu_file_open()` and the calls around it -- read, write, seek, tell, flush, sync, close -- are for a file too large to hold in memory or one whose interesting part is in the middle.  Deliberately thin over stdio, fixing only the three things stdio gets wrong across platforms:  UTF-8 paths on Windows, offsets past 2 GB where `ftell` returns a 32-bit `long`, and text-mode line-ending rewriting.  A short read is the end of the file; a short write is a failure; and `close` returns a result, because that is where buffered bytes reach the operating system and therefore where a full disk is reported.
+
 The design and the reasoning behind each decision are in `documentation/file.md`.
+
+### Directory
+
+Provides directory creation, removal and walking, in `ghoti.io/cutil/dir.h`.  Results are `GCU_File_Result` rather than a vocabulary of its own:  a directory that is not there and a file that is not there are the same failure to a caller.
+
+`gcu_dir_create()` makes one level and `gcu_dir_create_all()` builds a path, succeeding when the directory already exists -- but not when the name is taken by something that is not a directory, which is a collision rather than success.  `gcu_dir_remove()` takes an empty directory.  `gcu_dir_temp_create()` makes a uniquely named working directory, created rather than merely named, and owner-only.
+
+Walking is an iterator (`gcu_dir_open()`, `gcu_dir_read()`, `gcu_dir_close()`) because a directory can hold more entries than a caller can afford to hold at once.  `"."` and `".."` are never reported.  Entry types come back without following links, so a walk cannot be led out of its tree, and where the platform answers `DT_UNKNOWN` the entry is asked about directly rather than reported as typeless.
+
+There is deliberately **no recursive delete**:  it is the operation most likely to follow a symbolic link out of the tree it was given, and it wants a design conversation rather than a convenience function.
 
 ### Path
 
@@ -118,6 +134,8 @@ The environment half -- `gcu_path_cwd()`, `gcu_path_home()`, `gcu_path_config_di
 Lexical calls write into a caller-supplied buffer and never truncate:  a shortened path is still a valid path, and it names a different file.  Passing `NULL` with size `0` measures.
 
 There is deliberately no `chdir`.  A process has one working directory shared by every thread, and a library that changes it alters the meaning of every relative path in its host application.  Pass a base directory and join onto it.
+
+`gcu_path_match()` matches a name against a shell pattern -- `?`, `*`, `**`, `[abc]`, `[a-z]`, `[!abc]` and a backslash escape -- with no regular-expression engine, which is what keeps this library free of that dependency.  A single `*` does not cross a separator and `**` does, so a pattern describes one component unless it says otherwise; a character set never matches a separator either.  Matching is bounded by pattern length times path length, because patterns come from configuration files and sometimes from users.
 
 The design and the reasoning behind each decision are in `documentation/path.md`.
 

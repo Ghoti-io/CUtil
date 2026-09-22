@@ -2,15 +2,26 @@
 
 ## 1. What it is
 
-Two operations, and the handle that connects them.
+What a program needs from a filesystem, with the parts that cannot be
+described honestly on both POSIX and Windows left out rather than guessed at.
 
-`gcu_file_read()` reads an entire file into memory.  `gcu_file_temp_create()`
-opens a uniquely named temporary file, and `gcu_file_temp_commit()` moves it
-over a destination so that no reader ever sees a partly written file.
-`gcu_file_write_atomic()` is the two of those for the common case where the
-whole content is already in memory.
+Whole files:  `gcu_file_read()` reads one into memory, and
+`gcu_file_write_atomic()` replaces one without any reader ever seeing it partly
+written.  `gcu_file_temp_create()` and `gcu_file_temp_commit()` are that second
+one taken apart, for content that is produced rather than already in hand.
+
+Everything else a caller reaches for on the first day:  `gcu_file_stat()` and
+`gcu_file_exists()` to ask what is there, `gcu_file_remove()`,
+`gcu_file_rename()` and `gcu_file_copy()` to move it about, `gcu_file_open()`
+and the calls around it for a file too large to hold or one whose interesting
+part is in the middle, and `dir.h` for the directories all of that lives in.
 
 It is built on `path.h` and adds nothing of its own about path syntax.
+
+Sections 2 to 8 are the whole-file half, which came first and carries most of
+the reasoning.  Sections 9 to 13 are the rest, added when it became clear that
+counting what this suite's own libraries called was the wrong way to decide
+what a core library owes an arbitrary consumer.
 
 ## 2. Prior art
 
@@ -313,7 +324,133 @@ already hold there and `PRIVATE` does **not**.  Making it hold needs
 `SetSecurityInfo` and a constructed DACL.  Like the rest of the Windows branch
 in this module, it has never been compiled or run.
 
-## 9. Encoding
+## 9. Telling one failure from another
+
+`GCU_File_Result` distinguishes four things beyond the obvious:
+`ERR_NOT_FOUND`, `ERR_EXISTS`, `ERR_ACCESS` and `ERR_NOT_EMPTY`.  Everything
+else is `ERR_IO`, because a caller can act on "it is not there" and on "you may
+not", and cannot usefully branch on the difference between `ELOOP` and
+`ENAMETOOLONG`.
+
+The line was drawn there by watching what happened when it was not.  For a
+while `gcu_file_read()` reported one `ERR_IO` for a path that was absent and
+for a file that would not open, on the reasoning that both are failures.
+`cjelly` needed them apart - a wrong path is the caller's mistake and a failing
+disk is not - so it asked the filesystem a second time after the read had
+already failed, calling `gcu_path_canonicalize()` and throwing away the
+canonical path it allocated, with a paragraph of comment explaining why:
+
+> `gcu_path_canonicalize()` is the cross-platform existence query
+
+It is not.  It is a symlink resolver being used to answer a yes/no question,
+because there was nothing else - and the second question is a race as well as a
+duplication, since the file may appear or vanish between the two.  That is a
+consumer working around a missing primitive, and it is the clearest signal in
+this repository that the missing thing was missing.
+
+## 10. Asking what is there
+
+`gcu_file_stat()` fills in a `GCU_File_Info`:  a type, a size, and a
+modification time.  Nothing else.
+
+Ownership, permissions, link counts, device numbers and the several kinds of
+timestamp a platform may or may not keep are all absent for the reason section
+8 gives.  A struct with a `uid` field would be lying on Windows; one with a
+Windows security descriptor would be lying everywhere else.
+
+The time is `int64_t` nanoseconds since the Unix epoch, and is deliberately
+**not** a `chron` type:  `chron` is built on this library, so depending on it
+here would invert the suite.  Windows counts 100-nanosecond ticks from 1601 and
+is converted at the boundary.  The resolution is what the filesystem kept -
+many record whole seconds - so this is the value converted, not the precision
+promised.
+
+`gcu_file_stat_link()` does not follow a symbolic link at the end of the path.
+The distinction matters to anything that walks a tree, because following links
+is how a walk leaves the tree it was asked about.
+
+`gcu_file_exists()` is the convenience, and its documentation says plainly what
+it cannot do:  it answers "no" both for a path that is absent and for one the
+caller may not look at, and the answer is history by the time it returns.  It is
+for a better error message, not for deciding that a later operation will work.
+
+## 11. Directories
+
+`gcu_dir_create()` makes one level.  `gcu_dir_create_all()` builds a path, and
+succeeds when the directory is already there - the caller asked for it to
+exist, not for it to be new.  It does *not* succeed when the name is taken by
+something that is not a directory:  that is a collision, and reporting it as
+success would hand back a path that cannot be written into.
+
+The walk is an iterator - `gcu_dir_open()`, `gcu_dir_read()`,
+`gcu_dir_close()` - rather than a function returning a list.  A directory can
+hold more entries than a caller can afford to hold at once, and a caller is
+usually looking for one of them.
+
+`"."` and `".."` are never reported.  They are an artefact of how a filesystem
+stores a directory rather than things in it, and every caller that has ever
+forgotten to skip them has walked its own parent.
+
+Entry types come back without following links, so a walk cannot be led out of
+its tree.  Where the platform will not say - `DT_UNKNOWN`, which XFS without
+`ftype` and several network filesystems answer for everything - the entry is
+asked about directly rather than reported as `OTHER`, which would otherwise
+make every entry typeless on exactly those systems.
+
+There is **no recursive delete**, and that is a decision rather than an
+oversight.  It is the operation that most wants a symbolic link followed out of
+it by mistake, and the failure mode is deleting something nobody pointed at.  A
+caller who wants one can write it over `gcu_dir_read()`, whose types are
+already link-safe; what it needs first is a conversation about what guards it
+should carry.
+
+## 12. Opening a file and moving around in it
+
+`gcu_file_open()` exists for the two cases whole-file reading cannot serve:  a
+file too large to hold, and one whose interesting part is somewhere in the
+middle.
+
+It is thin on purpose.  `fopen` and `fread` are already standard C, and
+wrapping them again would buy nothing.  What it adds is the three things stdio
+does *not* get right across platforms:
+
+- **UTF-8 paths.**  `fopen` on Windows cannot open a path whose bytes are
+  UTF-8.  This opens through the wide entry point, as section 14 describes.
+- **Offsets past 2 GB.**  `ftell` returns `long`, which is 32 bits on 64-bit
+  Windows, so seeking a large file through plain stdio silently stops working
+  at two gigabytes.  These offsets are 64-bit everywhere.
+- **Line endings.**  Always binary.  A text-mode read on Windows rewrites the
+  bytes and makes the offset disagree with how many there are - which is
+  exactly the bug `ctang` had, recorded in section 2.
+
+Two asymmetries are deliberate.  A short **read** is not a failure:  it is the
+end of the file, and the count is reported rather than demanded, because
+anything reading a stream has to cope with it.  A short **write** is a failure,
+because there is no benign reason for one and a caller that carried on would be
+building a file with a hole in it.
+
+`gcu_file_close()` returns a result, and it is worth reading.  Buffered output
+reaches the operating system at the close, so the close is the call that
+reports a full disk.  Ignoring it is how a program loses the last few kilobytes
+of what it wrote and never finds out.
+
+Permissions on this path need no probe, unlike section 8's:  `open()` applies
+the umask itself, so asking for `0666` gets whatever the platform would have
+given any other new file.  The probe exists over there only because `mkstemp()`
+forces `0600` and the mode has to be recovered afterwards.
+
+## 13. Matching names
+
+`gcu_path_match()` is in `path.h` rather than here, because it is a question
+about a string and touches no filesystem at all.  It is documented with the
+rest of the path work; the reason it exists is this module - filtering a
+directory walk by name is one of the first things a caller wants, and
+`gcu_dir_read()` plus a matcher is how that is spelled.
+
+It needs no regular-expression engine, which is what keeps this library free of
+that dependency.
+
+## 14. Encoding
 
 Paths are UTF-8, converted to UTF-16 at the Win32 boundary, exactly as in
 `path.h` - `_wfopen`, not `fopen`.  The conversion helpers live in
@@ -322,22 +459,39 @@ one implementation rather than each carrying a copy of Windows-only code
 nobody here can compile.  A second copy of that is precisely the thing this
 module exists to stop.
 
-## 10. What it does not do
+## 15. What it does not do
 
-- **No streams.**  Section 5 of `CONVENTIONS.md` gives parsing libraries their
-  own `<PREFIX>_Stream`.  This is not that:  it is whole-file reading and
-  whole-file replacement, which is what the six existing copies were doing.
-- **No directory creation.**  A write into a directory that does not exist
-  fails; it does not build the path.
+Two entries that used to be here have gone, and the reason they were here is
+worth keeping.  "No directory creation" and "no partial reads or writes" were
+both justified by the six whole-file readers in section 2 not needing them -
+which measures those six callers, not what a core library owes a consumer who
+has never heard of them.  A successful workaround, like `cjelly`'s in section
+9, looks exactly like an absence of demand.  What follows is meant to be the
+list of things genuinely decided against.
+
+- **No parser streams.**  Section 5 of `CONVENTIONS.md` gives parsing libraries
+  their own `<PREFIX>_Stream`, with pull semantics, pushback and an incremental
+  contract.  `gcu_file_open()` is not that and does not try to be:  it is a
+  file, not a parse.
+- **No recursive delete.**  Section 11 says why:  it is the operation most
+  likely to follow a symbolic link out of the tree it was given, and it wants a
+  design conversation rather than a convenience function.
 - **No locking.**  Two processes replacing the same file race, and the loser's
   content is simply gone.  Advisory locking is a separate decision with a
   separate set of platform lies attached to it.
-- **No partial reads or writes.**  There is no seek, no offset and no append.
+- **No ownership, ACLs or extended attributes.**  Section 8.
+- **No file watching.**  `inotify`, `kqueue` and `ReadDirectoryChangesW` agree
+  on almost nothing, including whether a rename is one event or two.
+- **No symbolic link creation.**  Reading a link's type is supported because
+  every walk needs it; making one needs a privilege on Windows that a normal
+  user does not have, and an API that fails for most callers is worse than one
+  that is absent.
 
-## 11. Testing
+## 16. Testing
 
-`test/test-file.cpp`, 36 tests, clean under ASan+UBSan and under Valgrind with
-`--leak-check=full`.
+`test/test-file.cpp`, 63 tests, and `test/test-dir.cpp`, 17.  Both clean under
+ASan+UBSan and under Valgrind with `--leak-check=full`.  The matcher's tests
+live with the rest of the path work.
 
 Checked by sabotage.  Each invariant was broken in the source and the suite
 confirmed to fail:
@@ -389,3 +543,40 @@ coverage:
   may assume it can arrange.  The neighbouring failure - a probe that cannot
   be created - *is* covered, so the reporting path around it is exercised even
   though this one call's return value is not.
+
+### What the later work's sabotage found
+
+The directory and handle work was checked the same way, and two of the findings
+were about the *harness* rather than the code - which is the failure mode this
+technique has, and worth recording.
+
+| Sabotage | Tests failing |
+| --- | --- |
+| `create_all` treats an existing non-directory as success | 1 |
+| `read` reports `.` and `..` like any other entry | 3 |
+| `open` leaves the handle untouched when it fails | a crash |
+
+Breaking the `.` and `..` skip first appeared to be caught by **nothing**.  It
+was not:  the fixture wiped its scratch tree by walking it with
+`gcu_dir_read()`, so removing that skip sent every teardown into infinite
+recursion and the suite hung.  A hung run names no failing tests at all, which
+reads on the terminal exactly like a mutation that survived.  Two things came
+out of it.  The fixture now walks with `opendir` directly, so it no longer
+depends on the behaviour it is checking; and the sabotage script now imposes a
+timeout and reads the exit status, because a count of zero failures means
+nothing until you know the run finished.
+
+One mutation is recorded as **not caught**:  starting `create_all`'s walk at
+zero rather than past the root.  On POSIX the only root is `/`, and starting at
+zero merely produces an empty first component that the loop skips anyway, so
+the two are indistinguishable here.  It matters on Windows, where the root of
+`C:\x` is three characters and starting at zero would try to create `C:` as a
+directory.  The test that looked like it covered this did not, and has been
+renamed to say what it actually checks.
+
+The matcher's three defects were found by its own tests rather than by
+sabotage, and one of them was a genuine out-of-bounds read:  extending a `*`
+did not check that there was a character left to extend over, so a pattern that
+ran out of path walked off the end of it.  The test that exposed it was written
+to check that matching cannot be made exponential, which is a reminder that a
+hostile-input test earns its keep twice.

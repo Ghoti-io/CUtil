@@ -206,21 +206,69 @@ back naming a different file, or nothing at all.  This is invisible until
 somebody has an accented character in a directory name, at which point it is
 a bug report nobody can reproduce.
 
-## 10. What it does not do
+## 10. Matching names
 
-- **No globbing.**  A glob matcher is a self-contained string matcher and
-  belongs here when something needs one; it does not need the regex library,
-  and must not pull it in.  `cutil` is the root of the suite's dependency
-  graph and depends on nothing in it, which is what lets everything else
-  depend on `cutil`.  Translating globs to regular expressions would also be
-  more work and more error-prone than matching them directly: every literal
-  run would need its metacharacters escaped, `[!...]` mapped to `[^...]`, and
-  `*` constrained not to cross a separator.
-- **No directory iteration**, yet.  It is the other half of globbing and the
-  natural next addition; `chron` is currently the only caller in the suite
-  that walks a directory.
-- **No file I/O.**  Reading, writing and atomic replacement belong in a
-  sibling module that will use these functions.
+`gcu_path_match()` answers whether a name matches a shell pattern.  It is here
+rather than in `file.h` because it is a question about a string:  nothing is
+opened, nothing is resolved, and a pattern is never expanded into the set of
+files that exist.  Walking a directory and testing each entry is
+`gcu_dir_read()` plus this, which keeps the matching testable without a
+filesystem.
+
+Section 11 used to say there was no globbing, and gave the reason it would be
+safe to add:  a glob matcher needs no regular-expression engine.  That still
+holds, and is why this could be written at all - `cutil` is the root of the
+suite's dependency graph and must not grow a dependency on `regex`.  Going via
+a regular expression would also have been *more* work, not less:  every literal
+run would need its metacharacters escaped, `[!...]` mapped to `[^...]`, and `*`
+constrained not to cross a separator.
+
+### Two rules that keep a pattern inside its component
+
+A single `*` does not cross a separator, and neither does `?`.  A caller who
+writes `src` `/` `*.c` means the files in `src`, not everything beneath it.
+`**` crosses, which is the spelling every tool that needed both settled on.
+
+A character set does not match a separator either, however it is written.
+Without that rule `a[!x]b` would match `a/b`, and a pattern that looked like it
+described one component would quietly describe two - the same hole the star
+rule closes, through a different door.
+
+### Two backtrack points, not one
+
+The classic algorithm remembers only the most recent `*` and is provably
+enough when every star is equal.  These are not equal:  a `*` that runs out at
+a separator it may not cross must be able to fall back to an earlier `**`,
+which may.  So the matcher keeps both, and tries the narrower one first.
+
+The cost is bounded by pattern length times path length.  That is worth the
+care because patterns come from configuration files and sometimes from users,
+and a matcher that can be made exponential by a short string is a denial of
+service with a friendly face.  `RunsInBoundedTimeOnAPatternBuiltToBlowUp`
+fails if that ever regresses.
+
+### The backslash cannot be both things
+
+`\` escapes the next character under `GCU_PATH_POSIX`.  Under
+`GCU_PATH_WINDOWS` it separates components, and one character cannot be both
+that and the escape for the next one - so there is no escape character in that
+flavour.  This was a real defect before it was a documented rule:  the first
+implementation treated `\` as an escape in both, which meant no Windows
+pattern containing a separator could match anything.
+
+Case folding is opt-in through a flag and is ASCII-only, and it is *not*
+applied automatically for the Windows flavour.  What Windows folds is a
+property of the volume and the version, and folding UTF-8 correctly is a
+Unicode question rather than a path one.  A flag that says exactly what it does
+is honest; one that claimed to match the filesystem would not be.
+
+## 11. What it does not do
+
+Three entries that stood here have been built:  globbing is section 10,
+directory iteration is `dir.h`, and file I/O is `file.h`.  The directory entry
+said "`chron` is currently the only caller in the suite that walks a
+directory", which was true and was the wrong reason to wait - one caller in
+this suite says nothing about what a consumer outside it expects to find.
 - **No permissions or ownership.**  POSIX mode bits are not Windows ACLs and
   POSIX uids are not Windows SIDs.  An abstraction over them is either
   dishonest about what it did or so reduced that nothing can use it, and
@@ -230,9 +278,9 @@ a bug report nobody can reproduce.
   version-dependent and would not make the comparison agree with the
   filesystem in every case anyway.
 
-## 11. Testing
+## 12. Testing
 
-`test/test-path.cpp`, 45 tests.  Every Windows case runs on Linux, for the
+`test/test-path.cpp`, 58 tests.  Every Windows case runs on Linux, for the
 reason in section 2.
 
 The tests were checked by sabotage rather than by assumption - each invariant
