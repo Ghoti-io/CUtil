@@ -9,6 +9,7 @@
 #include <ghoti.io/cutil/mutex.h>
 #include <ghoti.io/cutil/cond.h>
 #include <ghoti.io/cutil/once.h>
+#include <ghoti.io/cutil/rwlock.h>
 
 int main(void) {
   GCU_MUTEX_T m;
@@ -33,6 +34,16 @@ int main(void) {
 
   static GCU_Once once = GCU_ONCE_INIT;
   rc |= gcu_once(&once, 0);
+
+  GCU_RWLock rw;
+  rc |= gcu_rwlock_create(&rw);
+  rc |= gcu_rwlock_read_lock(&rw);
+  rc |= gcu_rwlock_read_trylock(&rw);
+  rc |= gcu_rwlock_read_unlock(&rw);
+  rc |= gcu_rwlock_write_lock(&rw);
+  rc |= gcu_rwlock_write_trylock(&rw);
+  rc |= gcu_rwlock_write_unlock(&rw);
+  rc |= gcu_rwlock_destroy(&rw);
 
   return rc;
 }

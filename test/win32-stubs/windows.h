@@ -70,3 +70,11 @@ BOOL InitOnceExecuteOnce(PINIT_ONCE InitOnce, PINIT_ONCE_FN InitFn,
     PVOID Parameter, PVOID * Context);
 
 #endif
+
+/* --- appended for rwlock.h / rwlock.c --- */
+#ifndef GHOTI_IO_GCU_WIN32_STUBS_RWLOCK
+#define GHOTI_IO_GCU_WIN32_STUBS_RWLOCK
+void AcquireSRWLockShared(SRWLOCK * SRWLock);
+void ReleaseSRWLockShared(SRWLOCK * SRWLock);
+unsigned char TryAcquireSRWLockShared(SRWLOCK * SRWLock);
+#endif
