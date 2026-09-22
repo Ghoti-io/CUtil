@@ -167,7 +167,33 @@ loads, and only the code compiled *into* the `.so` changes.  To compare one
 version's counting against another's, point `-I` at the matching headers as
 well.  (The pre-`main` offset in section 4 is the exception, because it comes
 from a constructor inside the `.so`, so for that one a library swap really is
-enough.)  A build that instruments only `src/`
+enough.)
+
+### One process can hold two rule sets
+
+The rules are per translation unit but the totals are **one pair of globals in
+the shared object**, so a program built partly against old headers and partly
+against new ones does not pick a winner - each object file applies the rules it
+was compiled with, to the same two counters.  Demonstrated, in one process,
+against the current library:
+
+```
+  old-header TU: free(NULL)          alloc=0 free=1
+  new-header TU: free(NULL)          alloc=0 free=0
+  old-header TU: realloc(NULL)+free  alloc=0 free=1
+  new-header TU: realloc(NULL)+free  alloc=1 free=1
+```
+
+The imbalance is then proportional to how much of the program was not rebuilt,
+which is not a quantity anybody can reason about.
+
+Ordinary builds do not hit this: the `.d` files name the headers, so editing
+one in place rebuilds everything that includes it.  What defeats that is the
+header arriving from a *different prefix*.  The dependency file records an
+absolute path, that file still exists and is still older than the object, and
+`make` compiles nothing and exits 0.  So after any change of `PKG_CONFIG_PATH`
+or `PREFIX`, `make clean` first - a partial rebuild here fails silently rather
+than loudly.  A build that instruments only `src/`
 and not the tests will miss any allocation the tests perform directly - and a
 probe that sees nothing looks exactly like a program that does nothing wrong.
 Whatever the mechanism, confirm it fires on a case you know is there before
