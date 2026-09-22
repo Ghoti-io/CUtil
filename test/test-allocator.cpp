@@ -61,6 +61,20 @@ TEST(Default, ZeroSizeRequestsAreNotNull) {
   z = a->calloc_fn(a->ctx, 0, 0);
   EXPECT_NE(z, nullptr);
   a->free_fn(a->ctx, z);
+
+  // realloc() is the third way to reach the same trap, and the worst of the
+  // three: glibc releases the block before returning the NULL, so a caller
+  // reading it as failure holds a pointer that has already been freed.
+  void * r = a->malloc_fn(a->ctx, 32);
+  ASSERT_NE(r, nullptr);
+  void * shrunk = a->realloc_fn(a->ctx, r, 0);
+  EXPECT_NE(shrunk, nullptr);
+  a->free_fn(a->ctx, shrunk);
+
+  // And reallocating from NULL allocates, as it does for realloc() itself.
+  void * fresh = a->realloc_fn(a->ctx, NULL, 32);
+  EXPECT_NE(fresh, nullptr);
+  a->free_fn(a->ctx, fresh);
 }
 
 TEST(Default, ZeroSizeCallocIsStillZeroed) {

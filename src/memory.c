@@ -65,7 +65,16 @@ void * gcu_realloc_debug(void * pointer, size_t size, const char * file, size_t 
     snprintf(buffer, 32, "%p", pointer);
   }
 
-  void * result = realloc(pointer, size);
+  // The counting rules are the ones memory.h states for the inline version,
+  // and have to be kept identical here: reallocating from NULL is this
+  // block's first allocation, and shrinking to zero is not allowed to release
+  // it behind the count's back.  The trace still says "realloc", because it
+  // records what the caller wrote rather than what the heap was asked for.
+  bool first = pointer == NULL;
+  if (first) {
+    ++gcu_memory_alloc_count;
+  }
+  void * result = realloc(pointer, size ? size : 1);
   if (capture) {
     fprintf(stderr, "realloc | %s:%zu -> %p | %s(%zu)\n", buffer, size, result, file, line);
   }
@@ -73,7 +82,12 @@ void * gcu_realloc_debug(void * pointer, size_t size, const char * file, size_t 
 }
 
 void gcu_free_debug(void * pointer, const char * file, size_t line) {
-  ++gcu_memory_free_count;
+  // Freeing NULL releases nothing and is not counted, but it is still traced:
+  // the log records the calls the program made, and a free(NULL) is worth
+  // seeing.
+  if (pointer) {
+    ++gcu_memory_free_count;
+  }
   if (capture) {
     fprintf(stderr, "free    | %zd | %p | %s(%zu)\n", gcu_memory_free_count, pointer, file, line);
   }

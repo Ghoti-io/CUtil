@@ -121,8 +121,21 @@ GCU_API void gcu_free_debug(void * pointer, const char * file, size_t line);
 /**
  * Get the number of times memory has been allocated.
  *
- * Calls to gcu_malloc() and gcu_calloc() are counted.  Calls to gcu_realloc()
- * are not counted.
+ * The count tracks blocks, not calls.  A successful gcu_malloc() or
+ * gcu_calloc() is counted, and so is a gcu_realloc() against a `NULL`
+ * pointer, which allocates a block rather than growing one.  Growing or
+ * shrinking an existing block is not counted, because no block begins or ends
+ * there.
+ *
+ * An allocation that *fails* is still counted, which is wrong and is known to
+ * be wrong.  It is left alone because neither sanitizer gate will let a test
+ * provoke one: ASan makes an overflowing calloc() fatal, and valgrind rejects
+ * an absurd malloc() size outright, so the fix could not be pinned by a test
+ * in the suite that has to keep it.
+ *
+ * Subtracting gcu_get_free_count() from this therefore gives the number of
+ * blocks still outstanding, which is what makes the two comparable at the end
+ * of a program.
  *
  * @returns The number of times memory has been allocated.
  */
@@ -131,7 +144,9 @@ GCU_API size_t gcu_get_alloc_count(void);
 /**
  * Get the number of times memory has been freed.
  *
- * Calls to gcu_free() are counted.
+ * A gcu_free() of a real pointer is counted.  A gcu_free() of `NULL` is not,
+ * because it releases nothing; counting it would subtract from the net and so
+ * hide a leak of exactly the same size.
  *
  * @returns The number of times memory has been freed.
  */
@@ -180,16 +195,30 @@ void * gcu_calloc(size_t nitems, size_t size);
 /**
  * Cross-platform wrapper for the standard realloc() function.
  *
- * @param pointer The beginning byte of the currently allocated memory.
+ * Two departures from `realloc()`, both so that `NULL` means failure and
+ * nothing else:
+ *
+ * - A `NULL` @p pointer allocates, and the allocation is counted.  This is
+ *   how cutil's own containers obtain their first buffer.
+ * - A zero @p size is treated as a size of one rather than releasing the
+ *   block.  To release it, call gcu_free().
+ *
+ * @param pointer The beginning byte of the currently allocated memory, or
+ *   `NULL` to allocate a new block.
  * @param size The newly requested size.
- * @returns The beginning byte of the reallocated memory.
+ * @returns The beginning byte of the reallocated memory, or `NULL` if the
+ *   request could not be satisfied, in which case @p pointer is untouched.
  */
 void * gcu_realloc(void * pointer, size_t size);
 
 /**
  * Wrapper for the standard free() function.
  *
- * @param pointer The beginning byte of the currently allocated memory.
+ * A `NULL` @p pointer is accepted and does nothing, as in `free()`.  It is
+ * not counted; see gcu_get_free_count().
+ *
+ * @param pointer The beginning byte of the currently allocated memory, or
+ *   `NULL`.
  */
 void gcu_free(void * pointer);
 
@@ -229,10 +258,23 @@ static inline void * gcu_calloc(size_t nitems, size_t size) {
 }
 
 static inline void * gcu_realloc(void * pointer, size_t size) {
-  return HeapReAlloc(GetProcessHeap(), 0, pointer, size);
+  // Reallocating from NULL is this block's first allocation rather than a
+  // growth, so route it through gcu_malloc() and have it counted as one.
+  // HeapReAlloc() separately requires a pointer it issued, so this is also
+  // the only form that would work at all here.
+  if (!pointer) {
+    return gcu_malloc(size);
+  }
+  // Never shrink to nothing; see the note in the Linux version below.
+  return HeapReAlloc(GetProcessHeap(), 0, pointer, size ? size : 1);
 }
 
 static inline void gcu_free(void * pointer) {
+  // Freeing NULL releases nothing, so it is not counted; see the note in the
+  // Linux version below.
+  if (!pointer) {
+    return;
+  }
   ++gcu_memory_free_count;
   HeapFree(GetProcessHeap(), 0, pointer);
 }
@@ -250,10 +292,33 @@ static inline void * gcu_calloc(size_t nitems, size_t size) {
 }
 
 static inline void * gcu_realloc(void * pointer, size_t size) {
-  return realloc(pointer, size);
+  // Reallocating from NULL is this block's first allocation rather than a
+  // growth, and the gcu_free() that eventually matches it will be counted.
+  // Routing it through gcu_malloc() is what keeps the two sides paired: this
+  // is how every cutil container obtains its storage, so leaving it uncounted
+  // made a correct container look like a leak, and -- worse -- made a real
+  // leak elsewhere cancel out against it.
+  if (!pointer) {
+    return gcu_malloc(size);
+  }
+  // Never shrink to nothing.  realloc(p, 0) releases the block and returns
+  // NULL on glibc, which a caller cannot tell apart from failure and which
+  // would leave that free uncounted.  This is the same call gcu_allocator_
+  // default() already makes for a zero-size malloc(), for the same reason.
+  //
+  // Growing or shrinking an existing block is neither an allocation nor a
+  // free, and a failed realloc() leaves the original alive, so nothing is
+  // counted on this path either way.
+  return realloc(pointer, size ? size : 1);
 }
 
 static inline void gcu_free(void * pointer) {
+  // Freeing NULL releases nothing.  Counting it would subtract from the net,
+  // which is worse than a false positive: it cancels a genuine leak one for
+  // one, and the assertion that should have caught that leak passes.
+  if (!pointer) {
+    return;
+  }
   ++gcu_memory_free_count;
   free(pointer);
 }

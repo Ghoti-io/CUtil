@@ -52,7 +52,11 @@ static void * default_calloc(void * ctx, size_t nitems, size_t size) {
 
 static void * default_realloc(void * ctx, void * ptr, size_t size) {
   (void)ctx;
-  return realloc(ptr, size);
+  // The same rule the two above keep, for the same reason: realloc(p, 0)
+  // releases the block and hands back NULL on glibc, and a caller cannot tell
+  // that apart from a failure that left the block alive.  Shrink to one byte
+  // and let gcu_free() be the only way to release anything.
+  return realloc(ptr, size ? size : 1);
 }
 
 static void default_free(void * ctx, void * ptr) {

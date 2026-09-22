@@ -289,6 +289,74 @@ TEST(Memory, StopStartCapture) {
   ASSERT_EQ(gcu_get_free_count(), previous_free_count + 3);
 }
 
+// The three rules below are what make gcu_get_alloc_count() minus
+// gcu_get_free_count() the number of blocks still outstanding.  They are
+// stated once in memory.h and implemented twice -- here in the debug
+// functions, and again in the inline versions the library itself is built
+// with -- so each one is pinned on both sides.  test-memory-inline.cpp is the
+// other side.
+
+TEST(Memory, ReallocFromNullIsAnAllocation) {
+  size_t previous_alloc_count = gcu_get_alloc_count();
+  size_t previous_free_count = gcu_get_free_count();
+
+  testing::internal::CaptureStderr();
+  void * buffer = gcu_realloc(NULL, 32);
+  auto out = testing::internal::GetCapturedStderr();
+
+  ASSERT_NE(buffer, nullptr);
+  // It allocated a block, so it is counted as an allocation...
+  ASSERT_EQ(gcu_get_alloc_count(), previous_alloc_count + 1);
+  ASSERT_EQ(gcu_get_free_count(), previous_free_count);
+  // ...but the trace still reports the call the program actually made.
+  ASSERT_EQ(out.substr(0, 7), "realloc");
+
+  gcu_mem_stop();
+  gcu_free(buffer);
+  gcu_mem_start();
+
+  // And the free that matches it now has an allocation to match.
+  ASSERT_EQ(gcu_get_alloc_count(), previous_alloc_count + 1);
+  ASSERT_EQ(gcu_get_free_count(), previous_free_count + 1);
+}
+
+TEST(Memory, ReallocToZeroKeepsTheBlock) {
+  gcu_mem_stop();
+  size_t previous_alloc_count = gcu_get_alloc_count();
+  size_t previous_free_count = gcu_get_free_count();
+
+  void * buffer = gcu_malloc(64);
+  ASSERT_NE(buffer, nullptr);
+  void * shrunk = gcu_realloc(buffer, 0);
+
+  // glibc's realloc() would have released the block and handed back NULL,
+  // which a caller cannot tell apart from failure and which would have left
+  // the free uncounted.  The block survives instead.
+  ASSERT_NE(shrunk, nullptr);
+  ASSERT_EQ(gcu_get_alloc_count(), previous_alloc_count + 1);
+  ASSERT_EQ(gcu_get_free_count(), previous_free_count);
+
+  gcu_free(shrunk);
+  ASSERT_EQ(gcu_get_free_count(), previous_free_count + 1);
+  gcu_mem_start();
+}
+
+TEST(Memory, FreeOfNullIsNotCounted) {
+  size_t previous_alloc_count = gcu_get_alloc_count();
+  size_t previous_free_count = gcu_get_free_count();
+
+  testing::internal::CaptureStderr();
+  gcu_free(NULL);
+  auto out = testing::internal::GetCapturedStderr();
+
+  // Nothing was released, so nothing is counted.  Counting it would subtract
+  // from the net and cancel a genuine leak of exactly the same size.
+  ASSERT_EQ(gcu_get_alloc_count(), previous_alloc_count);
+  ASSERT_EQ(gcu_get_free_count(), previous_free_count);
+  // The call is still traced, because the log records what the program did.
+  ASSERT_EQ(out.substr(0, 4), "free");
+}
+
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
