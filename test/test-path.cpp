@@ -13,6 +13,7 @@
  * Copyright 2026 by Corey Pennycuff
  */
 
+#include <chrono>
 #include <string>
 #include <vector>
 #include <gtest/gtest.h>
@@ -718,6 +719,133 @@ TEST(Canonicalize, RequiresThePathToExistAndResolvesIt) {
 TEST(Free, AcceptsNullSoCleanupPathsNeedNoGuard) {
   gcu_path_free(nullptr, nullptr);
   gcu_path_free(gcu_allocator_default(), nullptr);
+}
+
+
+namespace {
+
+/** Shorthand: does this pattern match this path, POSIX flavour? */
+bool m(const char * pattern, const char * path, unsigned flags = 0) {
+  return gcu_path_match(GCU_PATH_POSIX, pattern, path, flags);
+}
+
+} // namespace
+
+TEST(PathMatch, LiteralsAndTheTwoSingleCharacterWildcards) {
+  EXPECT_TRUE(m("a.c", "a.c"));
+  EXPECT_FALSE(m("a.c", "a.h"));
+  EXPECT_TRUE(m("?.c", "a.c"));
+  EXPECT_FALSE(m("?.c", "ab.c"));
+  EXPECT_TRUE(m("", ""));
+  EXPECT_FALSE(m("", "a"));
+  EXPECT_FALSE(m("a", ""));
+}
+
+TEST(PathMatch, StarMatchesWithinAComponentAndNotAcrossOne) {
+  EXPECT_TRUE(m("*.c", "main.c"));
+  EXPECT_TRUE(m("*", "anything"));
+  EXPECT_TRUE(m("src/*.c", "src/main.c"));
+  // The point of the default: one star describes one component.
+  EXPECT_FALSE(m("src/*.c", "src/deep/main.c"));
+  EXPECT_FALSE(m("*", "a/b"));
+  EXPECT_FALSE(m("?", "/"));
+}
+
+TEST(PathMatch, DoubleStarCrossesSeparators) {
+  EXPECT_TRUE(m("src/**.c", "src/deep/nested/main.c"));
+  EXPECT_TRUE(m("**", "a/b/c"));
+  EXPECT_TRUE(m("**/main.c", "src/deep/main.c"));
+  EXPECT_TRUE(m("src/**", "src/a"));
+}
+
+TEST(PathMatch, TheCrossingFlagDoesForOneStarWhatTwoStarsDo) {
+  EXPECT_FALSE(m("src/*.c", "src/deep/main.c"));
+  EXPECT_TRUE(m("src/*.c", "src/deep/main.c", GCU_PATH_MATCH_STAR_CROSSES));
+  EXPECT_TRUE(m("?", "/", GCU_PATH_MATCH_STAR_CROSSES));
+}
+
+TEST(PathMatch, ASingleStarFallsBackToAnEarlierDoubleStar) {
+  // The case that needs two backtrack points rather than one: the `*` runs
+  // out at a separator it may not cross, and only the `**` can get past it.
+  EXPECT_TRUE(m("**/*.c", "a/b/c/main.c"));
+  EXPECT_TRUE(m("**/*x*/*.c", "a/b/xy/main.c"));
+  EXPECT_FALSE(m("**/*.c", "a/b/c/main.h"));
+}
+
+TEST(PathMatch, CharacterSetsIncludingRangesAndNegation) {
+  EXPECT_TRUE(m("[abc].c", "b.c"));
+  EXPECT_FALSE(m("[abc].c", "d.c"));
+  EXPECT_TRUE(m("[a-z].c", "q.c"));
+  EXPECT_FALSE(m("[a-z].c", "Q.c"));
+  EXPECT_TRUE(m("[!abc].c", "d.c"));
+  EXPECT_FALSE(m("[!abc].c", "a.c"));
+  EXPECT_TRUE(m("[^abc].c", "d.c"));
+  // A closing bracket first in the set is a member of it.
+  EXPECT_TRUE(m("[]a]", "]"));
+  EXPECT_TRUE(m("[]a]", "a"));
+}
+
+TEST(PathMatch, ASetNeverMatchesASeparator) {
+  // Otherwise a component pattern could escape its component through a
+  // character class, which is the same hole the star rule closes.
+  EXPECT_FALSE(m("a[!x]b", "a/b"));
+  EXPECT_FALSE(m("a[/]b", "a/b"));
+}
+
+TEST(PathMatch, AnUnterminatedSetIsALiteralBracketRatherThanAGuess) {
+  EXPECT_TRUE(m("[abc", "[abc"));
+  EXPECT_FALSE(m("[abc", "a"));
+}
+
+TEST(PathMatch, BackslashEscapesTheNextCharacter) {
+  EXPECT_TRUE(m("\\*.c", "*.c"));
+  EXPECT_FALSE(m("\\*.c", "main.c"));
+  EXPECT_TRUE(m("\\?", "?"));
+  EXPECT_TRUE(m("\\[a]", "[a]"));
+}
+
+TEST(PathMatch, CaseFoldingIsOptedIntoAndIsAsciiOnly) {
+  EXPECT_FALSE(m("*.C", "main.c"));
+  EXPECT_TRUE(m("*.C", "main.c", GCU_PATH_MATCH_CASEFOLD));
+  EXPECT_TRUE(m("[A-Z].c", "q.c", GCU_PATH_MATCH_CASEFOLD));
+  // Not applied for the Windows flavour on its own: what Windows folds is a
+  // property of the volume, and folding UTF-8 is a Unicode question.
+  EXPECT_FALSE(gcu_path_match(GCU_PATH_WINDOWS, "*.C", "main.c", 0));
+}
+
+TEST(PathMatch, EitherSeparatorMatchesEitherUnderTheWindowsFlavour) {
+  EXPECT_TRUE(gcu_path_match(GCU_PATH_WINDOWS, "src\\*.c", "src/main.c", 0));
+  EXPECT_TRUE(gcu_path_match(GCU_PATH_WINDOWS, "src/*.c", "src\\main.c", 0));
+  EXPECT_FALSE(gcu_path_match(GCU_PATH_POSIX, "src\\x.c", "src/x.c", 0));
+}
+
+TEST(PathMatch, RunsInBoundedTimeOnAPatternBuiltToBlowUp) {
+  // A naive recursive matcher takes exponential time on this shape. It is
+  // here because patterns come from configuration files and sometimes from
+  // users, so the cost of a hostile one is a real question.
+  // The pattern must END in a literal that is absent, or the trailing star
+  // simply absorbs the rest and the match succeeds cheaply - which is what a
+  // first draft of this test got wrong.
+  string pattern;
+  for (int i = 0; i < 20; ++i) {
+    pattern += "a*";
+  }
+  pattern += 'b';
+  string text(2000, 'a');
+
+  auto started = chrono::steady_clock::now();
+  bool matched = m(pattern.c_str(), text.c_str());
+  auto took = chrono::steady_clock::now() - started;
+
+  EXPECT_FALSE(matched);
+  EXPECT_LT(chrono::duration_cast<chrono::milliseconds>(took).count(), 1000)
+      << "matching should be bounded by pattern x path, not exponential";
+}
+
+TEST(PathMatch, NullIsRefusedRatherThanFatal) {
+  EXPECT_FALSE(m(nullptr, "a"));
+  EXPECT_FALSE(m("a", nullptr));
+  EXPECT_FALSE(m(nullptr, nullptr));
 }
 
 int main(int argc, char** argv) {

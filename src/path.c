@@ -1457,3 +1457,166 @@ GCU_Path_Result gcu_path_absolute(const char * path,
   *out = normalized;
   return GCU_PATH_OK;
 }
+
+/** Fold an ASCII letter, and nothing else.  See GCU_PATH_MATCH_CASEFOLD. */
+static char path_fold(char c, unsigned flags) {
+  if ((flags & GCU_PATH_MATCH_CASEFOLD) && c >= 'A' && c <= 'Z') {
+    return (char)(c - 'A' + 'a');
+  }
+  return c;
+}
+
+/**
+ * Test one character against a `[...]` set, and say where the set ends.
+ *
+ * @param p The pattern, positioned at the `[`.
+ * @param end Receives the index just past the closing `]`.
+ * @return Whether @p c is in the set.  An unterminated set never matches, and
+ *   @p end is left at the `[` so the caller can treat it as a literal.
+ */
+static bool path_match_set(GCU_Path_Flavor flavor, const char * p, char c,
+    unsigned flags, size_t * end) {
+  size_t i = 1;
+  bool negated = false;
+  if (p[i] == '!' || p[i] == '^') {
+    negated = true;
+    ++i;
+  }
+  // A ']' immediately after the opening (or after the negation) is a literal
+  // member rather than the end of the set, which is how the shell has always
+  // spelled "a set containing a closing bracket".
+  bool found = false;
+  bool first = true;
+  for (; p[i] && (p[i] != ']' || first); ++i) {
+    first = false;
+    if (p[i + 1] == '-' && p[i + 2] && p[i + 2] != ']') {
+      char lo = path_fold(p[i], flags);
+      char hi = path_fold(p[i + 2], flags);
+      char t = path_fold(c, flags);
+      if (lo <= t && t <= hi) {
+        found = true;
+      }
+      i += 2;
+      continue;
+    }
+    if (path_fold(p[i], flags) == path_fold(c, flags)) {
+      found = true;
+    }
+  }
+  if (p[i] != ']') {
+    // Unterminated. Refuse rather than guess: treating the rest of the
+    // pattern as a set would make a typo match far more than it looks like.
+    *end = 0;
+    return false;
+  }
+  *end = i + 1;
+  // A separator is never in a set, however the set is written, so that a
+  // component pattern cannot escape its component through a character class.
+  if (gcu_path_is_separator(flavor, c)) {
+    return false;
+  }
+  return negated ? !found : found;
+}
+
+/** Match one pattern element against one character, without wildcards. */
+static bool path_match_one(GCU_Path_Flavor flavor, const char * p, char c,
+    unsigned flags, size_t * advance) {
+  // Only where it is not already a separator. Under the Windows flavour a
+  // backslash separates components, and one character cannot be both that and
+  // the escape for the next one.
+  if (*p == '\\' && p[1] && !gcu_path_is_separator(flavor, '\\')) {
+    *advance = 2;
+    return path_fold(p[1], flags) == path_fold(c, flags);
+  }
+  if (*p == '?') {
+    *advance = 1;
+    return (flags & GCU_PATH_MATCH_STAR_CROSSES)
+        || !gcu_path_is_separator(flavor, c);
+  }
+  if (*p == '[') {
+    size_t end = 0;
+    bool in = path_match_set(flavor, p, c, flags, &end);
+    if (end == 0) {
+      *advance = 1;
+      return path_fold('[', flags) == path_fold(c, flags);
+    }
+    *advance = end;
+    return in;
+  }
+  *advance = 1;
+  // Either separator matches either spelling under the Windows flavour, so a
+  // pattern written with one kind of slash matches a path written with the
+  // other.
+  if (gcu_path_is_separator(flavor, *p) && gcu_path_is_separator(flavor, c)) {
+    return true;
+  }
+  return path_fold(*p, flags) == path_fold(c, flags);
+}
+
+bool gcu_path_match(GCU_Path_Flavor flavor, const char * pattern,
+    const char * path, unsigned flags) {
+  if (!pattern || !path) {
+    return false;
+  }
+
+  size_t i = 0; // Into path.
+  size_t j = 0; // Into pattern.
+  // Two backtrack points rather than one. The classic algorithm keeps only the
+  // most recent star, which is enough when every star is equal; here a `*`
+  // cannot cross a separator and a `**` can, so a `*` that runs out at a
+  // separator has to be able to fall back to an earlier `**`.
+  size_t star = (size_t)-1, star_mark = 0;
+  size_t deep = (size_t)-1, deep_mark = 0;
+
+  for (;;) {
+    if (path[i]) {
+      if (pattern[j] == '*') {
+        bool crosses = (pattern[j + 1] == '*')
+            || (flags & GCU_PATH_MATCH_STAR_CROSSES);
+        j += (pattern[j + 1] == '*') ? 2 : 1;
+        if (crosses) {
+          deep = j;
+          deep_mark = i;
+          star = (size_t)-1;
+        }
+        else {
+          star = j;
+          star_mark = i;
+        }
+        continue;
+      }
+      size_t advance = 0;
+      if (pattern[j]
+          && path_match_one(flavor, pattern + j, path[i], flags, &advance)) {
+        j += advance;
+        ++i;
+        continue;
+      }
+    }
+    else if (pattern[j] == '*') {
+      j += (pattern[j + 1] == '*') ? 2 : 1;
+      continue;
+    }
+    else if (!pattern[j]) {
+      return true;
+    }
+
+    // No progress. Give the most recent star one more character, if it is
+    // allowed to have it.
+    if (star != (size_t)-1 && path[star_mark]
+        && !gcu_path_is_separator(flavor, path[star_mark])) {
+      ++star_mark;
+      i = star_mark;
+      j = star;
+      continue;
+    }
+    if (deep != (size_t)-1 && path[deep_mark]) {
+      ++deep_mark;
+      i = deep_mark;
+      j = deep;
+      star = (size_t)-1;
+      continue;
+    }
+    return false;
+  }
+}

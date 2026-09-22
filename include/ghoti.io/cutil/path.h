@@ -370,6 +370,74 @@ GCU_API GCU_Path_Result gcu_path_to_posix(GCU_Path_Flavor flavor,
 /** @} */
 
 /**
+ * @name Matching
+ * @{
+ */
+
+/**
+ * How ::gcu_path_match() should read a pattern.
+ */
+typedef enum GCU_Path_Match_Flags {
+  /** Ordinary shell-style matching. */
+  GCU_PATH_MATCH_DEFAULT = 0,
+  /**
+   * Let `*` and `?` cross a separator.
+   *
+   * Off by default, because a pattern is nearly always meant to describe one
+   * component:  a pattern of `src` then a separator then `*.c` should not
+   * match `src/deep/nested/thing.c`.  Where crossing is wanted, spell that
+   * star twice and leave this flag alone; it is for matching a string that
+   * happens to contain separators rather than a path.
+   */
+  GCU_PATH_MATCH_STAR_CROSSES = 1u << 0,
+  /**
+   * Compare without regard to case, for ASCII letters only.
+   *
+   * Not applied automatically for ::GCU_PATH_WINDOWS.  Windows filesystems
+   * fold case by a table that belongs to the volume and the version, and
+   * folding UTF-8 correctly is a Unicode question rather than a path one.
+   * What this flag does is documented exactly:  A-Z and a-z, nothing else.
+   */
+  GCU_PATH_MATCH_CASEFOLD = 1u << 1,
+} GCU_Path_Match_Flags;
+
+/**
+ * Match a path against a shell-style pattern.
+ *
+ * Purely lexical:  nothing is opened, nothing is resolved, and a pattern is
+ * never expanded into the set of files that exist.  This answers "does this
+ * name match that pattern", which is the question a filter asks.  Walking a
+ * directory and testing each entry is ::gcu_dir_read() plus this.
+ *
+ * The syntax is the usual one, and needs no regular-expression engine:
+ *
+ * - `?` matches one character, but never a separator.
+ * - `*` matches any run of characters, but never a separator.
+ * - `**` matches any run of characters including separators.
+ * - `[abc]` matches one of those; `[a-z]` a range; `[!abc]` or `[^abc]`
+ *   anything but.  A `]` first in the set is a literal `]`, and a separator
+ *   never matches a set.
+ * - `\` escapes the next character, so `\*` is a literal asterisk -
+ *   under ::GCU_PATH_POSIX only.  Under ::GCU_PATH_WINDOWS a backslash
+ *   separates components, and one character cannot be both that and the
+ *   escape for the next; there is no escape character in that flavour.
+ *
+ * Matching runs in time proportional to the pattern times the path.  There is
+ * no backtracking blow-up, which matters because patterns often come from
+ * configuration files and sometimes from users.
+ *
+ * @param flavor Which separators count.
+ * @param pattern The pattern.
+ * @param path The string to test.
+ * @param flags See ::GCU_Path_Match_Flags.  Zero is the usual behaviour.
+ * @return true if it matches.  A NULL pattern or path is false.
+ */
+GCU_API bool gcu_path_match(GCU_Path_Flavor flavor, const char * pattern,
+  const char * path, unsigned flags);
+
+/** @} */
+
+/**
  * @name Environment
  *
  * These ask the operating system, so they use the host's rules rather than
