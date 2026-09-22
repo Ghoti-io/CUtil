@@ -549,6 +549,33 @@ cannot tell you which they wanted.  Only a person can settle it, and the commit
 that settles it should say so - the next reader will otherwise assume it was
 mechanical.
 
+It was settled twice, and the second answer came from a question none of the
+three options asked.  `chron` first took the middle row, then reversed to the
+third in `22d6506` on a point that had been sitting in the same function all
+along:  that reader *already* treats `$TZDIR` naming a missing directory, a
+plain file, or a loop of symbolic links as an ordinary miss.  A path too long
+is the fourth spelling of the same misconfiguration, so refusing only that one
+is a rule with nothing behind it - and the refusal surfaced nothing either,
+since `GCHRON_ERR_IO` does not tell anybody their `$TZDIR` was too long.  It
+lost a working answer and reported no reason.
+
+The transferable form, for anyone mapping this vocabulary onto a **search
+path** rather than a single open:  the question is not "is this errno more like
+absence or more like an error" but **"does this location already miss silently
+for reasons that are just as bad"**.  Where it does, the new spelling joins its
+siblings.  `chron`'s rule came out as failing to *obtain* the file sends the
+search on - `NOT_FOUND`, `ACCESS`, `INVALID` - while a failure about the file's
+contents or about the process is the answer:  `LIMIT`, a mid-read `ERR_IO`, and
+`OOM`.
+
+That last boundary is worth naming because it looks wrong and is not.  `OOM`
+reads like it belongs with the fall-through group, and a mutation moving it
+there survived `chron`'s first test pass:  with an allocator that refuses
+everything, the fallback read fails too and both answers are the same, so the
+test passes against the mutant.  Pinning it needs an allocator that refuses its
+**first** request and grants the rest.  Any caller with a fall-through boundary
+of its own needs a harness shaped like that, not a blanket failure.
+
 Nobody would have found this by reading the diff of the library that changed.
 It was found by the session that owned the caller, corrected by a third session
 that read the *old* cutil source rather than reasoning about what it must have
