@@ -53,10 +53,21 @@ extern "C" {
  * or it goes round a loop of symbolic links.
  *
  * `ENAMETOOLONG` is the one that looks like it belongs with those and does
- * not.  It is equally deterministic, but it says the *caller's argument*
- * cannot name anything on this filesystem rather than that nothing is there,
- * and the caller's answer to it is to fix its input rather than to create the
- * file.  That is `GCU_FILE_ERR_INVALID`.
+ * not.  The three above are statements about the filesystem's current *state*:
+ * nothing the caller does to its argument changes them, and they can stop being
+ * true while the caller sits still, because somebody else created a file or
+ * replaced a link.  `ENAMETOOLONG` is a statement about the *argument*, and
+ * only the caller can change it - so "try the same call again later" is
+ * coherent for the first three and incoherent for this one.  That is
+ * `GCU_FILE_ERR_INVALID`.
+ *
+ * With one caveat, since somebody will eventually read that code as the wider
+ * claim:  `NAME_MAX` and `PATH_MAX` are per-filesystem, so `ENAMETOOLONG` is a
+ * property of the argument *and* the filesystem rather than of the argument
+ * alone.  The same path can be too long on one mount and fine on another.  It
+ * does not change the mapping - the caller still has to change its input - but
+ * `ERR_INVALID` here means "not usable against this filesystem", not "malformed
+ * string".
  *
  * Everything else stays `GCU_FILE_ERR_IO`.  Nobody can usefully branch on the
  * difference between `EIO` and `ENXIO`.
