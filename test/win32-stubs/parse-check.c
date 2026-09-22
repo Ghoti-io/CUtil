@@ -14,6 +14,7 @@
 #include <ghoti.io/cutil/tls.h>
 #include <ghoti.io/cutil/env.h>
 #include <ghoti.io/cutil/library.h>
+#include <ghoti.io/cutil/filelock.h>
 
 int main(void) {
   GCU_MUTEX_T m;
@@ -72,6 +73,10 @@ int main(void) {
   rc |= gcu_library_symbol(dyn, "y") ? 1 : 0;
   rc |= gcu_library_error(libmsg, sizeof(libmsg));
   rc |= gcu_library_close(&dyn);
+
+  GCU_File_Lock flock_handle;
+  rc |= gcu_file_lock(&flock_handle, "x", 1, 0);
+  rc |= gcu_file_unlock(&flock_handle);
 
   return rc;
 }

@@ -124,3 +124,33 @@ HMODULE LoadLibraryW(LPCWSTR lpLibFileName);
 BOOL    FreeLibrary(HMODULE hLibModule);
 FARPROC GetProcAddress(HMODULE hModule, const char * lpProcName);
 #endif
+
+/* --- appended for filelock.c --- */
+#ifndef GHOTI_IO_GCU_WIN32_STUBS_FILELOCK
+#define GHOTI_IO_GCU_WIN32_STUBS_FILELOCK
+#define GENERIC_READ              0x80000000UL
+#define GENERIC_WRITE             0x40000000UL
+#define FILE_SHARE_READ           0x00000001UL
+#define FILE_SHARE_WRITE          0x00000002UL
+#define OPEN_ALWAYS               4UL
+#define FILE_ATTRIBUTE_NORMAL     0x80UL
+#define LOCKFILE_FAIL_IMMEDIATELY 0x00000001UL
+#define LOCKFILE_EXCLUSIVE_LOCK   0x00000002UL
+#define ERROR_LOCK_VIOLATION      33UL
+#define MAXDWORD                  0xFFFFFFFFUL
+#define INVALID_HANDLE_VALUE      ((HANDLE)(long)-1)
+#define ZeroMemory(d, l)          gcu_stub_zero((d), (l))
+typedef void * HANDLE;
+typedef struct _GCU_STUB_OVERLAPPED { unsigned long Internal; } OVERLAPPED;
+void gcu_stub_zero(void * destination, unsigned long length);
+HANDLE CreateFileW(LPCWSTR lpFileName, DWORD dwDesiredAccess,
+    DWORD dwShareMode, void * lpSecurityAttributes, DWORD dwCreationDisposition,
+    DWORD dwFlagsAndAttributes, HANDLE hTemplateFile);
+BOOL CloseHandle(HANDLE hObject);
+BOOL LockFileEx(HANDLE hFile, DWORD dwFlags, DWORD dwReserved,
+    DWORD nNumberOfBytesToLockLow, DWORD nNumberOfBytesToLockHigh,
+    OVERLAPPED * lpOverlapped);
+BOOL UnlockFileEx(HANDLE hFile, DWORD dwReserved,
+    DWORD nNumberOfBytesToUnlockLow, DWORD nNumberOfBytesToUnlockHigh,
+    OVERLAPPED * lpOverlapped);
+#endif
