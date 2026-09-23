@@ -85,12 +85,18 @@ static GCU_Char16 * read_raw(const char * name) {
     free(wide_name);
     return NULL;
   }
+  SetLastError(ERROR_SUCCESS);
   DWORD written = GetEnvironmentVariableW((LPCWSTR)wide_name,
       (LPWSTR)value, needed);
+  DWORD error = GetLastError();
   free(wide_name);
 
   // A racing setenv between the two calls can grow the value past `needed`.
-  if (written == 0 || written >= needed) {
+  //
+  // 0 is the copied length of an empty value as well as the failure return,
+  // and the error code is what tells them apart.  Treating every 0 as a
+  // failure made a variable set to "" read as unset.
+  if ((written == 0 && error != ERROR_SUCCESS) || written >= needed) {
     free(value);
     return NULL;
   }
