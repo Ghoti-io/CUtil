@@ -213,13 +213,13 @@ void gcu_string_murmur3_x86_128(const void * key, size_t len, uint32_t seed, voi
 
   switch(len & 15) {
     case 15:
-      k4 ^= tail[14] << 16;
+      k4 ^= (uint32_t)(tail[14]) << 16;
       // fall through
     case 14:
-      k4 ^= tail[13] << 8;
+      k4 ^= (uint32_t)(tail[13]) << 8;
       // fall through
     case 13:
-      k4 ^= tail[12] << 0;
+      k4 ^= (uint32_t)(tail[12]) << 0;
       k4 *= c4;
       k4 = ROTL32(k4, 18);
       k4 *= c1;
@@ -227,16 +227,16 @@ void gcu_string_murmur3_x86_128(const void * key, size_t len, uint32_t seed, voi
 
       // fall through
     case 12:
-      k3 ^= tail[11] << 24;
+      k3 ^= (uint32_t)(tail[11]) << 24;
       // fall through
     case 11:
-      k3 ^= tail[10] << 16;
+      k3 ^= (uint32_t)(tail[10]) << 16;
       // fall through
     case 10:
-      k3 ^= tail[9] << 8;
+      k3 ^= (uint32_t)(tail[9]) << 8;
       // fall through
     case 9:
-      k3 ^= tail[8] << 0;
+      k3 ^= (uint32_t)(tail[8]) << 0;
       k3 *= c3;
       k3 = ROTL32(k3, 17);
       k3 *= c4;
@@ -244,16 +244,16 @@ void gcu_string_murmur3_x86_128(const void * key, size_t len, uint32_t seed, voi
 
       // fall through
     case 8:
-      k2 ^= tail[7] << 24;
+      k2 ^= (uint32_t)(tail[7]) << 24;
       // fall through
     case 7:
-      k2 ^= tail[6] << 16;
+      k2 ^= (uint32_t)(tail[6]) << 16;
       // fall through
     case 6:
-      k2 ^= tail[5] << 8;
+      k2 ^= (uint32_t)(tail[5]) << 8;
       // fall through
     case 5:
-      k2 ^= tail[4] << 0;
+      k2 ^= (uint32_t)(tail[4]) << 0;
       k2 *= c2;
       k2 = ROTL32(k2, 16);
       k2 *= c3;
@@ -261,16 +261,16 @@ void gcu_string_murmur3_x86_128(const void * key, size_t len, uint32_t seed, voi
 
       // fall through
     case 4:
-      k1 ^= tail[3] << 24;
+      k1 ^= (uint32_t)(tail[3]) << 24;
       // fall through
     case 3:
-      k1 ^= tail[2] << 16;
+      k1 ^= (uint32_t)(tail[2]) << 16;
       // fall through
     case 2:
-      k1 ^= tail[1] << 8;
+      k1 ^= (uint32_t)(tail[1]) << 8;
       // fall through
     case 1:
-      k1 ^= tail[0] << 0;
+      k1 ^= (uint32_t)(tail[0]) << 0;
       k1 *= c1;
       k1 = ROTL32(k1, 15);
       k1 *= c2;
@@ -290,26 +290,28 @@ void gcu_string_murmur3_x86_128(const void * key, size_t len, uint32_t seed, voi
   h3 += h1;
   h4 += h1;
 
-  // Inline of fmix32() from Appleby.
+  // Four inlines of fmix32() from Appleby.  Each is five steps, and the
+  // leading shift-xor is one of them: h2, h3 and h4 were missing it, so this
+  // function returned something that was not MurmurHash3_x86_128.
   h1 ^= h1 >> 16;
   h1 *= 0x85ebca6b;
   h1 ^= h1 >> 13;
   h1 *= 0xc2b2ae35;
   h1 ^= h1 >> 16;
 
-  // Inline of fmix32() from Appleby.
+  h2 ^= h2 >> 16;
   h2 *= 0x85ebca6b;
   h2 ^= h2 >> 13;
   h2 *= 0xc2b2ae35;
   h2 ^= h2 >> 16;
 
-  // Inline of fmix32() from Appleby.
+  h3 ^= h3 >> 16;
   h3 *= 0x85ebca6b;
   h3 ^= h3 >> 13;
   h3 *= 0xc2b2ae35;
   h3 ^= h3 >> 16;
 
-  // Inline of fmix32() from Appleby.
+  h4 ^= h4 >> 16;
   h4 *= 0x85ebca6b;
   h4 ^= h4 >> 13;
   h4 *= 0xc2b2ae35;
