@@ -1,4 +1,7 @@
 build
+# `make BUILD=debug` builds here rather than under build/, because BUILD names
+# the directory as well as selecting the build type.
+debug
 *.session
 *.swp
 submodule

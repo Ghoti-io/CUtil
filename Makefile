@@ -1,3 +1,31 @@
+# The optimization level, and the one thing that should distinguish the two
+# builds' compile flags. `release` is what gets installed and what every
+# library above this one actually runs; `debug` is compiled for stepping
+# through. -g stays in both, because a release build that cannot be read in a
+# debugger is a release build nobody can diagnose, and symbols cost only file
+# size.
+#
+# Before this existed, BUILD=debug renamed the artifact -- appending -debug to
+# BRANCH and VERSION_STRING, below -- and changed nothing about how the code
+# was compiled, so `make BUILD=debug` produced an -O3 library carrying a debug
+# name: a debug build you cannot step through. The two blocks stay separate
+# because this one has to precede CFLAGS and that one has to follow BRANCH.
+#
+# -O3 rather than the suite's -O2 floor is pre-existing and ratified, not
+# measured here. Anything moving *to* -O3 needs a figure recorded beside it.
+#
+# What the instrumented targets do with this, checked rather than assumed:
+# `make coverage` appends its own -O0 through EXTRA_CFLAGS, which lands after
+# this and wins. The ASan and TSan builds append no -O at all, so they inherit
+# whichever level this picks -- deliberate, since it means they instrument the
+# code that actually ships. Do not copy a comment from a sibling Makefile
+# claiming a sanitizer -O1 here; there is none.
+ifeq ($(BUILD),debug)
+OPT_CFLAGS := -O0
+else
+OPT_CFLAGS := -O3
+endif
+
 CXX := g++
 CXXFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c++20 -O1 -g $(EXTRA_CXXFLAGS)
 CC := cc
@@ -5,7 +33,7 @@ CC := cc
 # GHOTIIO_CUTIL_TEST_BUILD would export internals for testing (checked by
 # GCU_INTERNAL_API); it is deliberately not set here, so the shipped library
 # exports its public API and nothing else.
-CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c17 -O3 -g -fvisibility=hidden -DGHOTIIO_CUTIL_BUILD $(EXTRA_CFLAGS)
+CFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c17 $(OPT_CFLAGS) -g -fvisibility=hidden -DGHOTIIO_CUTIL_BUILD $(EXTRA_CFLAGS)
 # -DGHOTIIO_CUTIL_ENABLE_MEMORY_DEBUG
 LDFLAGS := -L /usr/lib -lstdc++ -lm $(EXTRA_LDFLAGS)
 
