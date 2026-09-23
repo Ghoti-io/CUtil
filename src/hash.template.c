@@ -208,15 +208,27 @@ static bool TEMPLATE_GROW_HASH(TEMPLATE_GCU_HASH * hashTable, size_t size) {
   // had just been moved into the new table, not discarded - so the caller
   // freed values its table was still holding, and the next read of one was a
   // use-after-free.
+  //
+  // Only the cell storage moves; each table keeps its own mutex. A whole-struct
+  // copy also wrote the temporary's freshly initialised mutex over the live
+  // one - which the caller may be holding, with other threads queued on it,
+  // since gcu_thread_create() grows the thread table under that very lock.
+  // On Windows the SRWLOCK's waiter list lives in the lock word, so the
+  // overwrite lost every waiter and the process hung; glibc's futex word loses
+  // them the same way, only less often.
   TEMPLATE_GCU_HASH temp = *newTable;
-  temp.cleanup = hashTable->cleanup;
-  temp.supplementary_data = hashTable->supplementary_data;
 
-  *newTable = *hashTable;
+  newTable->capacity = hashTable->capacity;
+  newTable->entries = hashTable->entries;
+  newTable->removed = hashTable->removed;
+  newTable->data = hashTable->data;
   newTable->cleanup = 0;
   newTable->supplementary_data = 0;
 
-  *hashTable = temp;
+  hashTable->capacity = temp.capacity;
+  hashTable->entries = temp.entries;
+  hashTable->removed = temp.removed;
+  hashTable->data = temp.data;
 
   TEMPLATE_GCU_HASH_DESTROY(newTable);
 

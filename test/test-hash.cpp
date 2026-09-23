@@ -1,5 +1,7 @@
+#include <atomic>
 #include <chrono>
 #include <sstream>
+#include <thread>
 #include <gtest/gtest.h>
 #include <ghoti.io/cutil/hash.h>
 
@@ -1277,6 +1279,45 @@ TEST(Hash8, AdvancingAnExhaustedIteratorIsHarmless) {
   ASSERT_FALSE(iterator.exists);
 
   gcu_hash8_destroy(t);
+}
+
+TEST(Hash64, GrowingUnderTheLockKeepsTheLock) {
+  // Callers guard a table with its own mutex and may grow it while holding
+  // that mutex -- the thread module does exactly this in gcu_thread_create().
+  // Growth once swapped whole structs, writing a freshly initialised mutex
+  // over the held one, and anyone already queued on it was never woken.  On
+  // Windows that hung the thread tests on every run; on Linux it was a rare
+  // lost wakeup.  So: queue a waiter, grow, release, and see it get in.
+  auto t = gcu_hash64_create(0);
+  ASSERT_NE(t, nullptr);
+
+  GCU_MUTEX_LOCK(t->mutex);
+  std::atomic<bool> acquired{false};
+  std::thread waiter([&] {
+    GCU_MUTEX_LOCK(t->mutex);
+    acquired = true;
+    GCU_MUTEX_UNLOCK(t->mutex);
+  });
+  // Long enough for the waiter to be queued on the lock rather than merely
+  // started.  Too short makes this pass without testing anything, never fail.
+  this_thread::sleep_for(chrono::milliseconds(100));
+
+  for (uint64_t i = 0; i < 100; ++i) {
+    ASSERT_TRUE(gcu_hash64_set(t, i, gcu_type64_ui32((uint32_t)i)));
+  }
+  GCU_MUTEX_UNLOCK(t->mutex);
+
+  auto deadline = chrono::steady_clock::now() + chrono::seconds(10);
+  while (!acquired && chrono::steady_clock::now() < deadline) {
+    this_thread::sleep_for(chrono::milliseconds(1));
+  }
+  if (!acquired) {
+    // The waiter is stuck for good; leave it behind rather than hang here.
+    waiter.detach();
+    FAIL() << "a thread queued on the table's mutex was never woken";
+  }
+  waiter.join();
+  gcu_hash64_destroy(t);
 }
 
 int main(int argc, char** argv) {
