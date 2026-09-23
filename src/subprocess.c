@@ -143,6 +143,7 @@ typedef struct {
   volatile LONG * total;          ///< Bytes captured across both readers.
   size_t limit;                   ///< 0 for none.
   volatile LONG * over_limit;     ///< Set when @p limit is passed.
+  volatile LONG * stop;           ///< Set when the run has been given up on.
   bool failed;                    ///< An allocation failed.
 } GCU_Subprocess_Stream;
 
@@ -265,6 +266,11 @@ static DWORD WINAPI reader_thread(LPVOID argument) {
   GCU_Subprocess_Stream * stream = (GCU_Subprocess_Stream *)argument;
   char chunk[65536];
   for (;;) {
+    // Checked between reads; a read already blocked is interrupted by
+    // CancelSynchronousIo() instead.  See stop_streams().
+    if (*stream->stop) {
+      break;
+    }
     DWORD got = 0;
     if (!ReadFile(stream->handle, chunk, (DWORD)sizeof(chunk), &got, NULL)
         || got == 0) {
@@ -280,6 +286,11 @@ static DWORD WINAPI reader_thread(LPVOID argument) {
       LONG total = InterlockedExchangeAdd(stream->total, (LONG)got) + (LONG)got;
       if ((size_t)total >= stream->limit) {
         InterlockedExchange(stream->over_limit, 1);
+        // Stop here rather than when the waiting thread next looks, up to a
+        // slice later: a child like `yes` writes megabytes in that time, and
+        // the limit is meant to bound what is captured.  The child blocks on
+        // the full pipe until it is killed.
+        break;
       }
     }
   }
@@ -289,7 +300,7 @@ static DWORD WINAPI reader_thread(LPVOID argument) {
 static DWORD WINAPI writer_thread(LPVOID argument) {
   GCU_Subprocess_Stream * stream = (GCU_Subprocess_Stream *)argument;
   size_t written = 0;
-  while (written < stream->input_size) {
+  while (written < stream->input_size && !*stream->stop) {
     size_t remaining = stream->input_size - written;
     DWORD chunk = remaining > 65536u ? 65536u : (DWORD)remaining;
     DWORD put = 0;
@@ -306,6 +317,30 @@ static DWORD WINAPI writer_thread(LPVOID argument) {
   CloseHandle(stream->handle);
   stream->handle = INVALID_HANDLE_VALUE;
   return 0;
+}
+
+/**
+ * Stop reading and writing, for a run that has been given up on.
+ *
+ * The POSIX side closes its ends of the pipes and stops.  Killing the child
+ * is not enough on its own, because anything the child started holds copies
+ * of the pipe ends and keeps them open: under MSYS2, `sh -c "sleep 30"` runs
+ * sleep as a separate process, and the readers would wait the full thirty
+ * seconds for it after the timeout had fired.  A thread blocked in ReadFile
+ * or WriteFile on an anonymous pipe is not woken by closing the handle, so
+ * each is cancelled instead - repeatedly, because a cancel that lands between
+ * two calls cancels nothing, and the flag is what catches that case.
+ */
+static void stop_streams(HANDLE * threads, int count, volatile LONG * stop) {
+  InterlockedExchange(stop, 1);
+  for (int i = 0; i < count; ++i) {
+    if (!threads[i]) {
+      continue;
+    }
+    while (WaitForSingleObject(threads[i], 10) == WAIT_TIMEOUT) {
+      CancelSynchronousIo(threads[i]);
+    }
+  }
 }
 
 int gcu_subprocess_run(const GCU_Subprocess_Options * options,
@@ -330,6 +365,7 @@ int gcu_subprocess_run(const GCU_Subprocess_Options * options,
   memset(&process, 0, sizeof(process));
   volatile LONG total = 0;
   volatile LONG over_limit = 0;
+  volatile LONG stop = 0;
   GCU_Subprocess_Stream out_stream;
   GCU_Subprocess_Stream err_stream;
   GCU_Subprocess_Stream in_stream;
@@ -337,6 +373,9 @@ int gcu_subprocess_run(const GCU_Subprocess_Options * options,
   memset(&err_stream, 0, sizeof(err_stream));
   memset(&in_stream, 0, sizeof(in_stream));
   in_stream.handle = INVALID_HANDLE_VALUE;
+  out_stream.stop = &stop;
+  err_stream.stop = &stop;
+  in_stream.stop = &stop;
   int returning = -1;
 
   command = build_command_line(options->argv);
@@ -451,11 +490,18 @@ int gcu_subprocess_run(const GCU_Subprocess_Options * options,
     }
   }
 
-  // The child is gone, so every pipe end it held is closed and each thread
-  // is about to see end-of-file.
-  for (int i = 0; i < 3; ++i) {
-    if (threads[i]) {
-      WaitForSingleObject(threads[i], INFINITE);
+  if (was_forced) {
+    // Given up on: whatever the child started may still hold the pipes.
+    stop_streams(threads, 3, &stop);
+  }
+  else {
+    // The child is gone, so every pipe end it held is closed and each thread
+    // is about to see end-of-file - unless it handed them to something that
+    // outlives it, which the documentation of `timeout` warns about.
+    for (int i = 0; i < 3; ++i) {
+      if (threads[i]) {
+        WaitForSingleObject(threads[i], INFINITE);
+      }
     }
   }
 

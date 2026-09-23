@@ -21,7 +21,9 @@
 #include <ghoti.io/cutil/subprocess.h>
 #include "hang-guard.h"
 
-#ifndef _WIN32
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <fcntl.h>
 #include <pthread.h>
 #include <signal.h>
@@ -123,7 +125,16 @@ TEST_F(Subprocess, LooksTheProgramUpOnPath) {
   gcu_subprocess_result_free(&byPath);
 
   GCU_Subprocess_Result byName;
+#ifdef _WIN32
+  // "/bin/sh" is MSYS2's name for it, which only MSYS2 programs understand.
+  // The absolute path Windows means is wherever the PATH lookup found it.
+  char sh[MAX_PATH];
+  ASSERT_NE(0u, SearchPathA(nullptr, "sh.exe", nullptr, MAX_PATH, sh, nullptr))
+      << "no sh.exe on PATH";
+  Argv absolute{sh, "-c", "exit 4"};
+#else
   Argv absolute{"/bin/sh", "-c", "exit 4"};
+#endif
   options.argv = absolute();
   ASSERT_EQ(0, gcu_subprocess_run(&options, &byName));
   EXPECT_EQ(4, byName.exit_code);
