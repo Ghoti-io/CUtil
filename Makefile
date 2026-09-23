@@ -321,7 +321,7 @@ TESTFLAGS := `PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs --cfla
 # coverage target does, because --coverage links the gcov runtime, whose
 # mangle_path check-symbols is right to reject in a shipping library and
 # wrong to reject in an instrumented one. Spelled as text's TEST_GATES is.
-TEST_GATES ?= check-symbols check-win32-parse check-clang
+TEST_GATES ?= check-symbols check-win32-parse check-clang check-rebuild
 
 # Used by check-clang. Empty when clang is not installed, which that
 # target reports rather than failing over.
@@ -353,9 +353,12 @@ DEPFILES := $(LIBOBJECTS:.o=.d) $(TEST_DEPFILES)
 # Floating Point Type Identification
 ####################################################################
 FLOAT_IDENTIFIER := $(APP_DIR)/float_identifier$(EXE_EXTENSION)
+# Built with $(CFLAGS), and the type names it prints become float.h, so a flag
+# change has to rebuild it like any other object.
 $(FLOAT_IDENTIFIER): \
 		src/float_identifier.c \
-		src/float.h.template
+		src/float.h.template \
+		$(FLAGS_STAMP)
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $< -o $@
 
@@ -373,7 +376,7 @@ force-libver:
 
 $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/libver_gen.h: \
 		force-libver \
-		$(BUILD_DIR)/include/$(SUITE)/$(PROJECT)
+		| $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)
 	@if [ -z "$(LIBVER_SYMBOL)" ]; then \
 		printf "### LIBVER_SYMBOL is empty ###\n" >&2; \
 		printf "Every exported symbol would lose its version namespace, and two\n" >&2; \
@@ -399,10 +402,33 @@ $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/libver_gen.h: \
 		'#endif // GHOTIIO_CUTIL_LIBVER_GEN_H' > $@.tmp
 	@if cmp -s $@.tmp $@; then rm -f $@.tmp; else mv $@.tmp $@; fi
 
+# The directory is an order-only prerequisite, and that is not a style choice.
+# A directory's mtime moves whenever a file is created or removed inside it, and
+# the libver_gen.h rule above creates and removes $@.tmp there on every single
+# build. As a normal prerequisite the directory therefore made float.h out of
+# date on builds where nothing had changed, and because the recipe wrote $@
+# unconditionally its mtime moved too -- so type.h's six dependants, the library
+# and five tests recompiled. Measured 2026-09-23: with nothing edited at all,
+# consecutive `make test` runs came out 6, 0, 6, 6 objects; creating and
+# removing one unrelated file in that directory recompiled six on its own.
+# Writing through $@.tmp and keeping the old file when the content matches is
+# the second half of the fix: even when the rule does re-run, an unchanged
+# float.h must not get a new mtime.
+#
+# The two halves shadow each other and both stay. Measured: reverting either
+# one on its own leaves check-rebuild green, and only reverting both makes it
+# report twelve targets -- so the gate cannot tell you which one is carrying
+# the symptom, and finding that you cannot make one of them fail is not
+# evidence that it is redundant. They answer different questions. The
+# order-only prerequisite is what makes the rule's dependency list true; the
+# guard is what keeps an unchanged float.h from getting a new mtime when the
+# rule re-runs for a reason that is real, which it now can, since
+# $(FLOAT_IDENTIFIER) is rebuilt on every flag change and prints the same two
+# type names almost every time.
 $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/float.h: \
 		src/float.h.template \
 		$(FLOAT_IDENTIFIER) \
-		$(BUILD_DIR)/include/$(SUITE)/$(PROJECT)
+		| $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)
 	@f32="$$($(FLOAT_IDENTIFIER) 32)"; f64="$$($(FLOAT_IDENTIFIER) 64)"; \
 	if [ -z "$$f32" ] || [ -z "$$f64" ]; then \
 		printf "### $(FLOAT_IDENTIFIER) produced no type name ###\n" >&2; \
@@ -411,7 +437,8 @@ $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/float.h: \
 		printf "says nothing about this step. Delete $(FLOAT_IDENTIFIER) and rebuild.\n" >&2; \
 		exit 1; \
 	fi; \
-	sed "s/FLOAT32/$$f32/; s/FLOAT64/$$f64/" src/float.h.template > $@
+	sed "s/FLOAT32/$$f32/; s/FLOAT64/$$f64/" src/float.h.template > $@.tmp; \
+	if cmp -s $@.tmp $@; then rm -f $@.tmp; else mv $@.tmp $@; fi
 
 ####################################################################
 # Object Files
@@ -419,15 +446,14 @@ $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/float.h: \
 
 # Pattern rule: compile .c to .o and generate dependency file (compiler tracks headers).
 # float.h is generated; ensure it exists before compiling any .c that may include it (e.g. type.h).
-# Makefile is a real prerequisite, not decoration: every flag these objects
-# were built with comes from this file, and `make` otherwise sees a .o newer
-# than its .c and reuses it after a flag change. That is silent and it is
+# $(FLAGS_STAMP) is a real prerequisite, not decoration: every flag these
+# objects were built with is in that string, and `make` otherwise sees a .o
+# newer than its .c and reuses it after a flag change. That is silent and it is
 # specifically dangerous for the instrumented trees, where the flags *are* the
 # semantics -- a sanitizer arm rebuilt without the flag you just added reports
 # clean because the check was never compiled in. Two sessions in this
 # workspace measured "no hazard" that way on 2026-09-22 before noticing they
-# were comparing a binary with itself. The cost is a full rebuild whenever
-# this file changes, which is the correct price.
+# were comparing a binary with itself.
 $(OBJ_DIR)/%.o: src/%.c $(FLAGS_STAMP) | $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/float.h $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/libver_gen.h
 	@printf "\n### Compiling $@ ###\n"
 	@mkdir -p $(@D)
@@ -671,6 +697,7 @@ $(APP_DIR)/test-safemath-portable$(EXE_EXTENSION): test/test-safemath-portable.c
 
 # General commands
 .PHONY: clean cloc docs docs-pdf coverage check-symbols check-win32-parse check-clang test-tsan
+.PHONY: check-rebuild
 # Release build commands
 .PHONY: all install test test-asan test-ubsan test-watch uninstall watch
 # Debug build commands
@@ -811,6 +838,45 @@ else
 	$(CLANG) -fsyntax-only $(CFLAGS) $(INCLUDE) $(OS_SPECIFIC_COMPILE_FLAGS) \
 		$(patsubst $(OBJ_DIR)/%.o,src/%.c,$(LIBOBJECTS))
 endif
+
+# A build that recompiles when nothing changed is not a cosmetic annoyance. It
+# is the same failure as a build that *doesn't* recompile when something did,
+# seen from the other side: in both cases the tree's mtimes have stopped
+# meaning what the rules say they mean, and you cannot tell from outside which
+# of the two you have. It also hides itself, because the visible symptom is
+# only "the build is a bit slow".
+#
+# The gate perturbs the tree the way the build itself does before it looks.
+# Simply re-running make here does not work and was tried: by the time the
+# gate runs, this invocation has already absorbed whatever moved, so the tree
+# is settled and the check passes against its own bug. What it has to do is
+# reproduce the event -- the libver_gen.h rule writes and removes $@.tmp in
+# the generated-include directory on every build, which moves that directory's
+# mtime, and any rule naming the directory as a normal prerequisite is then
+# out of date for a reason that is not in the dependency graph. Creating and
+# removing a scratch file there is the same event.
+#
+# The sub-make runs on its own recipe line so that the leading `+` reaches
+# make and shares the jobserver. Written inside a $$(...) the `+` goes to the
+# shell instead, which has no such command -- the sub-make then never runs at
+# all, the captured output is an error message, and the gate passes against
+# every bug there is. That is how the first version of this rule behaved.
+GEN_INCLUDE_DIR := $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)
+check-rebuild: $(APP_DIR)/$(TARGET) $(TEST_BINARIES)
+	@printf "\n### Checking that a settled tree rebuilds nothing ###\n"
+	@: > $(GEN_INCLUDE_DIR)/.rebuild-probe; rm -f $(GEN_INCLUDE_DIR)/.rebuild-probe
+	+@$(MAKE) --no-print-directory $(APP_DIR)/$(TARGET) $(TEST_BINARIES) \
+		> $(BUILD_DIR)/.rebuild-check 2>&1 || true
+	@again=$$(grep -c '### Compiling ' $(BUILD_DIR)/.rebuild-check || true); \
+	if [ "$$again" -ne 0 ]; then \
+		printf "### %s targets recompiled with nothing changed ###\n" "$$again" >&2; \
+		grep '### Compiling ' $(BUILD_DIR)/.rebuild-check >&2; \
+		printf "A prerequisite moved on its own. The usual cause is a rule whose\n" >&2; \
+		printf "prerequisite list names a directory: a directory's mtime changes\n" >&2; \
+		printf "whenever any file is created or removed inside it, so it is never\n" >&2; \
+		printf "stable. Make it order-only, with a | in front of it.\n" >&2; \
+		exit 1; \
+	fi
 
 check-win32-parse: ## Parse-check the headers' Windows branches
 	@printf "\n### Parse-checking Windows branches ###\n"
