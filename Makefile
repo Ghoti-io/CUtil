@@ -11,23 +11,49 @@
 # name: a debug build you cannot step through. The two blocks stay separate
 # because this one has to precede CFLAGS and that one has to follow BRANCH.
 #
-# -O3 rather than the suite's -O2 floor is pre-existing and ratified, not
-# measured here. Anything moving *to* -O3 needs a figure recorded beside it.
+# -O3 for the library rather than the suite's -O2 floor is pre-existing and
+# ratified, not measured here. Anything moving *to* -O3 needs a figure.
+#
+# The tests get -O2 in release, and that is a measured choice rather than a
+# copy of the library's. Roughly half of this library compiles into its
+# *caller* -- seventeen inline functions across memory.h and safemath.h, plus
+# the function-like macros in macros.h and mutex.h -- so the level the tests
+# are built at is the level that half is tested at, and test-memory-inline.cpp
+# says in its own file comment that it exists to pin "what the library itself
+# and every consumer are built with". Every consumer is now -O2 or -O3, and
+# those inlines were being tested at -O1. Compiling a translation unit that
+# uses nothing but them:
+#
+#   -O1  60 instructions
+#   -O2  77 instructions      <- -O1 was genuinely testing other code
+#   -O3  77 instructions      <- byte-identical to -O2
+#
+# -O3 would cost about 30% more wall time on every `make test` and cannot
+# change a single instruction of the code under test, because these are scalar
+# wrappers and overflow checks with nothing for -O3's extra loop and
+# vectorisation work to act on. -O2 is where the real change is.
 #
 # What the instrumented targets do with this, checked rather than assumed:
 # `make coverage` appends its own -O0 through EXTRA_CFLAGS, which lands after
 # this and wins. The ASan and TSan builds append no -O at all, so they inherit
-# whichever level this picks -- deliberate, since it means they instrument the
-# code that actually ships. Do not copy a comment from a sibling Makefile
+# whichever level this picks. That is now a decision and not an accident: a
+# sanitizer gate exists to find defects in what ships, and latent UB that the
+# optimizer only exploits at -O3 would be invisible to a gate pinned lower --
+# a false negative, which is the expensive kind. The cost is worse stack
+# traces, and that is a diagnosis problem with an answer already in this file:
+# `make test-asan BUILD=debug` gives the same gate at -O0 once you know there
+# is something to look at. Do not copy a comment from a sibling Makefile
 # claiming a sanitizer -O1 here; there is none.
 ifeq ($(BUILD),debug)
 OPT_CFLAGS := -O0
+OPT_CXXFLAGS := -O0
 else
 OPT_CFLAGS := -O3
+OPT_CXXFLAGS := -O2
 endif
 
 CXX := g++
-CXXFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c++20 -O1 -g $(EXTRA_CXXFLAGS)
+CXXFLAGS := -pedantic-errors -Wall -Wextra -Werror -Wno-error=unused-function -Wfatal-errors -std=c++20 $(OPT_CXXFLAGS) -g $(EXTRA_CXXFLAGS)
 CC := cc
 # GHOTIIO_CUTIL_BUILD enables DLL export on Windows (checked by GCU_API).
 # GHOTIIO_CUTIL_TEST_BUILD would export internals for testing (checked by
