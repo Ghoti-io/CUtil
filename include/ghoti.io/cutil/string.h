@@ -35,6 +35,32 @@
 extern "C" {
 #endif
 
+/**
+ * @section murmur3_contract What these hashes do and do not promise
+ *
+ * **Alignment is not a precondition.** `key` and `out` may sit at any
+ * address.  The blocks are read and written a byte at a time into a local,
+ * which the compiler folds back into a single load or store, so an odd
+ * address costs nothing and is not undefined.  Hashing a substring, an offset
+ * into a buffer, or a field inside a packed struct is fair use.
+ *
+ * **The result is not stable across byte orders.** These follow Appleby's
+ * reference, which reads each block in the host's order and writes `out` in
+ * the host's order, so a big-endian machine returns a different hash for the
+ * same key -- and only the little-endian answers match the verification
+ * values SMHasher publishes.  Nothing in this suite depends on that, because
+ * every hash here indexes an in-memory table and none is written to a file or
+ * a wire.  Anything that does persist or transmit one, or that compares
+ * hashes computed on two different machines, needs a byte-order-explicit hash
+ * instead of these.  Making these little-endian everywhere is a one-line
+ * change per block and has not been made because there is no big-endian
+ * machine here to verify it on.
+ *
+ * `gcu_string_hash_64()` carries the same caveat twice over: it is
+ * `x64_128` on a 64-bit platform and `x86_128` on a 32-bit one, which are
+ * different algorithms, so its value already differs between two builds of
+ * the same source.
+ */
 
 /**
  * Helper function to wrap the hash function that produces a 32-bit number

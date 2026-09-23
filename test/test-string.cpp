@@ -1,3 +1,5 @@
+#include <cstdint>
+#include <cstring>
 #include <sstream>
 #include <gtest/gtest.h>
 #include <ghoti.io/cutil/string.h>
@@ -284,6 +286,91 @@ TEST(Murmur3, KnownAnswersPerLength) {
     gcu_string_murmur3_x64_128(k, e.len, 0, out128);
     EXPECT_EQ(e.h128_64[0], out128[0]) << "x64_128 lo at length " << e.len;
     EXPECT_EQ(e.h128_64[1], out128[1]) << "x64_128 hi at length " << e.len;
+  }
+}
+
+// A key is a run of bytes.  Where those bytes happen to sit in memory is not
+// part of the question being asked, so the same bytes must hash the same from
+// every offset -- and the functions must be free of undefined behaviour while
+// doing it.  Hashing a substring, an offset into a buffer, or a field inside a
+// packed struct are all ordinary things to ask of a (const void *, size_t)
+// API, and all of them can hand it an odd address.
+//
+// Note which half of that this test can see on its own.  x86 performs
+// unaligned loads happily, so the pointer-cast version these functions used to
+// use returned the *correct* answer from a misaligned key and every assertion
+// below passed against it.  The undefined behaviour is only visible to an
+// instrument: under `make test-asan` the old code stops at
+//
+//     src/string.c:76: runtime error: load of misaligned address ...
+//     for type 'const uint32_t', which requires 4 byte alignment
+//
+// so this test has teeth in the sanitizer build and is a property check in the
+// release build.  That is also why the defect survived: every key in this file
+// was a string literal and every key the consumers pass comes from malloc, so
+// nothing had ever handed these functions an odd address to begin with.
+TEST(Murmur3, AnswerDoesNotDependOnKeyAlignment) {
+  // Lengths spanning both 128-bit tail residues and several whole blocks.
+  static const size_t lengths[] = { 1, 3, 4, 7, 8, 15, 16, 17, 31, 32, 33, 64 };
+
+  alignas(8) unsigned char payload[64];
+  for (size_t i = 0; i < sizeof payload; ++i) {
+    payload[i] = static_cast<unsigned char>(i * 7 + 1);
+  }
+
+  for (size_t len : lengths) {
+    // The answers from an aligned key, to compare every offset against.
+    uint32_t want32;
+    uint64_t want86[2], want64[2];
+    gcu_string_murmur3_32(payload, len, 0, &want32);
+    gcu_string_murmur3_x86_128(payload, len, 0, want86);
+    gcu_string_murmur3_x64_128(payload, len, 0, want64);
+
+    for (size_t offset = 1; offset < 8; ++offset) {
+      alignas(8) unsigned char backing[8 + sizeof payload];
+      unsigned char * shifted = backing + offset;
+      memcpy(shifted, payload, len);
+      ASSERT_NE(0u, reinterpret_cast<uintptr_t>(shifted) % 8)
+        << "the shifted key was supposed to be misaligned";
+
+      uint32_t got32;
+      uint64_t got86[2], got64[2];
+      gcu_string_murmur3_32(shifted, len, 0, &got32);
+      gcu_string_murmur3_x86_128(shifted, len, 0, got86);
+      gcu_string_murmur3_x64_128(shifted, len, 0, got64);
+
+      EXPECT_EQ(want32, got32)
+        << "murmur3_32, length " << len << ", offset " << offset;
+      EXPECT_EQ(want86[0], got86[0]) << "x86_128 lo, length " << len
+        << ", offset " << offset;
+      EXPECT_EQ(want86[1], got86[1]) << "x86_128 hi, length " << len
+        << ", offset " << offset;
+      EXPECT_EQ(want64[0], got64[0]) << "x64_128 lo, length " << len
+        << ", offset " << offset;
+      EXPECT_EQ(want64[1], got64[1]) << "x64_128 hi, length " << len
+        << ", offset " << offset;
+    }
+  }
+}
+
+// The output pointer is a void * too, and had the same cast on the way out.
+TEST(Murmur3, WritesToAnUnalignedOutputBuffer) {
+  alignas(8) unsigned char out[8 + 16];
+  for (size_t offset = 1; offset < 8; ++offset) {
+    uint32_t want32;
+    uint64_t want128[2];
+    gcu_string_murmur3_32("alignment", 9, 0, &want32);
+    gcu_string_murmur3_x64_128("alignment", 9, 0, want128);
+
+    memset(out, 0, sizeof out);
+    gcu_string_murmur3_32("alignment", 9, 0, out + offset);
+    EXPECT_EQ(0, memcmp(out + offset, &want32, sizeof want32))
+      << "murmur3_32 output at offset " << offset;
+
+    memset(out, 0, sizeof out);
+    gcu_string_murmur3_x64_128("alignment", 9, 0, out + offset);
+    EXPECT_EQ(0, memcmp(out + offset, want128, sizeof want128))
+      << "x64_128 output at offset " << offset;
   }
 }
 
