@@ -1,3 +1,8 @@
+# Which build this is. Every other library in the suite defines this; cutil did
+# not, so its platform block below set the whole path and the release/debug
+# distinction never reached the build tree at all.
+BUILD ?= release
+
 # The optimization level, and the one thing that should distinguish the two
 # builds' compile flags. `release` is what gets installed and what every
 # library above this one actually runs; `debug` is compiled for stepping
@@ -133,7 +138,6 @@ endif
 # symbols, and two of them cannot be loaded into one process.
 LIBVER_SYMBOL := $(shell echo "ghotiio_$(PROJECT)$(BRANCH)" | sed 's/[.-]/_/g')
 
-BUILD_DIR = $(BUILD)
 BASE_NAME_PREFIX := lib$(SUITE)-$(PROJECT)$(BRANCH)
 BASE_NAME := $(BASE_NAME_PREFIX).so
 SO_NAME := $(BASE_NAME).$(MAJOR_VERSION)
@@ -149,7 +153,7 @@ UNAME_S := $(shell uname -s)
 
 ifeq ($(UNAME_S), Linux)
 	OS_NAME := Linux
-	BUILD := ./build/linux
+	override BUILD := linux/$(BUILD)
 	LIB_EXTENSION := so
 	OS_SPECIFIC_COMPILE_FLAGS := -fPIC
 	OS_SPECIFIC_LINK_FLAGS := -shared -fPIC
@@ -165,7 +169,7 @@ ifeq ($(UNAME_S), Linux)
 
 else ifeq ($(UNAME_S), Darwin)
 	OS_NAME := Mac
-	BUILD := ./build/mac
+	override BUILD := mac/$(BUILD)
 	LIB_EXTENSION := dylib
 	OS_SPECIFIC_COMPILE_FLAGS :=
 	OS_SPECIFIC_LINK_FLAGS := -shared
@@ -178,7 +182,7 @@ else ifeq ($(UNAME_S), Darwin)
 
 else ifeq ($(findstring MINGW32_NT,$(UNAME_S)),MINGW32_NT)  # 32-bit Windows
 	OS_NAME := Windows
-	BUILD := ./build/win32
+	override BUILD := win32/$(BUILD)
 	LIB_EXTENSION := dll
 	OS_SPECIFIC_COMPILE_FLAGS :=
 	OS_SPECIFIC_LINK_FLAGS := -shared
@@ -197,7 +201,7 @@ else ifeq ($(findstring MINGW32_NT,$(UNAME_S)),MINGW32_NT)  # 32-bit Windows
 
 else ifeq ($(findstring MINGW64_NT,$(UNAME_S)),MINGW64_NT)  # 64-bit Windows
 	OS_NAME := Windows
-	BUILD := ./build/win64
+	override BUILD := win64/$(BUILD)
 	LIB_EXTENSION := dll
 	OS_SPECIFIC_COMPILE_FLAGS :=
 	OS_SPECIFIC_LINK_FLAGS := -shared
@@ -260,9 +264,14 @@ LDFLAGS += -Wl,-rpath,$(LIB_INSTALL_PATH)/$(SUITE)
 endif
 
 
-OBJ_DIR := $(BUILD)/objects
-GEN_DIR := $(BUILD)/generated
-APP_DIR := $(BUILD)/apps
+# Defined after the platform block above, which prepends the OS segment to
+# BUILD. Defining it earlier expands $(BUILD) before that happens and silently
+# drops the segment, putting every build in one directory per OS.
+BUILD_DIR := ./build/$(BUILD)
+
+OBJ_DIR := $(BUILD_DIR)/objects
+GEN_DIR := $(BUILD_DIR)/generated
+APP_DIR := $(BUILD_DIR)/apps
 
 INCLUDE := -I include/ -I $(BUILD_DIR)/include/
 LIBOBJECTS := \
@@ -659,7 +668,7 @@ $(APP_DIR)/test-safemath-portable$(EXE_EXTENSION): test/test-safemath-portable.c
 
 watch: ## Watch the file directory for changes and compile the target
 	@while true; do \
-		make all BUILD=$(BUILD); \
+		make all; \
 		printf "\033[0;32m"; \
 		printf "#########################\n"; \
 		printf "# Waiting for changes.. #\n"; \
@@ -670,7 +679,7 @@ watch: ## Watch the file directory for changes and compile the target
 
 test-watch: ## Watch the file directory for changes and run the unit tests
 	@while true; do \
-		make test BUILD=$(BUILD); \
+		make test; \
 		printf "\033[0;32m"; \
 		printf "#########################\n"; \
 		printf "# Waiting for changes.. #\n"; \
@@ -854,7 +863,7 @@ ASAN_UBSAN_FLAGS := -fsanitize=address,$(UBSAN_CHECKS) \
 	-fno-sanitize-recover=$(UBSAN_CHECKS) \
 	-fno-omit-frame-pointer -g $(SAN_OPT_CFLAGS)
 
-ASAN_BUILD_DIR := $(BUILD)-asan
+ASAN_BUILD_DIR := $(BUILD_DIR)-asan
 ASAN_OBJ_DIR := $(ASAN_BUILD_DIR)/objects
 ASAN_APP_DIR := $(ASAN_BUILD_DIR)/apps
 ASAN_TARGET := $(BASE_NAME_PREFIX)-asan.so
@@ -989,7 +998,7 @@ TSAN_TEST_NAMES := test-mutex test-cond test-barrier test-once test-rwlock test-
 
 TSAN_FLAGS := -fsanitize=thread -fno-omit-frame-pointer -g $(SAN_OPT_CFLAGS)
 
-TSAN_BUILD_DIR := $(BUILD)-tsan
+TSAN_BUILD_DIR := $(BUILD_DIR)-tsan
 TSAN_OBJ_DIR := $(TSAN_BUILD_DIR)/objects
 TSAN_APP_DIR := $(TSAN_BUILD_DIR)/apps
 TSAN_TARGET := $(BASE_NAME_PREFIX)-tsan.so
