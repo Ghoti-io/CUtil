@@ -5,6 +5,25 @@
 
 using namespace std;
 
+// A note on what these tests can and cannot be credited with.
+//
+// Two undefined-behaviour defects were found in the hash template from
+// outside this repository, by a consumer that had built cutil with clang.
+// They look alike -- both are a table with no cell array being handled as
+// though it had one -- but they went unseen for opposite reasons, and only
+// one of them is a story about missing tests.
+//
+// Cloning an empty table was never done by any test here. That is a coverage
+// gap and CloneOfATableWithNoCells closes it.
+//
+// Growing from an empty table, on the other hand, is what Hash64.Set has done
+// on every run since it was written: create(0) then set(). The line was
+// executed thousands of times under ASan+UBSan and reported clean, because
+// forming `&data[0]` on a null pointer is undefined and *gcc's UBSan does not
+// diagnose it* -- neither -fsanitize=undefined nor -fsanitize=pointer-overflow,
+// both measured. clang's does. No test could have closed that one; only the
+// second compiler could, which is why `check-clang` is now a test gate.
+
 TEST(Hash64, CreateEmpty) {
   auto t = gcu_hash64_create(0);
   ASSERT_NE(t, nullptr);
@@ -1078,6 +1097,186 @@ TEST(Hash64, LookupFindsEntriesPastATombstone) {
   EXPECT_EQ(gcu_hash64_get(t, c).value.ui64, 3u);
 
   gcu_hash64_destroy(t);
+}
+
+TEST(Hash64, CloneOfATableWithNoCells) {
+  // A table created with a count of zero has no cell array at all -- capacity
+  // 0, data null -- and cloning one used to pass that null to memcpy, ask the
+  // allocator for zero bytes, and treat a null answer as failure. It also
+  // produced a table whose "empty" did not look like any other empty table's.
+  //
+  // This one really was a coverage gap: nothing cloned an empty table. The
+  // growth path below is the opposite case, so the two are worth keeping
+  // straight -- see the note on Hash64.Set.
+  auto t = gcu_hash64_create(0);
+  ASSERT_EQ(t->capacity, 0);
+  ASSERT_EQ(t->data, nullptr);
+
+  auto t2 = gcu_hash64_clone(t);
+  ASSERT_NE(t2, nullptr) << "an empty table must still clone";
+  ASSERT_NE(t, t2);
+  ASSERT_EQ(t2->capacity, 0);
+  ASSERT_EQ(t2->data, nullptr)
+      << "clone and create must agree on what an empty table looks like";
+  ASSERT_EQ(gcu_hash64_count(t2), 0);
+
+  // And the copy is a working table, not just a well-formed empty one.
+  ASSERT_TRUE(gcu_hash64_set(t2, 1001, gcu_type64_ui32(7)));
+  ASSERT_TRUE(gcu_hash64_contains(t2, 1001));
+  ASSERT_FALSE(gcu_hash64_contains(t, 1001))
+      << "the clone must not share the original's cells";
+
+  gcu_hash64_destroy(t);
+  gcu_hash64_destroy(t2);
+}
+
+TEST(Hash64, AdvancingAnExhaustedIteratorIsHarmless) {
+  // The documented loop stops on `exists`, so this is about a caller who
+  // steps one past the end. It should hand back an exhausted iterator rather
+  // than forming a pointer into a cell array that does not exist.
+  auto t = gcu_hash64_create(0);
+
+  GCU_Hash64_Iterator iterator = gcu_hash64_iterator_get(t);
+  ASSERT_FALSE(iterator.exists);
+  iterator = gcu_hash64_iterator_next(iterator);
+  ASSERT_FALSE(iterator.exists);
+
+  gcu_hash64_destroy(t);
+}
+
+TEST(Hash32, CloneOfATableWithNoCells) {
+  // A table created with a count of zero has no cell array at all -- capacity
+  // 0, data null -- and cloning one used to pass that null to memcpy, ask the
+  // allocator for zero bytes, and treat a null answer as failure. It also
+  // produced a table whose "empty" did not look like any other empty table's.
+  //
+  // This one really was a coverage gap: nothing cloned an empty table. The
+  // growth path below is the opposite case, so the two are worth keeping
+  // straight -- see the note on Hash64.Set.
+  auto t = gcu_hash32_create(0);
+  ASSERT_EQ(t->capacity, 0);
+  ASSERT_EQ(t->data, nullptr);
+
+  auto t2 = gcu_hash32_clone(t);
+  ASSERT_NE(t2, nullptr) << "an empty table must still clone";
+  ASSERT_NE(t, t2);
+  ASSERT_EQ(t2->capacity, 0);
+  ASSERT_EQ(t2->data, nullptr)
+      << "clone and create must agree on what an empty table looks like";
+  ASSERT_EQ(gcu_hash32_count(t2), 0);
+
+  // And the copy is a working table, not just a well-formed empty one.
+  ASSERT_TRUE(gcu_hash32_set(t2, 1001, gcu_type32_ui32(7)));
+  ASSERT_TRUE(gcu_hash32_contains(t2, 1001));
+  ASSERT_FALSE(gcu_hash32_contains(t, 1001))
+      << "the clone must not share the original's cells";
+
+  gcu_hash32_destroy(t);
+  gcu_hash32_destroy(t2);
+}
+
+TEST(Hash32, AdvancingAnExhaustedIteratorIsHarmless) {
+  // The documented loop stops on `exists`, so this is about a caller who
+  // steps one past the end. It should hand back an exhausted iterator rather
+  // than forming a pointer into a cell array that does not exist.
+  auto t = gcu_hash32_create(0);
+
+  GCU_Hash32_Iterator iterator = gcu_hash32_iterator_get(t);
+  ASSERT_FALSE(iterator.exists);
+  iterator = gcu_hash32_iterator_next(iterator);
+  ASSERT_FALSE(iterator.exists);
+
+  gcu_hash32_destroy(t);
+}
+
+TEST(Hash16, CloneOfATableWithNoCells) {
+  // A table created with a count of zero has no cell array at all -- capacity
+  // 0, data null -- and cloning one used to pass that null to memcpy, ask the
+  // allocator for zero bytes, and treat a null answer as failure. It also
+  // produced a table whose "empty" did not look like any other empty table's.
+  //
+  // This one really was a coverage gap: nothing cloned an empty table. The
+  // growth path below is the opposite case, so the two are worth keeping
+  // straight -- see the note on Hash64.Set.
+  auto t = gcu_hash16_create(0);
+  ASSERT_EQ(t->capacity, 0);
+  ASSERT_EQ(t->data, nullptr);
+
+  auto t2 = gcu_hash16_clone(t);
+  ASSERT_NE(t2, nullptr) << "an empty table must still clone";
+  ASSERT_NE(t, t2);
+  ASSERT_EQ(t2->capacity, 0);
+  ASSERT_EQ(t2->data, nullptr)
+      << "clone and create must agree on what an empty table looks like";
+  ASSERT_EQ(gcu_hash16_count(t2), 0);
+
+  // And the copy is a working table, not just a well-formed empty one.
+  ASSERT_TRUE(gcu_hash16_set(t2, 1001, gcu_type16_ui16(7)));
+  ASSERT_TRUE(gcu_hash16_contains(t2, 1001));
+  ASSERT_FALSE(gcu_hash16_contains(t, 1001))
+      << "the clone must not share the original's cells";
+
+  gcu_hash16_destroy(t);
+  gcu_hash16_destroy(t2);
+}
+
+TEST(Hash16, AdvancingAnExhaustedIteratorIsHarmless) {
+  // The documented loop stops on `exists`, so this is about a caller who
+  // steps one past the end. It should hand back an exhausted iterator rather
+  // than forming a pointer into a cell array that does not exist.
+  auto t = gcu_hash16_create(0);
+
+  GCU_Hash16_Iterator iterator = gcu_hash16_iterator_get(t);
+  ASSERT_FALSE(iterator.exists);
+  iterator = gcu_hash16_iterator_next(iterator);
+  ASSERT_FALSE(iterator.exists);
+
+  gcu_hash16_destroy(t);
+}
+
+TEST(Hash8, CloneOfATableWithNoCells) {
+  // A table created with a count of zero has no cell array at all -- capacity
+  // 0, data null -- and cloning one used to pass that null to memcpy, ask the
+  // allocator for zero bytes, and treat a null answer as failure. It also
+  // produced a table whose "empty" did not look like any other empty table's.
+  //
+  // This one really was a coverage gap: nothing cloned an empty table. The
+  // growth path below is the opposite case, so the two are worth keeping
+  // straight -- see the note on Hash64.Set.
+  auto t = gcu_hash8_create(0);
+  ASSERT_EQ(t->capacity, 0);
+  ASSERT_EQ(t->data, nullptr);
+
+  auto t2 = gcu_hash8_clone(t);
+  ASSERT_NE(t2, nullptr) << "an empty table must still clone";
+  ASSERT_NE(t, t2);
+  ASSERT_EQ(t2->capacity, 0);
+  ASSERT_EQ(t2->data, nullptr)
+      << "clone and create must agree on what an empty table looks like";
+  ASSERT_EQ(gcu_hash8_count(t2), 0);
+
+  // And the copy is a working table, not just a well-formed empty one.
+  ASSERT_TRUE(gcu_hash8_set(t2, 1001, gcu_type8_ui8(7)));
+  ASSERT_TRUE(gcu_hash8_contains(t2, 1001));
+  ASSERT_FALSE(gcu_hash8_contains(t, 1001))
+      << "the clone must not share the original's cells";
+
+  gcu_hash8_destroy(t);
+  gcu_hash8_destroy(t2);
+}
+
+TEST(Hash8, AdvancingAnExhaustedIteratorIsHarmless) {
+  // The documented loop stops on `exists`, so this is about a caller who
+  // steps one past the end. It should hand back an exhausted iterator rather
+  // than forming a pointer into a cell array that does not exist.
+  auto t = gcu_hash8_create(0);
+
+  GCU_Hash8_Iterator iterator = gcu_hash8_iterator_get(t);
+  ASSERT_FALSE(iterator.exists);
+  iterator = gcu_hash8_iterator_next(iterator);
+  ASSERT_FALSE(iterator.exists);
+
+  gcu_hash8_destroy(t);
 }
 
 int main(int argc, char** argv) {

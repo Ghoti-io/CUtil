@@ -126,13 +126,31 @@ TEMPLATE_GCU_HASH * TEMPLATE_GCU_HASH_CLONE(TEMPLATE_GCU_HASH * source) {
   }
   memcpy(newTable, source, sizeof(TEMPLATE_GCU_HASH));
 
-  // Copy the data from the source.
-  newTable->data = gcu_malloc(source->capacity * sizeof(TEMPLATE_GCU_HASH_CELL));
-  if (!newTable->data) {
-    gcu_free(newTable);
-    return 0;
+  // Copy the cells, if the source has any.
+  //
+  // A table created with a count of zero has no cell array until its first
+  // insertion -- capacity 0 and data null -- and three separate things went
+  // wrong here when that was not treated as its own case.  memcpy may not be
+  // given a null source even for zero bytes, which is what UBSan reports.
+  // gcu_malloc(0) is permitted to return null, which the check below would
+  // read as an allocation failure, so an empty table could fail to clone for
+  // no reason but the allocator's choice.  And when it did not return null,
+  // the clone came out with capacity 0 and data *non*-null: a second spelling
+  // of "empty" that no other path in this file produces, and that anything
+  // testing `data` to mean "has cells" would disagree with.
+  if (source->capacity) {
+    newTable->data = gcu_malloc(source->capacity * sizeof(TEMPLATE_GCU_HASH_CELL));
+    if (!newTable->data) {
+      gcu_free(newTable);
+      return 0;
+    }
+    memcpy(newTable->data, source->data, source->capacity * sizeof(TEMPLATE_GCU_HASH_CELL));
   }
-  memcpy(newTable->data, source->data, source->capacity * sizeof(TEMPLATE_GCU_HASH_CELL));
+  else {
+    // The struct copy above already brought the source's null across.  Said
+    // again because this is the one place the two fields have to agree.
+    newTable->data = 0;
+  }
 
   // Allocate the mutex.
   bool failure = GCU_MUTEX_CREATE(newTable->mutex);
@@ -162,15 +180,22 @@ static bool TEMPLATE_GROW_HASH(TEMPLATE_GCU_HASH * hashTable, size_t size) {
     return false;
   }
 
-  TEMPLATE_GCU_HASH_CELL * cursor = hashTable->data;
-  TEMPLATE_GCU_HASH_CELL * end = &hashTable->data[hashTable->capacity];
+  // Copy the existing entries across, if there are any.  A table that has
+  // never held one has no cell array, and forming `&data[capacity]` on a null
+  // pointer is undefined even when capacity is zero.  Worth knowing that no
+  // gcc flag reports this -- not -fsanitize=undefined, not
+  // -fsanitize=pointer-overflow, measured -- and clang's UBSan does, which is
+  // how it was found and why the clang build is now kept working.
+  if (hashTable->data) {
+    TEMPLATE_GCU_HASH_CELL * cursor = hashTable->data;
+    TEMPLATE_GCU_HASH_CELL * end = &hashTable->data[hashTable->capacity];
 
-  // Copy data into the new hash table.
-  while (cursor != end) {
-    if (cursor->occupied && !cursor->removed) {
-      TEMPLATE_GCU_HASH_SET(newTable, cursor->hash, cursor->data);
+    while (cursor != end) {
+      if (cursor->occupied && !cursor->removed) {
+        TEMPLATE_GCU_HASH_SET(newTable, cursor->hash, cursor->data);
+      }
+      ++cursor;
     }
-    ++cursor;
   }
 
   // Swap the data, keeping the caller's cleanup hook and its supplementary
@@ -398,6 +423,22 @@ TEMPLATE_GCU_HASH_ITERATOR TEMPLATE_GCU_HASH_ITERATOR_GET(TEMPLATE_GCU_HASH * ha
 }
 
 TEMPLATE_GCU_HASH_ITERATOR TEMPLATE_GCU_HASH_ITERATOR_NEXT(TEMPLATE_GCU_HASH_ITERATOR iterator) {
+  // Nothing to walk, because the table has no cell array.  The documented
+  // loop shape never gets here -- it stops on `exists` -- so this is about a
+  // caller who advances an iterator one time too many, which should give back
+  // an exhausted iterator rather than undefined behaviour.  The check has to
+  // come before the arithmetic below: forming a pointer into a null array is
+  // undefined at offset zero too.
+  if (!iterator.hashTable || !iterator.hashTable->data) {
+    return (TEMPLATE_GCU_HASH_ITERATOR) {
+      .current = iterator.current,
+      .exists = false,
+      .hash = 0,
+      .value = DEFAULT_TYPE(0),
+      .hashTable = iterator.hashTable,
+    };
+  }
+
   TEMPLATE_GCU_HASH_CELL * end = &iterator.hashTable->data[iterator.hashTable->capacity];
   size_t index = iterator.current;
   TEMPLATE_GCU_HASH_CELL * cursor = &iterator.hashTable->data[index];
