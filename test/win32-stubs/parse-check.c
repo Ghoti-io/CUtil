@@ -20,6 +20,7 @@
 #include <ghoti.io/cutil/mmap.h>
 #include <ghoti.io/cutil/atomic.h>
 #include <ghoti.io/cutil/subprocess.h>
+#include <ghoti.io/cutil/barrier.h>
 
 int main(void) {
   GCU_MUTEX_T m;
@@ -103,6 +104,12 @@ int main(void) {
   rc |= (int)spawned.outcome;
   rc |= GCU_SUBPROCESS_NOT_STARTED;
   gcu_subprocess_result_free(&spawned);
+
+  GCU_Barrier gate;
+  rc |= gcu_barrier_create(&gate, 1);
+  rc |= gcu_barrier_wait(&gate);
+  rc |= gcu_barrier_destroy(&gate);
+  rc |= GCU_BARRIER_SERIAL;
 
   return rc;
 }
