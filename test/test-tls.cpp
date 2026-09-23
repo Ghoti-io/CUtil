@@ -19,7 +19,7 @@ void free_value(void * value) {
 
 // Each thread writes its own number, sleeps so the others are provably
 // interleaved, then checks it still reads back its own.
-void * per_thread_value(void * arg) {
+GCU_THREAD_FUNC_RETURN_T GCU_THREAD_FUNC_CALLING_CONVENTION per_thread_value(GCU_THREAD_FUNC_ARG_T arg) {
   intptr_t mine = reinterpret_cast<intptr_t>(arg);
   int * slot = static_cast<int *>(malloc(sizeof(int)));
   *slot = static_cast<int>(mine);
@@ -31,7 +31,7 @@ void * per_thread_value(void * arg) {
   if (!read_back || *read_back != static_cast<int>(mine)) {
     ++mismatches;
   }
-  return nullptr;
+  return (GCU_THREAD_FUNC_RETURN_T)0;
 }
 
 } // namespace
@@ -99,8 +99,8 @@ TEST(TLS, TheMainThreadKeepsItsValueAcrossCalls) {
 
   // An unrelated thread comes and goes; this thread's slot is untouched.
   GCU_Thread t;
-  ASSERT_EQ(0, gcu_thread_create(&t, [](void *) -> void * {
-    return nullptr;
+  ASSERT_EQ(0, gcu_thread_create(&t, [](GCU_THREAD_FUNC_ARG_T) -> GCU_THREAD_FUNC_RETURN_T {
+    return (GCU_THREAD_FUNC_RETURN_T)0;
   }, nullptr));
   ASSERT_EQ(0, gcu_thread_join(t));
 

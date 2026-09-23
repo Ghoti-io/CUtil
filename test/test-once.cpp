@@ -18,14 +18,14 @@ void count_a_run(void) {
   ++run_count;
 }
 
-void * contender(void *) {
+GCU_THREAD_FUNC_RETURN_T GCU_THREAD_FUNC_CALLING_CONVENTION contender(GCU_THREAD_FUNC_ARG_T) {
   gcu_once(&contended, count_a_run);
   // Every thread must observe the completed initialisation, not merely a
   // started one:  gcu_once returns only after the routine has returned.
   if (run_count.load() == 1) {
     ++observers;
   }
-  return nullptr;
+  return (GCU_THREAD_FUNC_RETURN_T)0;
 }
 
 } // namespace

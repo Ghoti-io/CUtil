@@ -17,6 +17,7 @@
 #include <string>
 #include <vector>
 #include <gtest/gtest.h>
+#include <ghoti.io/cutil/env.h>
 #include <ghoti.io/cutil/subprocess.h>
 #include "hang-guard.h"
 
@@ -269,7 +270,7 @@ TEST_F(Subprocess, ReplacesTheEnvironmentWhenGiven) {
     "PATH=/bin:/usr/bin",
     nullptr,
   };
-  ASSERT_EQ(0, setenv("GHOTI_TEST_INHERITED", "parent", 1));
+  ASSERT_EQ(0, gcu_env_set("GHOTI_TEST_INHERITED", "parent"));
   GCU_Subprocess_Options options = {};
   options.environment = entries;
   GCU_Subprocess_Result result;
@@ -279,16 +280,16 @@ TEST_F(Subprocess, ReplacesTheEnvironmentWhenGiven) {
   EXPECT_EQ("present/", outputOf(result))
       << "the environment replaces, it does not add to";
   gcu_subprocess_result_free(&result);
-  unsetenv("GHOTI_TEST_INHERITED");
+  gcu_env_unset("GHOTI_TEST_INHERITED");
 }
 
 TEST_F(Subprocess, InheritsTheEnvironmentWhenNotGiven) {
-  ASSERT_EQ(0, setenv("GHOTI_TEST_INHERITED", "parent", 1));
+  ASSERT_EQ(0, gcu_env_set("GHOTI_TEST_INHERITED", "parent"));
   GCU_Subprocess_Result result;
   ASSERT_EQ(0, runScript("printf '%s' \"$GHOTI_TEST_INHERITED\"", &result));
   EXPECT_EQ("parent", outputOf(result));
   gcu_subprocess_result_free(&result);
-  unsetenv("GHOTI_TEST_INHERITED");
+  gcu_env_unset("GHOTI_TEST_INHERITED");
 }
 
 TEST_F(Subprocess, TheTimeoutKillsAChildThatWillNotFinish) {

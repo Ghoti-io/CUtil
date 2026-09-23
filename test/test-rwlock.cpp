@@ -15,7 +15,7 @@ struct Shared {
   int value = 0;
 };
 
-void * reader(void * arg) {
+GCU_THREAD_FUNC_RETURN_T GCU_THREAD_FUNC_CALLING_CONVENTION reader(GCU_THREAD_FUNC_ARG_T arg) {
   Shared * s = static_cast<Shared *>(arg);
   gcu_rwlock_read_lock(&s->lock);
   int now = ++s->readers_inside;
@@ -26,10 +26,10 @@ void * reader(void * arg) {
   gcu_thread_sleep(40);
   --s->readers_inside;
   gcu_rwlock_read_unlock(&s->lock);
-  return nullptr;
+  return (GCU_THREAD_FUNC_RETURN_T)0;
 }
 
-void * writer(void * arg) {
+GCU_THREAD_FUNC_RETURN_T GCU_THREAD_FUNC_CALLING_CONVENTION writer(GCU_THREAD_FUNC_ARG_T arg) {
   Shared * s = static_cast<Shared *>(arg);
   gcu_rwlock_write_lock(&s->lock);
   // If the lock is doing its job, no reader is inside while this holds it.
@@ -42,7 +42,7 @@ void * writer(void * arg) {
     ++s->writer_saw_readers;
   }
   gcu_rwlock_write_unlock(&s->lock);
-  return nullptr;
+  return (GCU_THREAD_FUNC_RETURN_T)0;
 }
 
 } // namespace

@@ -559,10 +559,24 @@ $(APP_DIR)/libtest-plugin.$(LIB_EXTENSION): test/test-plugin.c $(FLAGS_STAMP)
 	@mkdir -p $(@D)
 	$(CC) $(filter-out -fvisibility=hidden,$(CFLAGS)) -shared -fPIC -o $@ $<
 
+ifeq ($(OS_NAME), Windows)
+# A PE image cannot leave a symbol for the loader to find by name alone: every
+# import names the DLL it comes from, so the link needs an import library. This
+# one is made from a .def file and describes a DLL that is never built, which
+# gives LoadLibrary the same thing RTLD_NOW refuses on ELF - an import nothing
+# can satisfy - and Windows resolves imports at load time unconditionally.
+$(APP_DIR)/libtest-plugin-broken.$(LIB_EXTENSION): test/test-plugin-broken.c $(FLAGS_STAMP)
+	@printf "\n### Compiling Test Plugin (unresolvable) ###\n"
+	@mkdir -p $(@D)
+	printf 'LIBRARY gcu-test-plugin-absent.dll\nEXPORTS\n  gcu_test_plugin_no_such_function\n' > $(@D)/test-plugin-absent.def
+	dlltool -d $(@D)/test-plugin-absent.def -l $(@D)/libtest-plugin-absent.dll.a
+	$(CC) $(filter-out -fvisibility=hidden,$(CFLAGS)) -shared -o $@ $< $(@D)/libtest-plugin-absent.dll.a
+else
 $(APP_DIR)/libtest-plugin-broken.$(LIB_EXTENSION): test/test-plugin-broken.c $(FLAGS_STAMP)
 	@printf "\n### Compiling Test Plugin (unresolvable) ###\n"
 	@mkdir -p $(@D)
 	$(CC) $(filter-out -fvisibility=hidden,$(CFLAGS)) -shared -fPIC -o $@ $<
+endif
 
 # Extra flags for one test, looked up by name.  Spelled this way because the
 # ASan and TSan binaries are built from a generated rule that cannot carry a
@@ -893,6 +907,7 @@ endif
 # -fsyntax-only rather than a real compile: it is half a second, and it still
 # sees the driver-level diagnostics, including a link flag that has found its
 # way onto a compile line.
+check-clang: | $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/float.h $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/libver_gen.h
 check-clang: ## Check that the library still compiles under clang
 	@printf "\n### Compiling under clang ###\n"
 ifeq ($(CLANG),)
@@ -968,6 +983,9 @@ check-stamps: ## Check that every compile rule names its tree's flag stamp
 
 check-win32-parse: ## Parse-check the headers' Windows branches
 	@printf "\n### Parse-checking Windows branches ###\n"
+ifeq ($(OS_NAME), Windows)
+	@printf "check-win32-parse: skipped (this is Windows; the real build compiled those branches)\n"
+else
 	$(CC) -fsyntax-only $(filter-out -fvisibility=hidden -DGHOTIIO_CUTIL_BUILD,$(CFLAGS)) \
 		-include test/win32-stubs/force.h -I test/win32-stubs $(INCLUDE) \
 		test/win32-stubs/parse-check.c
@@ -975,6 +993,7 @@ check-win32-parse: ## Parse-check the headers' Windows branches
 	$(CC) -fsyntax-only -D_WIN32 $(filter-out -fvisibility=hidden,$(CFLAGS)) \
 		-include test/win32-stubs/force.h -I test/win32-stubs $(INCLUDE) \
 		$(WIN32_PARSE_SOURCES)
+endif
 
 test: ## Make and run the Unit tests
 # Both the prerequisites and the run lines are derived from TEST_NAMES, so

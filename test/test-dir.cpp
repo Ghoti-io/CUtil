@@ -15,7 +15,9 @@
 #include <ghoti.io/cutil/file.h>
 #include <ghoti.io/cutil/path.h>
 
-#ifndef _WIN32
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <dirent.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -31,21 +33,17 @@ protected:
   string dir;
 
   void SetUp() override {
-#ifndef _WIN32
     char * made = nullptr;
     ASSERT_EQ(GCU_FILE_OK,
         gcu_dir_temp_create(nullptr, "gcu-dir-test", nullptr, &made));
     dir = made;
     gcu_dir_free_path(nullptr, made);
-#endif
   }
 
   void TearDown() override {
-#ifndef _WIN32
     if (!dir.empty()) {
       wipe(dir);
     }
-#endif
   }
 
   /**
@@ -58,6 +56,35 @@ protected:
    * which reads exactly like a mutation nothing caught.
    */
   static void wipe(const string & path) {
+#ifdef _WIN32
+    WIN32_FIND_DATAA e;
+    HANDLE d = FindFirstFileA((path + "/*").c_str(), &e);
+    if (d != INVALID_HANDLE_VALUE) {
+      vector<pair<string, bool>> found;
+      do {
+        string name = e.cFileName;
+        if (name != "." && name != "..") {
+          // A reparse point is removed as itself, never followed, which is
+          // what lstat() gives the POSIX arm below.
+          bool is_dir = (e.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+              && !(e.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT);
+          found.emplace_back(name, is_dir);
+        }
+      } while (FindNextFileA(d, &e));
+      FindClose(d);
+      for (auto & [name, is_dir] : found) {
+        string child = path + "/" + name;
+        if (is_dir) {
+          wipe(child);
+        }
+        else {
+          SetFileAttributesA(child.c_str(), FILE_ATTRIBUTE_NORMAL);
+          DeleteFileA(child.c_str());
+        }
+      }
+    }
+    RemoveDirectoryA(path.c_str());
+#else
     if (DIR * d = opendir(path.c_str())) {
       vector<string> found;
       while (struct dirent * e = readdir(d)) {
@@ -79,6 +106,7 @@ protected:
       }
     }
     rmdir(path.c_str());
+#endif
   }
 
   string at(const string & name) const { return dir + "/" + name; }
@@ -100,13 +128,28 @@ protected:
   }
 };
 
+/**
+ * Make a symbolic link, or say why the test cannot.
+ *
+ * Windows creates one only with SeCreateSymbolicLinkPrivilege or with
+ * Developer Mode on, and an ordinary account has neither; that is the
+ * machine's configuration, not a defect, so the caller skips.
+ */
+bool make_symlink(const string & target, const string & link) {
+#ifdef _WIN32
+  return CreateSymbolicLinkA(link.c_str(), target.c_str(),
+      SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE) != 0;
+#else
+  return symlink(target.c_str(), link.c_str()) == 0;
+#endif
+}
+
 void put(const string & path, const string & bytes) {
   ASSERT_EQ(GCU_FILE_OK,
       gcu_file_write_atomic(path.c_str(), bytes.data(), bytes.size(),
           GCU_FILE_SYNC_NONE, GCU_FILE_PERMS_DEFAULT, nullptr));
 }
 
-#ifndef _WIN32
 
 TEST_F(Scratch, CreateMakesOneLevelAndSaysWhenItIsAlreadyThere) {
   EXPECT_EQ(GCU_FILE_OK, gcu_dir_create(at("one").c_str()));
@@ -201,7 +244,13 @@ TEST_F(Scratch, ReadOfAnEmptyDirectoryIsDoneImmediately) {
 TEST_F(Scratch, ReadReportsWhatEachEntryIs) {
   put(at("f"), "x");
   ASSERT_EQ(GCU_FILE_OK, gcu_dir_create(at("d").c_str()));
-  ASSERT_EQ(0, symlink(at("f").c_str(), at("l").c_str()));
+#ifdef _WIN32
+  if (!make_symlink(at("f"), at("l"))) {
+    GTEST_SKIP() << "this account cannot create symbolic links";
+  }
+#else
+  ASSERT_TRUE(make_symlink(at("f"), at("l")));
+#endif
 
   GCU_Dir dh;
   ASSERT_EQ(GCU_FILE_OK, gcu_dir_open(&dh, dir.c_str(), nullptr));
@@ -305,7 +354,6 @@ TEST_F(Scratch, NullArgumentsAreRefusedRatherThanFatal) {
   gcu_dir_free_path(nullptr, nullptr);
 }
 
-#endif
 
 } // namespace
 

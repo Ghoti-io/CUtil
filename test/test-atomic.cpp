@@ -16,38 +16,38 @@ GCU_Atomic_Size shared_size;
 GCU_Atomic_Flag shared_flag;
 GCU_Atomic_Int winners;
 
-void * hammer_add(void *) {
+GCU_THREAD_FUNC_RETURN_T GCU_THREAD_FUNC_CALLING_CONVENTION hammer_add(GCU_THREAD_FUNC_ARG_T) {
   for (int i = 0; i < kPerThread; ++i) {
     gcu_atomic_int_fetch_add(&shared_int, 1);
   }
-  return nullptr;
+  return (GCU_THREAD_FUNC_RETURN_T)0;
 }
 
-void * hammer_add_sub(void *) {
+GCU_THREAD_FUNC_RETURN_T GCU_THREAD_FUNC_CALLING_CONVENTION hammer_add_sub(GCU_THREAD_FUNC_ARG_T) {
   for (int i = 0; i < kPerThread; ++i) {
     gcu_atomic_size_fetch_add(&shared_size, 3);
     gcu_atomic_size_fetch_sub(&shared_size, 2);
   }
-  return nullptr;
+  return (GCU_THREAD_FUNC_RETURN_T)0;
 }
 
-void * race_for_the_flag(void *) {
+GCU_THREAD_FUNC_RETURN_T GCU_THREAD_FUNC_CALLING_CONVENTION race_for_the_flag(GCU_THREAD_FUNC_ARG_T) {
   if (!gcu_atomic_flag_test_and_set(&shared_flag)) {
     gcu_atomic_int_fetch_add(&winners, 1);
   }
-  return nullptr;
+  return (GCU_THREAD_FUNC_RETURN_T)0;
 }
 
 // A counter incremented with load-then-store instead of fetch_add: the
 // operation the atomic exists to replace. Used only to show the test can
 // detect a lost update at all.
 GCU_Atomic_Int unsafe_counter;
-void * hammer_unsafely(void *) {
+GCU_THREAD_FUNC_RETURN_T GCU_THREAD_FUNC_CALLING_CONVENTION hammer_unsafely(GCU_THREAD_FUNC_ARG_T) {
   for (int i = 0; i < kPerThread; ++i) {
     int32_t v = gcu_atomic_int_load(&unsafe_counter);
     gcu_atomic_int_store(&unsafe_counter, v + 1);
   }
-  return nullptr;
+  return (GCU_THREAD_FUNC_RETURN_T)0;
 }
 
 } // namespace

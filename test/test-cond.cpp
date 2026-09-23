@@ -28,7 +28,7 @@ struct Gate {
   }
 };
 
-void * waiter(void * arg) {
+GCU_THREAD_FUNC_RETURN_T GCU_THREAD_FUNC_CALLING_CONVENTION waiter(GCU_THREAD_FUNC_ARG_T arg) {
   Gate * g = static_cast<Gate *>(arg);
   GCU_MUTEX_LOCK(g->mutex);
   while (!g->ready) {
@@ -36,7 +36,7 @@ void * waiter(void * arg) {
   }
   ++g->woken;
   GCU_MUTEX_UNLOCK(g->mutex);
-  return nullptr;
+  return (GCU_THREAD_FUNC_RETURN_T)0;
 }
 
 } // namespace
