@@ -113,7 +113,14 @@ int gcu_mmap_sync(GCU_Mapped_File * map) {
   if (!FlushViewOfFile(map->data, 0)) {
     return -1;
   }
-  return FlushFileBuffers(map->file) ? 0 : -1;
+  if (FlushFileBuffers(map->file)) {
+    return 0;
+  }
+  // FlushFileBuffers needs a handle opened for writing, and a read-only
+  // mapping's is not.  Such a mapping has nothing to write back, which is the
+  // success msync() reports for it on POSIX; the handle's access is the only
+  // record of which kind this is, since GCU_Mapped_File does not keep one.
+  return GetLastError() == ERROR_ACCESS_DENIED ? 0 : -1;
 }
 
 int gcu_mmap_close(GCU_Mapped_File * map) {
