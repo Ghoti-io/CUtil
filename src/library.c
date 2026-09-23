@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ghoti.io/cutil/macros.h>
+#include <ghoti.io/cutil/error.h>
 #include <ghoti.io/cutil/library.h>
 #include <ghoti.io/cutil/utf.h>
 
@@ -72,6 +73,7 @@ int gcu_library_open(GCU_Library * library, const char * path) {
     return -1;
   }
   *library = handle;
+  last_error = ERROR_SUCCESS;
   return 0;
 }
 
@@ -84,6 +86,7 @@ int gcu_library_close(GCU_Library * library) {
     return -1;
   }
   *library = NULL;
+  last_error = ERROR_SUCCESS;
   return 0;
 }
 
@@ -97,6 +100,10 @@ GCU_Library_Function gcu_library_symbol(GCU_Library library,
     last_error = GetLastError();
     return NULL;
   }
+  // A success clears what an earlier failure left, as dlsym() does on the
+  // POSIX side: otherwise an error from a lookup the caller has moved past is
+  // reported against one that worked.
+  last_error = ERROR_SUCCESS;
   // No union here, unlike the POSIX branch below: GetProcAddress already
   // returns a function pointer, so this is an ordinary and fully defined
   // conversion between two function pointer types.  Routing it through a
@@ -114,24 +121,14 @@ int gcu_library_error(char * buffer, size_t size) {
     return -1;
   }
 
-  DWORD written = FormatMessageA(
-      FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-      NULL, last_error, 0, buffer, (DWORD)size, NULL);
+  // gcu_error_string() rather than FormatMessage directly: FormatMessage
+  // fails outright on a buffer too small for the message instead of
+  // truncating it, and the error module already works around that.
+  int result = gcu_error_string((int)last_error, buffer, size);
   // Cleared on read, matching dlerror(), so the two platforms behave the same
   // way for a caller that checks twice.
   last_error = ERROR_SUCCESS;
-
-  if (written == 0) {
-    buffer[0] = '\0';
-    return -1;
-  }
-  while (written > 0
-      && (buffer[written - 1] == '\n' || buffer[written - 1] == '\r'
-          || buffer[written - 1] == '.' || buffer[written - 1] == ' ')) {
-    --written;
-  }
-  buffer[written] = '\0';
-  return 0;
+  return result;
 }
 
 #else
