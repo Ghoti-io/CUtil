@@ -141,7 +141,7 @@ GCU_API void gcu_thread_sleep(unsigned long milliseconds);
 /**
  * Yield the current thread.
  */
-GCU_API void gcu_thread_yield();
+GCU_API void gcu_thread_yield(void);
 
 /**
  * Get the number of logical processors on the system.
@@ -152,7 +152,7 @@ GCU_API void gcu_thread_yield();
  *
  * @return The number of logical processors on the system; never less than 1.
  */
-GCU_API unsigned int gcu_thread_get_num_processors();
+GCU_API unsigned int gcu_thread_get_num_processors(void);
 
 /**
  * Set the thread affinity mask.
@@ -230,7 +230,7 @@ GCU_API int gcu_thread_get_current_name(char * name, size_t size);
  *
  * @return The thread ID of the current thread.
  */
-GCU_API GCU_Thread gcu_thread_get_current_id();
+GCU_API GCU_Thread gcu_thread_get_current_id(void);
 
 /**
  * Return whether or not the thread is running.

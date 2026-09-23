@@ -75,7 +75,8 @@ ifeq ($(UNAME_S), Linux)
 	OS_NAME := Linux
 	BUILD := ./build/linux
 	LIB_EXTENSION := so
-	OS_SPECIFIC_CXX_FLAGS := -shared -fPIC
+	OS_SPECIFIC_COMPILE_FLAGS := -fPIC
+	OS_SPECIFIC_LINK_FLAGS := -shared -fPIC
 	OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,-soname,$(SO_NAME)
 	TARGET := $(SO_NAME).$(MINOR_VERSION)
 	EXE_EXTENSION :=
@@ -90,7 +91,8 @@ else ifeq ($(UNAME_S), Darwin)
 	OS_NAME := Mac
 	BUILD := ./build/mac
 	LIB_EXTENSION := dylib
-	OS_SPECIFIC_CXX_FLAGS := -shared
+	OS_SPECIFIC_COMPILE_FLAGS :=
+	OS_SPECIFIC_LINK_FLAGS := -shared
 	OS_SPECIFIC_LIBRARY_NAME_FLAG := -Wl,-install_name,$(BASE_NAME_PREFIX).dylib
 	TARGET := $(BASE_NAME_PREFIX).dylib
 	EXE_EXTENSION :=
@@ -102,7 +104,8 @@ else ifeq ($(findstring MINGW32_NT,$(UNAME_S)),MINGW32_NT)  # 32-bit Windows
 	OS_NAME := Windows
 	BUILD := ./build/win32
 	LIB_EXTENSION := dll
-	OS_SPECIFIC_CXX_FLAGS := -shared
+	OS_SPECIFIC_COMPILE_FLAGS :=
+	OS_SPECIFIC_LINK_FLAGS := -shared
 	OS_SPECIFIC_LIBRARY_NAME_FLAG = -Wl,--out-implib,$(APP_DIR)/$(BASE_NAME_PREFIX).dll.a
 	TARGET := $(BASE_NAME_PREFIX).dll
 	EXE_EXTENSION := .exe
@@ -120,7 +123,8 @@ else ifeq ($(findstring MINGW64_NT,$(UNAME_S)),MINGW64_NT)  # 64-bit Windows
 	OS_NAME := Windows
 	BUILD := ./build/win64
 	LIB_EXTENSION := dll
-	OS_SPECIFIC_CXX_FLAGS := -shared
+	OS_SPECIFIC_COMPILE_FLAGS :=
+	OS_SPECIFIC_LINK_FLAGS := -shared
 	OS_SPECIFIC_LIBRARY_NAME_FLAG = -Wl,--out-implib,$(APP_DIR)/$(BASE_NAME_PREFIX).dll.a
 	TARGET := $(BASE_NAME_PREFIX).dll
 	EXE_EXTENSION := .exe
@@ -222,7 +226,11 @@ TESTFLAGS := `PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs --cfla
 # coverage target does, because --coverage links the gcov runtime, whose
 # mangle_path check-symbols is right to reject in a shipping library and
 # wrong to reject in an instrumented one. Spelled as text's TEST_GATES is.
-TEST_GATES ?= check-symbols check-win32-parse
+TEST_GATES ?= check-symbols check-win32-parse check-clang
+
+# Used by check-clang. Empty when clang is not installed, which that
+# target reports rather than failing over.
+CLANG := $(shell command -v clang 2>/dev/null)
 
 # Sources whose #ifdef _WIN32 bodies are parse-checked. Add a file here in
 # the same commit that gives it a Windows branch, or the branch ships
@@ -328,7 +336,7 @@ $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/float.h: \
 $(OBJ_DIR)/%.o: src/%.c Makefile | $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/float.h $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/libver_gen.h
 	@printf "\n### Compiling $@ ###\n"
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@ $(OS_SPECIFIC_CXX_FLAGS)
+	$(CC) $(CFLAGS) $(INCLUDE) -c $< -MMD -MP -MF $(@:.o=.d) -o $@ $(OS_SPECIFIC_COMPILE_FLAGS)
 
 # Extra source dependencies not seen by the compiler (included via macros).
 $(OBJ_DIR)/hash.o: src/hash.template.c
@@ -342,7 +350,7 @@ $(APP_DIR)/$(TARGET): \
 		$(LIBOBJECTS)
 	@printf "\n### Compiling Ghoti.io CUtil Shared Library ###\n"
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $(OS_SPECIFIC_CXX_FLAGS) -o $@ $^ $(LDFLAGS) $(OS_SPECIFIC_LIBRARY_NAME_FLAG)
+	$(CC) $(CFLAGS) $(OS_SPECIFIC_LINK_FLAGS) -o $@ $^ $(LDFLAGS) $(OS_SPECIFIC_LIBRARY_NAME_FLAG)
 
 ifeq ($(OS_NAME), Linux)
 	@ln -f -s $(TARGET) $(APP_DIR)/$(SO_NAME)
@@ -567,7 +575,7 @@ $(APP_DIR)/test-safemath-portable$(EXE_EXTENSION): test/test-safemath-portable.c
 ####################################################################
 
 # General commands
-.PHONY: clean cloc docs docs-pdf coverage check-symbols check-win32-parse test-tsan
+.PHONY: clean cloc docs docs-pdf coverage check-symbols check-win32-parse check-clang test-tsan
 # Release build commands
 .PHONY: all install test test-asan test-ubsan test-watch uninstall watch
 # Debug build commands
@@ -686,6 +694,29 @@ endif
 # error from the initial commit until it was written down. This compiles a TU
 # that *uses* every Windows-only macro against stub declarations; it catches
 # the syntax-error class and says nothing about semantics.
+# Compile everything with clang as well as gcc.
+#
+# Not about supporting a second compiler for its own sake. clang's UBSan
+# diagnoses things gcc's does not -- `&data[0]` on a null pointer is undefined
+# and only clang reports it, with no gcc flag that turns it on
+# (-fsanitize=undefined and -fsanitize=pointer-overflow were both measured
+# silent) -- and libFuzzer needs clang too. A library that has quietly stopped
+# compiling under it cannot be instrumented at all without local patches,
+# which is exactly how two such defects sat in the hash template while every
+# run of this suite executed the line.
+#
+# -fsyntax-only rather than a real compile: it is half a second, and it still
+# sees the driver-level diagnostics, including a link flag that has found its
+# way onto a compile line.
+check-clang: ## Check that the library still compiles under clang
+	@printf "\n### Compiling under clang ###\n"
+ifeq ($(CLANG),)
+	@printf "check-clang: skipped (clang is not installed)\n"
+else
+	$(CLANG) -fsyntax-only $(CFLAGS) $(INCLUDE) $(OS_SPECIFIC_COMPILE_FLAGS) \
+		$(patsubst $(OBJ_DIR)/%.o,src/%.c,$(LIBOBJECTS))
+endif
+
 check-win32-parse: ## Parse-check the headers' Windows branches
 	@printf "\n### Parse-checking Windows branches ###\n"
 	$(CC) -fsyntax-only $(filter-out -fvisibility=hidden -DGHOTIIO_CUTIL_BUILD,$(CFLAGS)) \
@@ -769,7 +800,25 @@ ASAN_CUTILLIBRARY := -L $(ASAN_APP_DIR) -l$(SUITE)-$(PROJECT)$(BRANCH)-asan
 # A desktop session that sets LD_PRELOAD for its own reasons is enough to
 # trigger that, and every test then aborts before gtest gets control. Naming
 # the runtime here replaces whatever was inherited and puts it first.
+#
+# Only under gcc, though. clang links its own runtime into the executable, and
+# preloading gcc's on top of that gets "Your application is linked against
+# incompatible ASan runtimes" on the first binary -- which is what
+# `make test-asan CC=clang` used to do. An empty preload is right there: it
+# still replaces whatever the desktop inherited, which is the entire purpose
+# of setting it, and clang's runtime is already first in the executable's own
+# NEEDED list.
+#
+# The compiler has to be identified by asking it, not by looking at the answer
+# to -print-file-name: clang on this distribution resolves libasan.so through
+# the gcc installation and hands back gcc's absolute path, so the two replies
+# are byte-identical and a path test cannot tell them apart.
+ASAN_CC_IS_CLANG := $(shell $(CC) -dM -E -x c /dev/null 2>/dev/null | grep -c __clang__)
+ifeq ($(ASAN_CC_IS_CLANG),0)
 ASAN_RUNTIME := $(shell $(CC) -print-file-name=libasan.so)
+else
+ASAN_RUNTIME :=
+endif
 
 # float.h and libver_gen.h are plain generated headers, so the instrumented
 # build reuses the ones the ordinary build made rather than building a second
@@ -781,7 +830,7 @@ $(ASAN_OBJ_DIR)/%.o: src/%.c Makefile \
 		  $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/libver_gen.h
 	@printf "\n### Compiling (ASan+UBSan): $@ ###\n"
 	@mkdir -p $(@D)
-	$(CC) $(ASAN_CFLAGS) $(INCLUDE) -c $< -o $@ $(OS_SPECIFIC_CXX_FLAGS)
+	$(CC) $(ASAN_CFLAGS) $(INCLUDE) -c $< -o $@ $(OS_SPECIFIC_COMPILE_FLAGS)
 
 $(ASAN_OBJ_DIR)/hash.o: src/hash.template.c
 $(ASAN_OBJ_DIR)/vector.o: src/vector.template.c
@@ -789,7 +838,7 @@ $(ASAN_OBJ_DIR)/vector.o: src/vector.template.c
 $(ASAN_APP_DIR)/$(ASAN_TARGET): $(ASAN_LIBOBJECTS)
 	@printf "\n### Linking (ASan+UBSan) $@ ###\n"
 	@mkdir -p $(@D)
-	$(CC) $(ASAN_CFLAGS) $(OS_SPECIFIC_CXX_FLAGS) -o $@ $^ $(ASAN_LDFLAGS)
+	$(CC) $(ASAN_CFLAGS) $(OS_SPECIFIC_LINK_FLAGS) -o $@ $^ $(ASAN_LDFLAGS)
 
 # One rule per test, generated from TEST_NAMES for the same reason the ordinary
 # test list is: a hand-maintained second list is a list that can silently omit
@@ -903,7 +952,7 @@ $(TSAN_OBJ_DIR)/%.o: src/%.c Makefile \
 		  $(BUILD_DIR)/include/$(SUITE)/$(PROJECT)/libver_gen.h
 	@printf "\n### Compiling (TSan): $@ ###\n"
 	@mkdir -p $(@D)
-	$(CC) $(TSAN_CFLAGS) $(INCLUDE) -c $< -o $@ $(OS_SPECIFIC_CXX_FLAGS)
+	$(CC) $(TSAN_CFLAGS) $(INCLUDE) -c $< -o $@ $(OS_SPECIFIC_COMPILE_FLAGS)
 
 $(TSAN_OBJ_DIR)/hash.o: src/hash.template.c
 $(TSAN_OBJ_DIR)/vector.o: src/vector.template.c
@@ -911,7 +960,7 @@ $(TSAN_OBJ_DIR)/vector.o: src/vector.template.c
 $(TSAN_APP_DIR)/$(TSAN_TARGET): $(TSAN_LIBOBJECTS)
 	@printf "\n### Linking (TSan) $@ ###\n"
 	@mkdir -p $(@D)
-	$(CC) $(TSAN_CFLAGS) $(OS_SPECIFIC_CXX_FLAGS) -o $@ $^ $(TSAN_LDFLAGS)
+	$(CC) $(TSAN_CFLAGS) $(OS_SPECIFIC_LINK_FLAGS) -o $@ $^ $(TSAN_LDFLAGS)
 
 define TSAN_TEST_RULE
 $(TSAN_APP_DIR)/$(1)$(EXE_EXTENSION): test/$(1).cpp \

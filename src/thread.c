@@ -99,7 +99,7 @@ typedef struct GCU_Thread_Internal {
 //
 // This is a helper function to get the "handle" of the current thread.
 //
-static GCU_THREAD_T gcu_thread_get_current_handle() {
+static GCU_THREAD_T gcu_thread_get_current_handle(void) {
 #ifdef _WIN32
   return GetCurrentThread();
 #else
@@ -601,7 +601,7 @@ void gcu_thread_sleep(unsigned long milliseconds) {
 }
 
 
-void gcu_thread_yield() {
+void gcu_thread_yield(void) {
 #ifdef _WIN32
   Sleep(0);
 #else
@@ -610,7 +610,7 @@ void gcu_thread_yield() {
 }
 
 
-unsigned int gcu_thread_get_num_processors() {
+unsigned int gcu_thread_get_num_processors(void) {
 #ifdef _WIN32
   SYSTEM_INFO sysinfo;
   GetSystemInfo(&sysinfo);
@@ -857,7 +857,7 @@ int gcu_thread_get_current_name(char * name, size_t size) {
 }
 
 
-GCU_Thread gcu_thread_get_current_id() {
+GCU_Thread gcu_thread_get_current_id(void) {
 #ifdef _WIN32
   return GetCurrentThreadId();
 #else
