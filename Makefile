@@ -283,7 +283,7 @@ INCLUDE := -I include/ -I $(BUILD_DIR)/include/
 # broad, because a comment-only edit recompiled everything, and too narrow,
 # because a command-line override such as `make EXTRA_CFLAGS=-O2` changes no
 # file's mtime and so was invisible. The flag string sees both.
-FLAGS_STAMP := $(BUILD_DIR)/.flags
+FLAGS_STAMP := $(OBJ_DIR)/.flags
 LIBOBJECTS := \
   $(OBJ_DIR)/allocator.o \
 	$(OBJ_DIR)/array.o \
@@ -890,7 +890,7 @@ ASAN_LDFLAGS := $(LDFLAGS) $(ASAN_UBSAN_FLAGS)
 # broad, because a comment-only edit recompiled everything, and too narrow,
 # because a command-line override such as `make EXTRA_CFLAGS=-O2` changes no
 # file's mtime and so was invisible. The flag string sees both.
-ASAN_FLAGS_STAMP := $(ASAN_BUILD_DIR)/.flags
+ASAN_FLAGS_STAMP := $(ASAN_OBJ_DIR)/.flags
 ASAN_LIBOBJECTS := $(patsubst $(OBJ_DIR)/%,$(ASAN_OBJ_DIR)/%,$(LIBOBJECTS))
 ASAN_TEST_BINARIES := \
 	$(foreach t,$(TEST_NAMES),$(ASAN_APP_DIR)/$(t)$(EXE_EXTENSION))
@@ -1035,7 +1035,7 @@ TSAN_LDFLAGS := $(LDFLAGS) $(TSAN_FLAGS)
 # broad, because a comment-only edit recompiled everything, and too narrow,
 # because a command-line override such as `make EXTRA_CFLAGS=-O2` changes no
 # file's mtime and so was invisible. The flag string sees both.
-TSAN_FLAGS_STAMP := $(TSAN_BUILD_DIR)/.flags
+TSAN_FLAGS_STAMP := $(TSAN_OBJ_DIR)/.flags
 TSAN_LIBOBJECTS := $(patsubst $(OBJ_DIR)/%,$(TSAN_OBJ_DIR)/%,$(LIBOBJECTS))
 TSAN_TEST_BINARIES := \
 	$(foreach t,$(TSAN_TEST_NAMES),$(TSAN_APP_DIR)/$(t)$(EXE_EXTENSION))
