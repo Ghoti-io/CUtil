@@ -51,26 +51,34 @@ int gcu_error_string(int code, char * buffer, size_t size) {
   }
   buffer[0] = '\0';
 
-  // FORMAT_MESSAGE_ALLOCATE_BUFFER is deliberately absent: writing into the
-  // caller's buffer is what keeps this allocation-free and therefore usable
-  // from a failure path that may itself be out of memory.
+  // FORMAT_MESSAGE_ALLOCATE_BUFFER is deliberately absent: formatting into a
+  // stack buffer is what keeps this allocation-free and therefore usable from
+  // a failure path that may itself be out of memory.
+  //
+  // It formats into its own buffer rather than the caller's because
+  // FormatMessage does not truncate: given too little room it fails with
+  // ERROR_INSUFFICIENT_BUFFER and writes nothing, where the contract promises
+  // a truncated message.
+  char full[GCU_ERROR_STRING_MAX];
   DWORD written = FormatMessageA(
       FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-      NULL, (DWORD)code, 0, buffer, (DWORD)size, NULL);
+      NULL, (DWORD)code, 0, full, (DWORD)sizeof(full), NULL);
 
   if (written == 0) {
-    buffer[0] = '\0';
     return -1;
   }
 
   // FormatMessage appends ".\r\n" to most system messages, which is wrong in
   // the middle of a sentence and wrong in a log line.
   while (written > 0
-      && (buffer[written - 1] == '\n' || buffer[written - 1] == '\r'
-          || buffer[written - 1] == '.' || buffer[written - 1] == ' ')) {
+      && (full[written - 1] == '\n' || full[written - 1] == '\r'
+          || full[written - 1] == '.' || full[written - 1] == ' ')) {
     --written;
   }
-  buffer[written] = '\0';
+
+  size_t keep = written < size - 1 ? written : size - 1;
+  memcpy(buffer, full, keep);
+  buffer[keep] = '\0';
   return 0;
 }
 

@@ -85,13 +85,16 @@ TEST(Error, StringLastAgreesWithStringOfLast) {
   errno = 0;
   FILE * f = fopen("/nonexistent-directory-a8f3/nonexistent-file", "rb");
   ASSERT_EQ(nullptr, f);
+  // Read back rather than assumed: POSIX says ENOENT, but Windows tells a
+  // missing directory (ERROR_PATH_NOT_FOUND) from a missing file
+  // (ERROR_FILE_NOT_FOUND), and this path has neither.
+  int last = gcu_error_last();
 
   char viaLast[GCU_ERROR_STRING_MAX];
   ASSERT_EQ(0, gcu_error_string_last(viaLast, sizeof(viaLast)));
 
-  errno = ENOENT;
   char viaCode[GCU_ERROR_STRING_MAX];
-  ASSERT_EQ(0, gcu_error_string(ENOENT, viaCode, sizeof(viaCode)));
+  ASSERT_EQ(0, gcu_error_string(last, viaCode, sizeof(viaCode)));
   ASSERT_STREQ(viaCode, viaLast);
 }
 
