@@ -311,9 +311,15 @@ TEST_F(Scratch, TempDirectoryIsCreatedUniqueAndOwnerOnly) {
   EXPECT_TRUE(gcu_file_is_directory(a));
   EXPECT_TRUE(gcu_file_is_directory(b));
 
+#ifndef _WIN32
+  // Windows has no mode bits to read: stat() synthesises 0777 for any
+  // writable directory, and ownership lives in the ACL.  What the Windows
+  // arm does about "owner only" is recorded in the workspace's
+  // notes/suite/WINDOWS-TODO.md rather than asserted here.
   struct stat info;
   ASSERT_EQ(0, stat(a, &info));
   EXPECT_EQ(0700, (int)(info.st_mode & 07777));
+#endif
 
   gcu_dir_free_path(nullptr, a);
   gcu_dir_free_path(nullptr, b);

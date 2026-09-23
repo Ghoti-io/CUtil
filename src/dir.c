@@ -109,7 +109,8 @@ GCU_File_Result gcu_dir_create_all(const char * path,
   // Started past the root, so that the root itself is never a thing to create:
   // "/" on POSIX, and "C:\" or a UNC share on Windows, already exist by
   // definition and answering EXISTS for them would be noise.
-  size_t i = gcu_path_root_length(GCU_PATH_NATIVE, work);
+  size_t root = gcu_path_root_length(GCU_PATH_NATIVE, work);
+  size_t i = root;
 
   for (;;) {
     while (i < len && !gcu_path_is_separator(GCU_PATH_NATIVE, work[i])) {
@@ -119,7 +120,11 @@ GCU_File_Result gcu_dir_create_all(const char * path,
     char saved = work[i];
     work[i] = '\0';
 
-    if (*work) {
+    // A path that is nothing but its root reaches here with the root alone,
+    // which is not a thing to create either.  POSIX forgives the attempt -
+    // mkdir("/") is EEXIST, which the arm below accepts - but Windows answers
+    // CreateDirectory("/") with ERROR_ACCESS_DENIED.
+    if (i > root && *work) {
       GCU_File_Result made = gcu_dir_create(work);
       if (made == GCU_FILE_ERR_EXISTS) {
         // Already there is the outcome asked for - unless it is there as
@@ -344,8 +349,20 @@ GCU_File_Result gcu_dir_open(GCU_Dir * dir, const char * path,
   gcu_allocator_free(allocator, wide);
   if (h == INVALID_HANDLE_VALUE) {
     gcu_allocator_free(allocator, found);
-    return GetLastError() == ERROR_PATH_NOT_FOUND ? GCU_FILE_ERR_NOT_FOUND
-                                                  : GCU_FILE_ERR_IO;
+    // What POSIX reports as ENOENT or ENOTDIR, both of which are NOT_FOUND
+    // there.  Opening a regular file as a directory is ERROR_DIRECTORY or,
+    // with the "\*" appended, ERROR_PATH_NOT_FOUND depending on the version.
+    switch (GetLastError()) {
+      case ERROR_FILE_NOT_FOUND:
+      case ERROR_PATH_NOT_FOUND:
+      case ERROR_DIRECTORY:
+      case ERROR_INVALID_NAME:
+        return GCU_FILE_ERR_NOT_FOUND;
+      case ERROR_ACCESS_DENIED:
+        return GCU_FILE_ERR_ACCESS;
+      default:
+        return GCU_FILE_ERR_IO;
+    }
   }
   dir->handle = h;
   dir->path = (char *)found;
