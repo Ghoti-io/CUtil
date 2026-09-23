@@ -179,17 +179,40 @@ TEST(Atomic, TheContentionTestCanDetectALostUpdate) {
   // threads never actually overlapped, a non-atomic increment would pass it
   // too. Load-then-store over the same shape must lose updates; if it does
   // not, the contention above is not real and the test above is not a test.
-  gcu_atomic_int_init(&unsafe_counter, 0);
-  GCU_Thread t[kThreads];
-  for (int i = 0; i < kThreads; ++i) {
-    ASSERT_EQ(0, gcu_thread_create(&t[i], hammer_unsafely, nullptr));
+  //
+  // Attempted more than once, because losing an update needs two threads
+  // inside the same load-store window at the same instant, which needs them
+  // to be running at the same instant. With every core busy -- which is what
+  // running the whole suite looks like -- they time-slice instead, and a
+  // slice boundary falls in that window only occasionally. Measured: 0
+  // failures in 60 runs on an idle machine, 2 in 30 with all 12 cores
+  // saturated. A single attempt is a bet on the scheduler, and losing it
+  // reads as a defect in the atomics.
+  //
+  // The window is deliberately NOT widened to make a loss more likely. This
+  // is a control for the test above, so it has to contend the same way that
+  // test does; a control with an easier shape would pass while telling you
+  // nothing about the shape you care about.
+  constexpr int kAttempts = 8;
+  int32_t total = 0;
+  for (int attempt = 0; attempt < kAttempts; ++attempt) {
+    gcu_atomic_int_init(&unsafe_counter, 0);
+    GCU_Thread t[kThreads];
+    for (int i = 0; i < kThreads; ++i) {
+      ASSERT_EQ(0, gcu_thread_create(&t[i], hammer_unsafely, nullptr));
+    }
+    for (int i = 0; i < kThreads; ++i) {
+      ASSERT_EQ(0, gcu_thread_join(t[i]));
+    }
+    total = gcu_atomic_int_load(&unsafe_counter);
+    if (total < kThreads * kPerThread) {
+      return;
+    }
   }
-  for (int i = 0; i < kThreads; ++i) {
-    ASSERT_EQ(0, gcu_thread_join(t[i]));
-  }
-  ASSERT_LT(gcu_atomic_int_load(&unsafe_counter), kThreads * kPerThread)
-      << "load-then-store lost nothing, so the threads never contended and "
-         "the atomic test above is not exercising anything";
+  FAIL() << "load-then-store lost nothing in " << kAttempts << " attempts, so "
+            "the threads never ran concurrently and the atomic test above is "
+            "not exercising anything (last total " << total << " of "
+         << (kThreads * kPerThread) << ")";
 }
 
 TEST(Atomic, SizeAddAndSubtractBalanceUnderContention) {
