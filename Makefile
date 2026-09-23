@@ -910,33 +910,11 @@ check-rebuild: $(APP_DIR)/$(TARGET) $(TEST_BINARIES)
 # TSan rules all live inside `ifeq ($(OS_NAME), Linux)`.
 check-stamps: ## Check that every compile rule names its tree's flag stamp
 	@printf "\n### Checking flag stamps on compile rules ###\n"
-	@awk '\
-	  { line = $$0; \
-	    while (line ~ /\\$$/) { sub(/\\$$/, "", line); if ((getline nxt) <= 0) break; line = line " " nxt } \
-	    if (line ~ /^\t/) { recipe = recipe "\n" line; next } \
-	    check(); \
-	    if (line ~ /^[^\t #][^:=]*:[^=]/ && line !~ /^(ifeq|ifneq|ifdef|ifndef|else|endif|define|endef)/) { \
-	      ln = NR; split(line, p, ":"); target = p[1]; prereq = substr(line, index(line, ":") + 1); recipe = "" \
-	    } else { target = "" } \
-	  } \
-	  END { check(); \
-	        if (bad) exit 1; \
-	        printf "check-stamps: %d compile rules, every one stamped for its own tree\n", seen } \
-	  function check() { \
-	    if (target == "" || recipe !~ /\$$+\((CC|CXX|CLANG)\)/ || recipe ~ /-fsyntax-only/) return; \
-	    seen++; \
-	    want = (target ~ /ASAN/) ? "ASAN_FLAGS_STAMP" : (target ~ /TSAN/) ? "TSAN_FLAGS_STAMP" : "FLAGS_STAMP"; \
-	    if (prereq !~ ("\\$$\\(" want "\\)")) { \
-	      bad++; \
-	      printf "Makefile:%d: %s\n", ln, target > "/dev/stderr"; \
-	      if (prereq ~ /FLAGS_STAMP/) printf "    names a stamp, but not %s\n", want > "/dev/stderr"; \
-	      else printf "    names no flag stamp; it wants %s\n", want > "/dev/stderr" \
-	    } \
-	  }' Makefile \
+	@awk -f test/stamp-audit.awk Makefile \
 	|| { printf "### A compile rule is not guarded by its flag stamp ###\n" >&2; \
 	     printf "Such a rule builds with whatever flags are in force and is then\n" >&2; \
-	     printf "never rebuilt when they change. Add the stamp for the tree the\n" >&2; \
-	     printf "output is built into as a prerequisite of the rule.\n" >&2; \
+	     printf "never rebuilt when they change. See test/stamp-audit.awk for what\n" >&2; \
+	     printf "each arm means and how to fix it.\n" >&2; \
 	     exit 1; }
 
 check-win32-parse: ## Parse-check the headers' Windows branches
@@ -1404,18 +1382,45 @@ help: ## Display this help
 # has an empty target and silently does not exist, which reads as "No rule to
 # make target .../.flags". And the first target in a makefile is the default
 # goal, so a stamp rule near the top makes a bare `make` build only the stamp.
+# What a stamp records has to be everything the guarded recipes expand, not
+# just the flag variables that were on hand when it was written. A rule can
+# name the right stamp for the right tree and still be blind to a variable
+# only its own recipe mentions -- the rule looks guarded, the audit agrees,
+# and the rebuild never happens.
+#
+# $(CC) and $(CXX) were in no stamp at all, which made `make CC=clang` a
+# silent no-op. Measured 2026-09-23 before the fix: `make test-asan CC=clang
+# CXX=clang++` compiled 0 objects and re-ran GCC's binaries, and
+# `readelf -p .comment` on the ASan objects said GCC. The suite reported 538
+# passing "under clang" and no clang had run. A second compiler is a gate, so
+# that is a gate reporting green while switched off.
+#
+# $(TESTFLAGS) is the gtest flags from pkg-config and is expanded here through
+# $(shell ...) rather than recorded as the literal backtick string the recipes
+# use, because the string never changes and the flags it produces do. That is
+# what makes a gtest upgrade rebuild the tests.
+GTEST_FLAGS_NOW := $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs --cflags gtest 2>/dev/null)
+# Taken through $(call) with the tree's own app directory, the way the recipes
+# take them -- expanded bare they come out with an empty $(1) and the stamp
+# stops reflecting the -D values that actually reach the compiler.
+TEST_CPPFLAGS_ALL = $(call TEST_CPPFLAGS_test-library,$(1)) \
+	$(call TEST_CPPFLAGS_test-filelock,$(1)) $(call TEST_CPPFLAGS_test-mmap,$(1)) \
+	$(call TEST_CPPFLAGS_test-subprocess,$(1))
+COMMON_STAMP_TEXT := $(CC) $(CXX) $(INCLUDE) $(TESTFLAGS) $(GTEST_FLAGS_NOW) \
+	$(OS_SPECIFIC_COMPILE_FLAGS) $(OS_SPECIFIC_LINK_FLAGS) $(OS_SPECIFIC_LIBRARY_NAME_FLAG)
+
 .PHONY: force-flags
 $(FLAGS_STAMP): force-flags
 	@mkdir -p $(@D)
-	@printf '%s\n' '$(CFLAGS) $(CXXFLAGS) $(LDFLAGS) $(INCLUDE)' > $@.new
+	@printf '%s\n' '$(COMMON_STAMP_TEXT) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) $(CUTILLIBRARY) $(call TEST_CPPFLAGS_ALL,$(APP_DIR))' > $@.new
 	@cmp -s $@.new $@ 2>/dev/null && rm -f $@.new || mv -f $@.new $@
 
 $(ASAN_FLAGS_STAMP): force-flags
 	@mkdir -p $(@D)
-	@printf '%s\n' '$(ASAN_CFLAGS) $(ASAN_CXXFLAGS) $(ASAN_LDFLAGS) $(INCLUDE)' > $@.new
+	@printf '%s\n' '$(COMMON_STAMP_TEXT) $(ASAN_CFLAGS) $(ASAN_CXXFLAGS) $(ASAN_LDFLAGS) $(ASAN_CUTILLIBRARY) $(call TEST_CPPFLAGS_ALL,$(ASAN_APP_DIR))' > $@.new
 	@cmp -s $@.new $@ 2>/dev/null && rm -f $@.new || mv -f $@.new $@
 
 $(TSAN_FLAGS_STAMP): force-flags
 	@mkdir -p $(@D)
-	@printf '%s\n' '$(TSAN_CFLAGS) $(TSAN_CXXFLAGS) $(TSAN_LDFLAGS) $(INCLUDE)' > $@.new
+	@printf '%s\n' '$(COMMON_STAMP_TEXT) $(TSAN_CFLAGS) $(TSAN_CXXFLAGS) $(TSAN_LDFLAGS) $(TSAN_CUTILLIBRARY) $(call TEST_CPPFLAGS_ALL,$(TSAN_APP_DIR))' > $@.new
 	@cmp -s $@.new $@ 2>/dev/null && rm -f $@.new || mv -f $@.new $@
