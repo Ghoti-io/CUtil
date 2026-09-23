@@ -15,7 +15,10 @@
 #include <ghoti.io/cutil/file.h>
 #include <ghoti.io/cutil/path.h>
 
-#ifndef _WIN32
+#ifdef _WIN32
+#include <windows.h>
+#include <ghoti.io/cutil/dir.h>
+#else
 #include <dirent.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -31,7 +34,15 @@ protected:
   string dir;
 
   void SetUp() override {
-#ifndef _WIN32
+#ifdef _WIN32
+    // No mkdtemp() here. gcu_dir_temp_create() is the dir module's, not the
+    // one under test, and test-dir covers it.
+    char * made = nullptr;
+    ASSERT_EQ(GCU_FILE_OK,
+        gcu_dir_temp_create(nullptr, "gcu-file-test", nullptr, &made));
+    dir = made;
+    gcu_dir_free_path(nullptr, made);
+#else
     char * temp_root = nullptr;
     ASSERT_EQ(GCU_PATH_OK, gcu_path_temp_dir(nullptr, &temp_root));
     string tmpl = string(temp_root) + "/gcu-file-test-XXXXXX";
@@ -44,10 +55,17 @@ protected:
   }
 
   void TearDown() override {
-#ifndef _WIN32
     if (dir.empty()) {
       return;
     }
+#ifdef _WIN32
+    for (const string & name : entries()) {
+      string path = dir + "/" + name;
+      SetFileAttributesA(path.c_str(), FILE_ATTRIBUTE_NORMAL);
+      DeleteFileA(path.c_str());
+    }
+    RemoveDirectoryA(dir.c_str());
+#else
     if (DIR * d = opendir(dir.c_str())) {
       while (struct dirent * e = readdir(d)) {
         string name = e->d_name;
@@ -66,7 +84,19 @@ protected:
   /** Everything in the scratch directory, sorted. */
   vector<string> entries() const {
     vector<string> found;
-#ifndef _WIN32
+#ifdef _WIN32
+    WIN32_FIND_DATAA e;
+    HANDLE d = FindFirstFileA((dir + "/*").c_str(), &e);
+    if (d != INVALID_HANDLE_VALUE) {
+      do {
+        string name = e.cFileName;
+        if (name != "." && name != "..") {
+          found.push_back(name);
+        }
+      } while (FindNextFileA(d, &e));
+      FindClose(d);
+    }
+#else
     if (DIR * d = opendir(dir.c_str())) {
       while (struct dirent * e = readdir(d)) {
         string name = e->d_name;
@@ -233,7 +263,10 @@ TEST_F(Scratch, TempCreateOpensAFileInTheDirectoryItWasGiven) {
   // Being in the destination's directory is what makes the later rename
   // atomic, so it is a property worth asserting rather than assuming.
   EXPECT_EQ(dir, path.substr(0, dir.size()));
-  EXPECT_NE(string::npos, path.find("/pre"));
+  // Joined natively, so the separator before the prefix is a backslash on
+  // Windows.
+  EXPECT_NE(string::npos,
+      path.find(string(1, gcu_path_separator(GCU_PATH_NATIVE)) + "pre"));
   EXPECT_TRUE(exists(path));
   gcu_file_temp_abort(&temp);
 }
