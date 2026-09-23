@@ -1308,10 +1308,14 @@ ifeq ($(OS_NAME), Linux)
 	@if [ -n "$(LDCONF_INSTALL_PATH)" ]; then echo "$(LIB_INSTALL_PATH)/$(SUITE)" > $(LDCONF_INSTALL_PATH)/$(SUITE)-$(PROJECT)$(BRANCH).conf; fi
 endif
 ifeq ($(OS_NAME), Windows)
-# The .dll file and the .dll.a file
-	@mkdir -p $(BIN_INSTALL_PATH)/$(SUITE)
-	@cp $(APP_DIR)/$(TARGET).a $(LIB_INSTALL_PATH)
-	@cp $(APP_DIR)/$(TARGET) $(BIN_INSTALL_PATH)
+# The .dll goes beside the other programs' DLLs in bin/, which is where the
+# loader looks once that directory is on PATH - Windows has no rpath. The
+# import library goes where the .pc's -L points, in lib/$(SUITE)/, as the .so
+# does on Linux. It used to go in lib/, which no -L named, so a consumer that
+# found cutil through pkg-config could not link against it.
+	@mkdir -p $(BIN_INSTALL_PATH)
+	@cp $(APP_DIR)/$(TARGET).a $(LIB_INSTALL_PATH)/$(SUITE)/
+	@cp $(APP_DIR)/$(TARGET) $(BIN_INSTALL_PATH)/
 endif
 	# Installing the headers.
 	# Removed first: this directory is owned entirely by this project and
@@ -1339,7 +1343,7 @@ ifeq ($(OS_NAME), Linux)
 	@rm -f $(LDCONF_INSTALL_PATH)/$(SUITE)-$(PROJECT)$(BRANCH).conf
 endif
 ifeq ($(OS_NAME), Windows)
-	@rm -f $(LIB_INSTALL_PATH)/$(TARGET).a
+	@rm -f $(LIB_INSTALL_PATH)/$(SUITE)/$(TARGET).a
 	@rm -f $(BIN_INSTALL_PATH)/$(TARGET)
 endif
 	# Deleting the headers.
