@@ -321,7 +321,7 @@ TESTFLAGS := `PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs --cfla
 # coverage target does, because --coverage links the gcov runtime, whose
 # mangle_path check-symbols is right to reject in a shipping library and
 # wrong to reject in an instrumented one. Spelled as text's TEST_GATES is.
-TEST_GATES ?= check-symbols check-win32-parse check-clang check-rebuild
+TEST_GATES ?= check-symbols check-win32-parse check-clang check-rebuild check-stamps
 
 # Used by check-clang. Empty when clang is not installed, which that
 # target reports rather than failing over.
@@ -467,11 +467,25 @@ $(OBJ_DIR)/vector.o: src/vector.template.c
 # Shared Library
 ####################################################################
 
+# The stamp is redundant here and named anyway. Every object already carries
+# it, and the link takes $^, so a flag change reaches this rule transitively --
+# measured: a change to LDFLAGS alone rebuilt all 28 objects, relinked, and put
+# BIND_NOW in the artifact. But "covered by something else" is the state that
+# stops being true quietly, and an audit that has to special-case three rules
+# grows an allowlist, which is how the audit rots.
+#
+# The three link recipes name their object list instead of $^ because of this.
+# $^ is every prerequisite, so the first attempt handed .flags to the linker:
+# "file format not recognized; treating as linker script". Adding a stamp to a
+# rule whose recipe uses $^ or $+ breaks it, and check-stamps cannot see that
+# -- it reads prerequisite lists, not recipes, and stayed green while the link
+# was broken. `make test` is what caught it.
 $(APP_DIR)/$(TARGET): \
-		$(LIBOBJECTS)
+		$(LIBOBJECTS) \
+		$(FLAGS_STAMP)
 	@printf "\n### Compiling Ghoti.io CUtil Shared Library ###\n"
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $(OS_SPECIFIC_LINK_FLAGS) -o $@ $^ $(LDFLAGS) $(OS_SPECIFIC_LIBRARY_NAME_FLAG)
+	$(CC) $(CFLAGS) $(OS_SPECIFIC_LINK_FLAGS) -o $@ $(LIBOBJECTS) $(LDFLAGS) $(OS_SPECIFIC_LIBRARY_NAME_FLAG)
 
 ifeq ($(OS_NAME), Linux)
 	@ln -f -s $(TARGET) $(APP_DIR)/$(SO_NAME)
@@ -697,7 +711,7 @@ $(APP_DIR)/test-safemath-portable$(EXE_EXTENSION): test/test-safemath-portable.c
 
 # General commands
 .PHONY: clean cloc docs docs-pdf coverage check-symbols check-win32-parse check-clang test-tsan
-.PHONY: check-rebuild
+.PHONY: check-rebuild check-stamps
 # Release build commands
 .PHONY: all install test test-asan test-ubsan test-watch uninstall watch
 # Debug build commands
@@ -878,6 +892,53 @@ check-rebuild: $(APP_DIR)/$(TARGET) $(TEST_BINARIES)
 		exit 1; \
 	fi
 
+# Every rule that compiles or links has to name the flag stamp for the tree its
+# output lands in. A rule that names none builds with whatever flags are in
+# force and is then never rebuilt when they change, which is indistinguishable
+# from a correct incremental build; a rule copied between trees that keeps the
+# source tree's stamp is worse, because it misses exactly the flag changes it
+# was put there to catch.
+#
+# The pattern rules are never the problem -- they get edited as a group. It is
+# the hand-written one-off rules, written once and then left alone. cutil's
+# float_identifier was missed that way when the stamp replaced the Makefile
+# prerequisite, and it is the rule whose output *is* a generated header.
+#
+# This reads the makefile's TEXT rather than `make -p`, and that is the whole
+# point: a rule inside an ifeq whose condition is false is not in make's rule
+# database at all, so a database audit reports it as covered. cutil's ASan and
+# TSan rules all live inside `ifeq ($(OS_NAME), Linux)`.
+check-stamps: ## Check that every compile rule names its tree's flag stamp
+	@printf "\n### Checking flag stamps on compile rules ###\n"
+	@awk '\
+	  { line = $$0; \
+	    while (line ~ /\\$$/) { sub(/\\$$/, "", line); if ((getline nxt) <= 0) break; line = line " " nxt } \
+	    if (line ~ /^\t/) { recipe = recipe "\n" line; next } \
+	    check(); \
+	    if (line ~ /^[^\t #][^:=]*:[^=]/ && line !~ /^(ifeq|ifneq|ifdef|ifndef|else|endif|define|endef)/) { \
+	      ln = NR; split(line, p, ":"); target = p[1]; prereq = substr(line, index(line, ":") + 1); recipe = "" \
+	    } else { target = "" } \
+	  } \
+	  END { check(); \
+	        if (bad) exit 1; \
+	        printf "check-stamps: %d compile rules, every one stamped for its own tree\n", seen } \
+	  function check() { \
+	    if (target == "" || recipe !~ /\$$+\((CC|CXX|CLANG)\)/ || recipe ~ /-fsyntax-only/) return; \
+	    seen++; \
+	    want = (target ~ /ASAN/) ? "ASAN_FLAGS_STAMP" : (target ~ /TSAN/) ? "TSAN_FLAGS_STAMP" : "FLAGS_STAMP"; \
+	    if (prereq !~ ("\\$$\\(" want "\\)")) { \
+	      bad++; \
+	      printf "Makefile:%d: %s\n", ln, target > "/dev/stderr"; \
+	      if (prereq ~ /FLAGS_STAMP/) printf "    names a stamp, but not %s\n", want > "/dev/stderr"; \
+	      else printf "    names no flag stamp; it wants %s\n", want > "/dev/stderr" \
+	    } \
+	  }' Makefile \
+	|| { printf "### A compile rule is not guarded by its flag stamp ###\n" >&2; \
+	     printf "Such a rule builds with whatever flags are in force and is then\n" >&2; \
+	     printf "never rebuilt when they change. Add the stamp for the tree the\n" >&2; \
+	     printf "output is built into as a prerequisite of the rule.\n" >&2; \
+	     exit 1; }
+
 check-win32-parse: ## Parse-check the headers' Windows branches
 	@printf "\n### Parse-checking Windows branches ###\n"
 	$(CC) -fsyntax-only $(filter-out -fvisibility=hidden -DGHOTIIO_CUTIL_BUILD,$(CFLAGS)) \
@@ -1006,10 +1067,10 @@ $(ASAN_OBJ_DIR)/%.o: src/%.c $(ASAN_FLAGS_STAMP) \
 $(ASAN_OBJ_DIR)/hash.o: src/hash.template.c
 $(ASAN_OBJ_DIR)/vector.o: src/vector.template.c
 
-$(ASAN_APP_DIR)/$(ASAN_TARGET): $(ASAN_LIBOBJECTS)
+$(ASAN_APP_DIR)/$(ASAN_TARGET): $(ASAN_LIBOBJECTS) $(ASAN_FLAGS_STAMP)
 	@printf "\n### Linking (ASan+UBSan) $@ ###\n"
 	@mkdir -p $(@D)
-	$(CC) $(ASAN_CFLAGS) $(OS_SPECIFIC_LINK_FLAGS) -o $@ $^ $(ASAN_LDFLAGS)
+	$(CC) $(ASAN_CFLAGS) $(OS_SPECIFIC_LINK_FLAGS) -o $@ $(ASAN_LIBOBJECTS) $(ASAN_LDFLAGS)
 
 # One rule per test, generated from TEST_NAMES for the same reason the ordinary
 # test list is: a hand-maintained second list is a list that can silently omit
@@ -1138,10 +1199,10 @@ $(TSAN_OBJ_DIR)/%.o: src/%.c $(TSAN_FLAGS_STAMP) \
 $(TSAN_OBJ_DIR)/hash.o: src/hash.template.c
 $(TSAN_OBJ_DIR)/vector.o: src/vector.template.c
 
-$(TSAN_APP_DIR)/$(TSAN_TARGET): $(TSAN_LIBOBJECTS)
+$(TSAN_APP_DIR)/$(TSAN_TARGET): $(TSAN_LIBOBJECTS) $(TSAN_FLAGS_STAMP)
 	@printf "\n### Linking (TSan) $@ ###\n"
 	@mkdir -p $(@D)
-	$(CC) $(TSAN_CFLAGS) $(OS_SPECIFIC_LINK_FLAGS) -o $@ $^ $(TSAN_LDFLAGS)
+	$(CC) $(TSAN_CFLAGS) $(OS_SPECIFIC_LINK_FLAGS) -o $@ $(TSAN_LIBOBJECTS) $(TSAN_LDFLAGS)
 
 define TSAN_TEST_RULE
 $(TSAN_APP_DIR)/$(1)$(EXE_EXTENSION): test/$(1).cpp $(TSAN_FLAGS_STAMP) \
