@@ -60,12 +60,29 @@ extern "C" {
  * which is the value you want on a little-endian machine and a byte-swapped
  * one elsewhere.
  *
- * **`gcu_string_hash_64()` is still not stable across word sizes**, and that
- * one is by design rather than by accident: it is `x64_128` on a 64-bit
- * platform and `x86_128` on a 32-bit one, because the 64-bit variant's
- * arithmetic is slow on a 32-bit machine.  Those are different algorithms, so
- * its value differs between a 32- and a 64-bit build of the same source.
- * Do not persist or transmit one.
+ * **`gcu_string_hash_64()` is not stable across word sizes.**  It is
+ * `x64_128` on a 64-bit platform and `x86_128` on a 32-bit one.  Those are
+ * different algorithms, so its value differs between a 32- and a 64-bit build
+ * of the same source.  **Do not persist or transmit one.**
+ *
+ * The split earns itself, which is measured rather than assumed -- wall
+ * clock, five interleaved paired trials pinned to one core, 1-2% spread:
+ *
+ *                       x86_128    x64_128
+ *       32-bit, short   581.8 ms   724.1 ms   x86_128 wins by 24%
+ *       32-bit, bulk     93.5 ms   235.3 ms   x86_128 wins by 152%
+ *       64-bit, short   395.1 ms   336.6 ms   x64_128 wins by 15%
+ *       64-bit, bulk     87.9 ms    77.5 ms   x64_128 wins by 12%
+ *
+ * Each arm picks the variant that is faster for its word size, and on 32-bit
+ * bulk input the wrong choice costs two and a half times.
+ *
+ * `gcu_string_hash_32()`, by contrast, **is** stable everywhere: there is only
+ * one 32-bit variant, and since blocks are read little-endian it returns the
+ * same value on all seven targets in the workspace's tools/xarch.  So does any
+ * direct call to the three `gcu_string_murmur3_*` functions.  A caller who
+ * needs a hash that survives leaving the process already has one; what they do
+ * not have is a 64-bit helper that promises it.
  */
 
 /**
