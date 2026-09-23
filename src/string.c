@@ -69,13 +69,19 @@ uint32_t gcu_string_hash_32(char const * str, size_t len) {
 uint64_t gcu_string_hash_64(char const * str, size_t len) {
   uint64_t buf[2];
   gcu_string_murmur3_x64_128(str, len, 0, buf);
-  return (int64_t)(buf[0] ^ buf[1]);
+  return buf[0] ^ buf[1];
 }
 
 #else
 
-size_t gcu_string_hash_64(char const * str, size_t len) {
-  int64_t buf[2];
+// The 32-bit arm.  Note what both the return type and the local were before:
+// `size_t` and `int64_t`.  `size_t` is 32 bits on a 32-bit target, and
+// string.h promises uint64_t, so this did not merely truncate the hash to
+// half its width -- it did not compile at all.  Every 32-bit build of this
+// library failed on this one function, and no build had ever been attempted:
+// see notes/cutil/murmur3-correctness.md.
+uint64_t gcu_string_hash_64(char const * str, size_t len) {
+  uint64_t buf[2];
   gcu_string_murmur3_x86_128(str, len, 0, buf);
   return buf[0] ^ buf[1];
 }
