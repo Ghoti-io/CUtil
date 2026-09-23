@@ -33,23 +33,45 @@
 # wrappers and overflow checks with nothing for -O3's extra loop and
 # vectorisation work to act on. -O2 is where the real change is.
 #
-# What the instrumented targets do with this, checked rather than assumed:
-# `make coverage` appends its own -O0 through EXTRA_CFLAGS, which lands after
-# this and wins. The ASan and TSan builds append no -O at all, so they inherit
-# whichever level this picks. That is now a decision and not an accident: a
-# sanitizer gate exists to find defects in what ships, and latent UB that the
-# optimizer only exploits at -O3 would be invisible to a gate pinned lower --
-# a false negative, which is the expensive kind. The cost is worse stack
-# traces, and that is a diagnosis problem with an answer already in this file:
-# `make test-asan BUILD=debug` gives the same gate at -O0 once you know there
-# is something to look at. Do not copy a comment from a sibling Makefile
-# claiming a sanitizer -O1 here; there is none.
+# The sanitizer builds are pinned rather than left to follow the library, and
+# that reverses what this comment said until the claim was measured. The
+# argument for inheriting was that UB the optimizer only exploits at a high -O
+# would be invisible to a gate pinned lower. Plausible, and false: eleven
+# planted defects, one per program so that halting at the first cannot mask a
+# later one, each built at -O0/-O1/-O2/-O3 under both compilers.
+#
+#   use-after-free, heap and stack overflow, use-after-return,
+#   leak, signed overflow, bad shift, float-cast overflow    caught at all four
+#   zero offset from a null pointer                          clang only, all four
+#   strict aliasing                                          caught at NONE
+#   a planted data race, under TSan                          caught at all four
+#
+# Not one class was detected at a high level and missed at a low one. Strict
+# aliasing was the named hazard the inheriting argument rested on, and no
+# sanitizer here detects it at any level, so the whole case was for a benefit
+# that does not exist. (Measure leaks carefully: a first probe read as "lost
+# above -O0" and was an elided allocation -- zero calls to malloc in the
+# binary -- not a blind sanitizer.)
+#
+# Detection being level-independent, the level is chosen for diagnosis and
+# speed instead: -O1 inlines less, so a stack trace names the frame you want.
+# Pinning also stops the gate moving silently the next time the release level
+# does, which is how this question arose across the suite in the first place.
+# -O0 still available deliberately through BUILD=debug, for the run after the
+# gate has told you there is something to look at.
+#
+# `make coverage` appends its own -O0 through EXTRA_CFLAGS and wins over the
+# library level; the sanitizer flags come after that again, so test-asan is
+# pinned against EXTRA_CFLAGS too. Do not copy a level from a sibling
+# Makefile: measure it here.
 ifeq ($(BUILD),debug)
 OPT_CFLAGS := -O0
 OPT_CXXFLAGS := -O0
+SAN_OPT_CFLAGS := -O0
 else
 OPT_CFLAGS := -O3
 OPT_CXXFLAGS := -O2
+SAN_OPT_CFLAGS := -O1
 endif
 
 CXX := g++
@@ -424,12 +446,12 @@ endif
 # One per tree.  The ASan tree gets its own rather than borrowing the ordinary
 # one, so the object the loader opens was built with the same flags as the
 # process opening it.
-$(APP_DIR)/libtest-plugin.$(LIB_EXTENSION): test/test-plugin.c
+$(APP_DIR)/libtest-plugin.$(LIB_EXTENSION): test/test-plugin.c Makefile
 	@printf "\n### Compiling Test Plugin ###\n"
 	@mkdir -p $(@D)
 	$(CC) $(filter-out -fvisibility=hidden,$(CFLAGS)) -shared -fPIC -o $@ $<
 
-$(APP_DIR)/libtest-plugin-broken.$(LIB_EXTENSION): test/test-plugin-broken.c
+$(APP_DIR)/libtest-plugin-broken.$(LIB_EXTENSION): test/test-plugin-broken.c Makefile
 	@printf "\n### Compiling Test Plugin (unresolvable) ###\n"
 	@mkdir -p $(@D)
 	$(CC) $(filter-out -fvisibility=hidden,$(CFLAGS)) -shared -fPIC -o $@ $<
@@ -450,167 +472,167 @@ TEST_CPPFLAGS_test-filelock = -DGCU_TEST_LOCK_DIR='"$(1)"'
 TEST_CPPFLAGS_test-mmap     = -DGCU_TEST_MMAP_DIR='"$(1)"'
 TEST_CPPFLAGS_test-subprocess = -DGCU_TEST_SUBPROCESS_DIR='"$(1)"'
 
-$(APP_DIR)/test-library$(EXE_EXTENSION): test/test-library.cpp \
+$(APP_DIR)/test-library$(EXE_EXTENSION): test/test-library.cpp Makefile \
 		$(call TEST_PREREQS_test-library,$(APP_DIR)) | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Library Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(call TEST_CPPFLAGS_test-library,$(APP_DIR)) \
 		-MMD -MP -MF $(APP_DIR)/test-library.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-mmap$(EXE_EXTENSION): test/test-mmap.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-mmap$(EXE_EXTENSION): test/test-mmap.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Mmap Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(call TEST_CPPFLAGS_test-mmap,$(APP_DIR)) \
 		-MMD -MP -MF $(APP_DIR)/test-mmap.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-subprocess$(EXE_EXTENSION): test/test-subprocess.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-subprocess$(EXE_EXTENSION): test/test-subprocess.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Subprocess Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(call TEST_CPPFLAGS_test-subprocess,$(APP_DIR)) \
 		-MMD -MP -MF $(APP_DIR)/test-subprocess.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-barrier$(EXE_EXTENSION): test/test-barrier.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-barrier$(EXE_EXTENSION): test/test-barrier.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Barrier Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-barrier.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-atomic$(EXE_EXTENSION): test/test-atomic.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-atomic$(EXE_EXTENSION): test/test-atomic.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Atomic Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-atomic.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-filelock$(EXE_EXTENSION): test/test-filelock.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-filelock$(EXE_EXTENSION): test/test-filelock.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling File Lock Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(call TEST_CPPFLAGS_test-filelock,$(APP_DIR)) \
 		-MMD -MP -MF $(APP_DIR)/test-filelock.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-env$(EXE_EXTENSION): test/test-env.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-env$(EXE_EXTENSION): test/test-env.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Env Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-env.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-tls$(EXE_EXTENSION): test/test-tls.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-tls$(EXE_EXTENSION): test/test-tls.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling TLS Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-tls.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-utf$(EXE_EXTENSION): test/test-utf.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-utf$(EXE_EXTENSION): test/test-utf.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling UTF Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-utf.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-error$(EXE_EXTENSION): test/test-error.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-error$(EXE_EXTENSION): test/test-error.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Error Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-error.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-rwlock$(EXE_EXTENSION): test/test-rwlock.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-rwlock$(EXE_EXTENSION): test/test-rwlock.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling RWLock Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-rwlock.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-once$(EXE_EXTENSION): test/test-once.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-once$(EXE_EXTENSION): test/test-once.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Once Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-once.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-cond$(EXE_EXTENSION): test/test-cond.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-cond$(EXE_EXTENSION): test/test-cond.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Condition Variable Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-cond.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-macros$(EXE_EXTENSION): test/test-macros.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-macros$(EXE_EXTENSION): test/test-macros.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Macros Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-macros.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-type$(EXE_EXTENSION): test/test-type.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-type$(EXE_EXTENSION): test/test-type.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Types Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-type.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-memory$(EXE_EXTENSION): test/test-memory.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-memory$(EXE_EXTENSION): test/test-memory.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Memory Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-memory.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-memory-inline$(EXE_EXTENSION): test/test-memory-inline.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-memory-inline$(EXE_EXTENSION): test/test-memory-inline.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Inline Memory Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-memory-inline.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-hash$(EXE_EXTENSION): test/test-hash.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-hash$(EXE_EXTENSION): test/test-hash.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Hash Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-hash.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-mutex$(EXE_EXTENSION): test/test-mutex.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-mutex$(EXE_EXTENSION): test/test-mutex.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Mutex Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-mutex.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-pool$(EXE_EXTENSION): test/test-pool.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-pool$(EXE_EXTENSION): test/test-pool.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Pool Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-pool.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-sequencer$(EXE_EXTENSION): test/test-sequencer.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-sequencer$(EXE_EXTENSION): test/test-sequencer.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Sequencer Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-sequencer.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-file$(EXE_EXTENSION): test/test-file.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-file$(EXE_EXTENSION): test/test-file.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling File Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-file.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-dir$(EXE_EXTENSION): test/test-dir.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-dir$(EXE_EXTENSION): test/test-dir.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Directory Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-dir.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-path$(EXE_EXTENSION): test/test-path.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-path$(EXE_EXTENSION): test/test-path.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Path Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-path.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-random$(EXE_EXTENSION): test/test-random.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-random$(EXE_EXTENSION): test/test-random.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Random Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-random.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-semaphore$(EXE_EXTENSION): test/test-semaphore.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-semaphore$(EXE_EXTENSION): test/test-semaphore.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Semaphore Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-semaphore.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-string$(EXE_EXTENSION): test/test-string.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-string$(EXE_EXTENSION): test/test-string.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling String Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-string.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-thread$(EXE_EXTENSION): test/test-thread.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-thread$(EXE_EXTENSION): test/test-thread.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Thread Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-thread.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-vector$(EXE_EXTENSION): test/test-vector.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-vector$(EXE_EXTENSION): test/test-vector.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Vector Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-vector.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-array$(EXE_EXTENSION): test/test-array.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-array$(EXE_EXTENSION): test/test-array.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Array Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-array.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-allocator$(EXE_EXTENSION): test/test-allocator.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-allocator$(EXE_EXTENSION): test/test-allocator.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Allocator Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-allocator.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
 
-$(APP_DIR)/test-safemath$(EXE_EXTENSION): test/test-safemath.cpp | $(APP_DIR)/$(TARGET)
+$(APP_DIR)/test-safemath$(EXE_EXTENSION): test/test-safemath.cpp Makefile | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Safe Math Test ###\n"
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -MMD -MP -MF $(APP_DIR)/test-safemath.d -o $@ $< $(LDFLAGS) $(TESTFLAGS) $(CUTILLIBRARY)
@@ -618,7 +640,7 @@ $(APP_DIR)/test-safemath$(EXE_EXTENSION): test/test-safemath.cpp | $(APP_DIR)/$(
 # The same cases against the portable body of each operation. It includes
 # test-safemath.cpp, so -I test/ is needed to find it, and it has to be
 # rebuilt when that file changes.
-$(APP_DIR)/test-safemath-portable$(EXE_EXTENSION): test/test-safemath-portable.cpp \
+$(APP_DIR)/test-safemath-portable$(EXE_EXTENSION): test/test-safemath-portable.cpp Makefile \
 		test/test-safemath.cpp | $(APP_DIR)/$(TARGET)
 	@printf "\n### Compiling Safe Math Test (portable body) ###\n"
 	@mkdir -p $(@D)
@@ -830,7 +852,7 @@ UBSAN_CHECKS := undefined,float-cast-overflow
 
 ASAN_UBSAN_FLAGS := -fsanitize=address,$(UBSAN_CHECKS) \
 	-fno-sanitize-recover=$(UBSAN_CHECKS) \
-	-fno-omit-frame-pointer -g
+	-fno-omit-frame-pointer -g $(SAN_OPT_CFLAGS)
 
 ASAN_BUILD_DIR := $(BUILD)-asan
 ASAN_OBJ_DIR := $(ASAN_BUILD_DIR)/objects
@@ -897,18 +919,18 @@ $(ASAN_APP_DIR)/$(ASAN_TARGET): $(ASAN_LIBOBJECTS)
 # One rule per test, generated from TEST_NAMES for the same reason the ordinary
 # test list is: a hand-maintained second list is a list that can silently omit
 # a test.
-$(ASAN_APP_DIR)/libtest-plugin.$(LIB_EXTENSION): test/test-plugin.c
+$(ASAN_APP_DIR)/libtest-plugin.$(LIB_EXTENSION): test/test-plugin.c Makefile
 	@printf "\n### Compiling (ASan+UBSan) Test Plugin ###\n"
 	@mkdir -p $(@D)
 	$(CC) $(filter-out -fvisibility=hidden,$(ASAN_CFLAGS)) -shared -fPIC -o $@ $<
 
-$(ASAN_APP_DIR)/libtest-plugin-broken.$(LIB_EXTENSION): test/test-plugin-broken.c
+$(ASAN_APP_DIR)/libtest-plugin-broken.$(LIB_EXTENSION): test/test-plugin-broken.c Makefile
 	@printf "\n### Compiling (ASan+UBSan) Test Plugin (unresolvable) ###\n"
 	@mkdir -p $(@D)
 	$(CC) $(filter-out -fvisibility=hidden,$(ASAN_CFLAGS)) -shared -fPIC -o $@ $<
 
 define ASAN_TEST_RULE
-$(ASAN_APP_DIR)/$(1)$(EXE_EXTENSION): test/$(1).cpp \
+$(ASAN_APP_DIR)/$(1)$(EXE_EXTENSION): test/$(1).cpp Makefile \
 		$(call TEST_PREREQS_$(1),$(ASAN_APP_DIR)) \
 		| $(ASAN_APP_DIR)/$(ASAN_TARGET)
 	@printf "\n### Compiling (ASan+UBSan) $$@ ###\n"
@@ -965,7 +987,7 @@ test-ubsan: test-asan
 
 TSAN_TEST_NAMES := test-mutex test-cond test-barrier test-once test-rwlock test-tls test-atomic test-semaphore test-thread test-pool test-sequencer
 
-TSAN_FLAGS := -fsanitize=thread -fno-omit-frame-pointer -g
+TSAN_FLAGS := -fsanitize=thread -fno-omit-frame-pointer -g $(SAN_OPT_CFLAGS)
 
 TSAN_BUILD_DIR := $(BUILD)-tsan
 TSAN_OBJ_DIR := $(TSAN_BUILD_DIR)/objects
@@ -1017,7 +1039,7 @@ $(TSAN_APP_DIR)/$(TSAN_TARGET): $(TSAN_LIBOBJECTS)
 	$(CC) $(TSAN_CFLAGS) $(OS_SPECIFIC_LINK_FLAGS) -o $@ $^ $(TSAN_LDFLAGS)
 
 define TSAN_TEST_RULE
-$(TSAN_APP_DIR)/$(1)$(EXE_EXTENSION): test/$(1).cpp \
+$(TSAN_APP_DIR)/$(1)$(EXE_EXTENSION): test/$(1).cpp Makefile \
 		| $(TSAN_APP_DIR)/$(TSAN_TARGET)
 	@printf "\n### Compiling (TSan) $$@ ###\n"
 	@mkdir -p $$(@D)
