@@ -2,11 +2,10 @@
  * @file
  * Tests for subprocess.h.
  *
- * Every test runs under an `alarm()`, because the failures this module is
+ * Every test runs under hang-guard.h, because the failures this module is
  * most likely to have are hangs: a pipe that nobody drains, a wait that no
  * clock bounds.  A hang stops the whole suite with no failing test to point
- * at and gets blamed on the machine; SIGALRM turns it into a dead binary and
- * a non-zero exit, which the Makefile reports.
+ * at and gets blamed on the machine.
  */
 
 #include <cerrno>
@@ -19,6 +18,7 @@
 #include <vector>
 #include <gtest/gtest.h>
 #include <ghoti.io/cutil/subprocess.h>
+#include "hang-guard.h"
 
 #ifndef _WIN32
 #include <fcntl.h>
@@ -36,19 +36,9 @@ using namespace std;
 
 namespace {
 
-class Subprocess : public ::testing::Test {
-protected:
-  void SetUp() override {
-#ifndef _WIN32
-    alarm(60);
-#endif
-  }
-  void TearDown() override {
-#ifndef _WIN32
-    alarm(0);
-#endif
-  }
-};
+// The longest test here waits ten seconds on purpose, so the guard is well
+// clear of that.  See hang-guard.h.
+using Subprocess = ghoti_test::HangGuarded<60>;
 
 /// A NULL-terminated argv built from a list, for readability at the call site.
 struct Argv {

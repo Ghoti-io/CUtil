@@ -1,0 +1,90 @@
+/**
+ * @file
+ * A per-test watchdog that says which test hung.
+ *
+ * For suites whose failures are hangs rather than wrong answers -- anything
+ * that blocks on another thread or another process.  A plain `alarm()` turns
+ * a hang into a dead binary, which is already much better than a suite that
+ * stops forever and gets blamed on the machine.  But `make test` runs with
+ * `--gtest_brief=1`, so a binary killed by SIGALRM prints nothing at all:
+ * the run fails and says nothing about where.
+ *
+ * So the alarm is caught instead, and the handler names the test.  The name
+ * is captured in SetUp and written with `write()`, both async-signal-safe;
+ * asking gtest for it from inside the handler would not be.
+ *
+ * Not a general timeout: the alarm has to be generous enough that a slow
+ * machine never trips it, so it is a diagnosis of a hang, not a measurement
+ * of duration.  Bound the operation itself where the API can.
+ */
+
+#ifndef GHOTI_IO_GCU_TEST_HANG_GUARD_H
+#define GHOTI_IO_GCU_TEST_HANG_GUARD_H
+
+#include <csignal>
+#include <cstdio>
+#include <cstring>
+#include <gtest/gtest.h>
+
+#ifndef _WIN32
+#include <unistd.h>
+#endif
+
+namespace ghoti_test {
+
+inline char * hangGuardName() {
+  static char name[256] = "";
+  return name;
+}
+
+inline size_t & hangGuardLength() {
+  static size_t length = 0;
+  return length;
+}
+
+#ifndef _WIN32
+extern "C" inline void hangGuardFired(int) {
+  static const char prefix[] = "\n*** TIMED OUT, no answer from: ";
+  static const char suffix[] = " ***\n";
+  ssize_t written = write(STDERR_FILENO, prefix, sizeof(prefix) - 1);
+  written = write(STDERR_FILENO, hangGuardName(), hangGuardLength());
+  written = write(STDERR_FILENO, suffix, sizeof(suffix) - 1);
+  (void)written;
+  // _exit, not abort: a non-zero status the Makefile reports, without a core
+  // dump for something that is not a crash.
+  _exit(1);
+}
+#endif
+
+/**
+ * Derive a fixture from this to have every one of its tests watched.
+ *
+ * @tparam Seconds How long to allow.  Pick a large multiple of the test's
+ *   real duration; this is a deadlock detector, not a stopwatch.
+ */
+template <unsigned int Seconds>
+class HangGuarded : public ::testing::Test {
+protected:
+  void SetUp() override {
+#ifndef _WIN32
+    const ::testing::TestInfo * running =
+        ::testing::UnitTest::GetInstance()->current_test_info();
+    snprintf(hangGuardName(), 256, "%s.%s",
+        running ? running->test_suite_name() : "?",
+        running ? running->name() : "?");
+    hangGuardLength() = strlen(hangGuardName());
+    signal(SIGALRM, hangGuardFired);
+    alarm(Seconds);
+#endif
+  }
+  void TearDown() override {
+#ifndef _WIN32
+    alarm(0);
+    signal(SIGALRM, SIG_DFL);
+#endif
+  }
+};
+
+} // namespace ghoti_test
+
+#endif // GHOTI_IO_GCU_TEST_HANG_GUARD_H
