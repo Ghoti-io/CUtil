@@ -93,13 +93,21 @@ typedef void* GCU_MUTEX_T;
 #define GCU_MUTEX_T          SRWLOCK
 
 // InitializeSRWLock and the acquire/release calls return void and cannot
-// fail, so each is sequenced with a comma operator and yields the 0 the
-// contract above promises.  SRWLOCK needs no teardown; DESTROY still
-// evaluates its argument so that it cannot become an unused variable.
-#define GCU_MUTEX_CREATE(x)  (InitializeSRWLock(&(x)), 0)
-#define GCU_MUTEX_DESTROY(x) ((void)(x), 0)
-#define GCU_MUTEX_LOCK(x)    (AcquireSRWLockExclusive(&(x)), 0)
-#define GCU_MUTEX_UNLOCK(x)  (ReleaseSRWLockExclusive(&(x)), 0)
+// fail, so each is wrapped in a function that yields the 0 the contract above
+// promises.  A comma expression such as `(f(&x), 0)` says the same thing, but
+// GCC reports its unused right-hand side as -Wunused-value wherever the macro
+// is used as a statement, which is almost everywhere.  SRWLOCK needs no
+// teardown; DESTROY still takes its argument so that it cannot become an
+// unused variable.
+static inline int gcu_mutex_create_srw_(SRWLOCK * m) { InitializeSRWLock(m); return 0; }
+static inline int gcu_mutex_destroy_srw_(SRWLOCK * m) { (void)m; return 0; }
+static inline int gcu_mutex_lock_srw_(SRWLOCK * m) { AcquireSRWLockExclusive(m); return 0; }
+static inline int gcu_mutex_unlock_srw_(SRWLOCK * m) { ReleaseSRWLockExclusive(m); return 0; }
+
+#define GCU_MUTEX_CREATE(x)  gcu_mutex_create_srw_(&(x))
+#define GCU_MUTEX_DESTROY(x) gcu_mutex_destroy_srw_(&(x))
+#define GCU_MUTEX_LOCK(x)    gcu_mutex_lock_srw_(&(x))
+#define GCU_MUTEX_UNLOCK(x)  gcu_mutex_unlock_srw_(&(x))
 
 // The only one that reports anything: TryAcquireSRWLockExclusive returns
 // non-zero when it acquired the lock, which is backwards from the contract,
