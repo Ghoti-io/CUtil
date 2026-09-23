@@ -46,30 +46,66 @@
 // into the same single load the cast produced, from -O1 up.  The load stays
 // host-endian, exactly as Appleby's reference is, so no hash value changes on
 // any platform -- see the note on byte order in string.h.
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#define GCU_STRING_SWAP_BLOCKS 1
+#endif
+
 static inline uint32_t gcu_string_getblock32(const uint8_t * p) {
+#ifdef GCU_STRING_SWAP_BLOCKS
+  return  (uint32_t)p[0]        | ((uint32_t)p[1] << 8)
+       | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
+#else
   uint32_t block;
   memcpy(&block, p, sizeof(block));
   return block;
+#endif
 }
 
 static inline uint64_t gcu_string_getblock64(const uint8_t * p) {
+#ifdef GCU_STRING_SWAP_BLOCKS
+  return  (uint64_t)p[0]        | ((uint64_t)p[1] << 8)
+       | ((uint64_t)p[2] << 16) | ((uint64_t)p[3] << 24)
+       | ((uint64_t)p[4] << 32) | ((uint64_t)p[5] << 40)
+       | ((uint64_t)p[6] << 48) | ((uint64_t)p[7] << 56);
+#else
   uint64_t block;
   memcpy(&block, p, sizeof(block));
   return block;
+#endif
+}
+
+static inline void gcu_string_putblock32(uint8_t * p, uint32_t v) {
+#ifdef GCU_STRING_SWAP_BLOCKS
+  p[0] = (uint8_t)v;         p[1] = (uint8_t)(v >> 8);
+  p[2] = (uint8_t)(v >> 16); p[3] = (uint8_t)(v >> 24);
+#else
+  memcpy(p, &v, sizeof(v));
+#endif
+}
+
+static inline void gcu_string_putblock64(uint8_t * p, uint64_t v) {
+#ifdef GCU_STRING_SWAP_BLOCKS
+  p[0] = (uint8_t)v;         p[1] = (uint8_t)(v >> 8);
+  p[2] = (uint8_t)(v >> 16); p[3] = (uint8_t)(v >> 24);
+  p[4] = (uint8_t)(v >> 32); p[5] = (uint8_t)(v >> 40);
+  p[6] = (uint8_t)(v >> 48); p[7] = (uint8_t)(v >> 56);
+#else
+  memcpy(p, &v, sizeof(v));
+#endif
 }
 
 uint32_t gcu_string_hash_32(char const * str, size_t len) {
-  uint32_t buf;
-  gcu_string_murmur3_32(str, len, 0, &buf);
-  return buf;
+  uint8_t buf[4];
+  gcu_string_murmur3_32(str, len, 0, buf);
+  return gcu_string_getblock32(buf);
 }
 
 #if SIZE_MAX == 18446744073709551615u
 
 uint64_t gcu_string_hash_64(char const * str, size_t len) {
-  uint64_t buf[2];
+  uint8_t buf[16];
   gcu_string_murmur3_x64_128(str, len, 0, buf);
-  return buf[0] ^ buf[1];
+  return gcu_string_getblock64(buf) ^ gcu_string_getblock64(buf + 8);
 }
 
 #else
@@ -81,9 +117,9 @@ uint64_t gcu_string_hash_64(char const * str, size_t len) {
 // library failed on this one function, and no build had ever been attempted:
 // see notes/cutil/murmur3-correctness.md.
 uint64_t gcu_string_hash_64(char const * str, size_t len) {
-  uint64_t buf[2];
+  uint8_t buf[16];
   gcu_string_murmur3_x86_128(str, len, 0, buf);
-  return buf[0] ^ buf[1];
+  return gcu_string_getblock64(buf) ^ gcu_string_getblock64(buf + 8);
 }
 
 #endif
@@ -156,7 +192,7 @@ void gcu_string_murmur3_32(const void * key, size_t len, uint32_t seed, void * o
 
   // Populate the final hash value.  memcpy for the same reason as the loads:
   // `out` is a void * and nothing promises it is aligned for a uint32_t.
-  memcpy(out, &h1, sizeof(h1));
+  gcu_string_putblock32((uint8_t *)out, h1);
 }
 
 void gcu_string_murmur3_x86_128(const void * key, size_t len, uint32_t seed, void * out ) {
@@ -357,8 +393,10 @@ void gcu_string_murmur3_x86_128(const void * key, size_t len, uint32_t seed, voi
 
   // memcpy for the same reason as the loads: `out` is a void * and nothing
   // promises it is aligned for a uint32_t.
-  const uint32_t h[4] = { h1, h2, h3, h4 };
-  memcpy(out, h, sizeof(h));
+  gcu_string_putblock32((uint8_t *)out + 0,  h1);
+  gcu_string_putblock32((uint8_t *)out + 4,  h2);
+  gcu_string_putblock32((uint8_t *)out + 8,  h3);
+  gcu_string_putblock32((uint8_t *)out + 12, h4);
 }
 
 void gcu_string_murmur3_x64_128(const void * key, size_t len, uint32_t seed, void * out) {
@@ -499,7 +537,7 @@ void gcu_string_murmur3_x64_128(const void * key, size_t len, uint32_t seed, voi
   // Populate the final hash value.
   // memcpy for the same reason as the loads: `out` is a void * and nothing
   // promises it is aligned for a uint64_t.
-  const uint64_t h[2] = { h1, h2 };
-  memcpy(out, h, sizeof(h));
+  gcu_string_putblock64((uint8_t *)out + 0, h1);
+  gcu_string_putblock64((uint8_t *)out + 8, h2);
 }
 

@@ -44,22 +44,28 @@ extern "C" {
  * address costs nothing and is not undefined.  Hashing a substring, an offset
  * into a buffer, or a field inside a packed struct is fair use.
  *
- * **The result is not stable across byte orders.** These follow Appleby's
- * reference, which reads each block in the host's order and writes `out` in
- * the host's order, so a big-endian machine returns a different hash for the
- * same key -- and only the little-endian answers match the verification
- * values SMHasher publishes.  Nothing in this suite depends on that, because
- * every hash here indexes an in-memory table and none is written to a file or
- * a wire.  Anything that does persist or transmit one, or that compares
- * hashes computed on two different machines, needs a byte-order-explicit hash
- * instead of these.  Making these little-endian everywhere is a one-line
- * change per block and has not been made because there is no big-endian
- * machine here to verify it on.
+ * **The result does not depend on the host's byte order.** Blocks are read
+ * and `out` is written little-endian on every platform, so the same key gives
+ * the same bytes and the same integer on a big-endian machine as on a little-
+ * endian one, and every platform reproduces the verification values SMHasher
+ * publishes.  Appleby's reference does not promise this -- it reads and
+ * writes in host order, so its own output is little-endian only by virtue of
+ * where it is usually run.  Verified on s390x, powerpc64, powerpc and sparc64
+ * as well as x86_64, i686 and aarch64; see tools/xarch in the workspace.
  *
- * `gcu_string_hash_64()` carries the same caveat twice over: it is
- * `x64_128` on a 64-bit platform and `x86_128` on a 32-bit one, which are
- * different algorithms, so its value already differs between two builds of
- * the same source.
+ * The consequence for `out`: it holds a defined little-endian byte string,
+ * not a host integer.  Read it with `gcu_string_hash_32()` /
+ * `gcu_string_hash_64()`, or decode the bytes yourself.  Casting it to
+ * `uint32_t *` and dereferencing gives the host's reading of those bytes,
+ * which is the value you want on a little-endian machine and a byte-swapped
+ * one elsewhere.
+ *
+ * **`gcu_string_hash_64()` is still not stable across word sizes**, and that
+ * one is by design rather than by accident: it is `x64_128` on a 64-bit
+ * platform and `x86_128` on a 32-bit one, because the 64-bit variant's
+ * arithmetic is slow on a 32-bit machine.  Those are different algorithms, so
+ * its value differs between a 32- and a 64-bit build of the same source.
+ * Do not persist or transmit one.
  */
 
 /**
