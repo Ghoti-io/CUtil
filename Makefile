@@ -16,8 +16,51 @@ BUILD ?= release
 # name: a debug build you cannot step through. The two blocks stay separate
 # because this one has to precede CFLAGS and that one has to follow BRANCH.
 #
-# -O3 for the library rather than the suite's -O2 floor is pre-existing and
-# ratified, not measured here. Anything moving *to* -O3 needs a figure.
+# -O2 for the library. It was -O3, pre-existing and unmeasured, and the figure
+# that was owed for it came out against it on 2026-09-23.
+#
+# Nineteen of the twenty-eight translation units compile to byte-identical
+# .text at the two levels, so -O3 could only ever act on nine: array, file,
+# hash, path, pool, sequencer, subprocess, thread, utf. What it does there,
+# measured out-of-line through the shared library (21 paired trials each,
+# interleaved and pinned, with callgrind instruction counts beside the clock):
+#
+#   gcu_path_join        -60%  time, -59.0% Ir      6 consumer call sites, all
+#                                                   one-shot: leap-second file,
+#                                                   timezone database paths
+#   utf8/16 round trip   -36%  time, -32.5% Ir      no callers at all on Linux;
+#                                                   every internal use is
+#                                                   inside _WIN32, and the
+#                                                   Linux .so contains zero
+#                                                   calls to them
+#   gcu_array_append           , -14.1% Ir          15 call sites, some hot
+#   gcu_hash64 set+get         ,  +2.4% Ir          slower at -O3
+#   gcu_path_basename    +7.8% time,   0.0% Ir      slower at -O3 for pure
+#                                                   layout reasons: 6,919,730,671
+#                                                   instructions against
+#                                                   6,919,730,808
+#
+# Those are ceilings -- tight loops in which the called function is the whole
+# workload. End to end, on programs that use this library for real:
+#
+#   model, 2.4 MB Stanford bunny OBJ    cutil 11.5% of instructions    -0.444%
+#   ctang, 20k-iteration template       cutil  9.3% of instructions    -0.041%
+#   compress, LZW benchmark             cutil below the 100-instruction
+#                                       threshold in 107 billion       n/a
+#
+# ctang shows why the ceiling does not arrive: its cutil time is almost all
+# vector.template.c, one of the nineteen TUs that are byte-identical. And two
+# consumers cannot be affected at all -- image and regex make no call into any
+# of the nine.
+#
+# Against that, -O3 costs +16.3% .text and +13.4% on the shipped .so (433,168
+# to 491,224 bytes), on the one library every other one links. A tenth of a
+# percent is not worth that, and it is not worth a function that gets slower
+# because the code around it moved.
+#
+# Anything moving *to* -O3 needs a figure, and the figure has to be end to end
+# in a consumer, per path, naming any path that crosses a library boundary. A
+# microbenchmark of an exported function will say -60% and mean -0.4%.
 #
 # The tests get -O2 in release, and that is a measured choice rather than a
 # copy of the library's. Roughly half of this library compiles into its
@@ -74,7 +117,7 @@ OPT_CFLAGS := -O0
 OPT_CXXFLAGS := -O0
 SAN_OPT_CFLAGS := -O0
 else
-OPT_CFLAGS := -O3
+OPT_CFLAGS := -O2
 OPT_CXXFLAGS := -O2
 SAN_OPT_CFLAGS := -O1
 endif
