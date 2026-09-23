@@ -271,6 +271,11 @@ else
     $(error Unsupported OS: $(UNAME_S))
 
 endif
+ifeq ($(OS_NAME), Windows)
+# path.c asks GetUserProfileDirectoryW for the home directory when USERPROFILE
+# is not set. Placed after the OS block because OS_NAME is not known before it.
+LDFLAGS += -luserenv
+endif
 
 # ---------------------------------------------------------------------------
 # Installation prefix

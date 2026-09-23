@@ -43,6 +43,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include <userenv.h>
 #else
 #include <errno.h>
 #include <limits.h>
@@ -1010,6 +1011,31 @@ GCU_Path_Result gcu_path_cwd(const GCU_Allocator * allocator, char ** out) {
   return GCU_PATH_OK;
 }
 
+/**
+ * The profile directory of the account this process runs as, asked of the
+ * system rather than the environment.
+ */
+static char * path_profile_from_token(const GCU_Allocator * allocator) {
+  // OpenProcessToken rather than the GetCurrentProcessToken() pseudo-handle,
+  // which the headers declare only for a Windows 8 target.
+  HANDLE token = NULL;
+  if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token)) {
+    return NULL;
+  }
+  char * result = NULL;
+  DWORD needed = 0;
+  // Fails by design with ERROR_INSUFFICIENT_BUFFER, reporting the size.
+  GetUserProfileDirectoryW(token, NULL, &needed);
+  wchar_t * wide = needed == 0 ? NULL
+      : (wchar_t *)gcu_allocator_malloc(allocator, needed * sizeof(wchar_t));
+  if (wide && GetUserProfileDirectoryW(token, wide, &needed)) {
+    result = gcu_path_internal_from_wide(allocator, wide);
+  }
+  gcu_allocator_free(allocator, wide);
+  CloseHandle(token);
+  return result;
+}
+
 GCU_Path_Result gcu_path_home(const GCU_Allocator * allocator, char ** out) {
   if (!out) {
     return GCU_PATH_ERR_INVALID;
@@ -1017,7 +1043,14 @@ GCU_Path_Result gcu_path_home(const GCU_Allocator * allocator, char ** out) {
   if (!allocator) {
     allocator = gcu_allocator_default();
   }
+  // USERPROFILE first, as the other platforms honour $HOME: it is the user's
+  // to redirect.  But a process can be started without it - a service, or a
+  // child whose parent built its environment by hand - and every account
+  // still has a profile directory, so the system is asked before giving up.
   char * value = path_env_wide(allocator, L"USERPROFILE");
+  if (!value) {
+    value = path_profile_from_token(allocator);
+  }
   if (!value) {
     return GCU_PATH_ERR_IO;
   }

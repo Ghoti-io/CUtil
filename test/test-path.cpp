@@ -688,7 +688,12 @@ TEST(Absolute, ResolvesAgainstTheWorkingDirectoryWithoutTouchingTheDisk) {
   Owned resolved;
   ASSERT_EQ(GCU_PATH_OK,
       gcu_path_absolute("a/b", nullptr, &resolved.value));
+#ifdef _WIN32
+  // Joined and normalised natively, so with backslashes.
+  EXPECT_EQ(cwd.str() + "\\a\\b", resolved.str());
+#else
   EXPECT_EQ(cwd.str() + "/a/b", resolved.str());
+#endif
 
   // Nothing has to exist: this answers what the path means, not what it
   // reaches.
@@ -700,7 +705,13 @@ TEST(Absolute, ResolvesAgainstTheWorkingDirectoryWithoutTouchingTheDisk) {
   Owned already;
   ASSERT_EQ(GCU_PATH_OK,
       gcu_path_absolute("/a/./b/../c", nullptr, &already.value));
+#ifdef _WIN32
+  // "/a" is rooted but has no drive, so it names the working directory's
+  // drive, which is where the tests are running from.
+  EXPECT_EQ(cwd.str().substr(0, 2) + "\\a\\c", already.str());
+#else
   EXPECT_EQ("/a/c", already.str());
+#endif
 }
 
 TEST(Canonicalize, RequiresThePathToExistAndResolvesIt) {
