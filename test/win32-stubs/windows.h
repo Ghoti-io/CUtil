@@ -112,6 +112,12 @@ typedef WCHAR * LPWSTR;
 void  SetLastError(DWORD dwErrCode);
 DWORD GetEnvironmentVariableW(LPCWSTR lpName, LPWSTR lpBuffer, DWORD nSize);
 BOOL  SetEnvironmentVariableW(LPCWSTR lpName, LPCWSTR lpValue);
+// _wputenv_s is the C runtime's, not Win32's -- it comes from <stdlib.h> on
+// Windows, and is declared here because this file is the only stand-in the
+// parse check has.  It returns an errno value, zero on success; set_raw()
+// compares against zero for that reason and not because it is a BOOL.
+typedef int errno_t;
+errno_t _wputenv_s(const wchar_t * varname, const wchar_t * value_string);
 #endif
 
 /* --- appended for library.c --- */
@@ -159,6 +165,7 @@ BOOL UnlockFileEx(HANDLE hFile, DWORD dwReserved,
 #ifndef GHOTI_IO_GCU_WIN32_STUBS_MMAP
 #define GHOTI_IO_GCU_WIN32_STUBS_MMAP
 #define OPEN_EXISTING   3UL
+#define ERROR_ACCESS_DENIED 5UL
 #define PAGE_READONLY   0x02UL
 #define PAGE_READWRITE  0x04UL
 #define FILE_MAP_READ   0x0004UL
@@ -184,6 +191,7 @@ BOOL   FlushFileBuffers(HANDLE hFile);
 #define STARTF_USESTDHANDLES        0x00000100UL
 #define CREATE_UNICODE_ENVIRONMENT  0x00000400UL
 #define WAIT_OBJECT_0               0x00000000UL
+#define WAIT_TIMEOUT                258UL
 typedef long LONG;
 typedef unsigned long long ULONGLONG;
 typedef HANDLE * PHANDLE;
@@ -234,4 +242,5 @@ BOOL GetExitCodeProcess(HANDLE hProcess, DWORD * lpExitCode);
 ULONGLONG GetTickCount64(void);
 LONG InterlockedExchangeAdd(LONG volatile * Addend, LONG Value);
 LONG InterlockedExchange(LONG volatile * Target, LONG Value);
+BOOL CancelSynchronousIo(HANDLE hThread);
 #endif
