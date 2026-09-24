@@ -271,6 +271,27 @@ TEST_F(Scratch, TempCreateOpensAFileInTheDirectoryItWasGiven) {
   gcu_file_temp_abort(&temp);
 }
 
+TEST_F(Scratch, AnOpenTemporaryCanBeReplacedAtomically) {
+  // POSIX lets a file be renamed over while something holds it open, and
+  // callers rely on it: writing the final result atomically to a path they
+  // made with gcu_file_temp_create() and have not closed.  Windows refuses
+  // unless the open file shares delete access, which the temporary did not.
+  GCU_File_Temp temp;
+  ASSERT_EQ(GCU_FILE_OK,
+      gcu_file_temp_create(&temp, dir.c_str(), "held", nullptr));
+  string path = gcu_file_temp_path(&temp);
+
+  const string replacement = "replaced while open";
+  EXPECT_EQ(GCU_FILE_OK,
+      gcu_file_write_atomic(path.c_str(), replacement.data(),
+          replacement.size(), GCU_FILE_SYNC_NONE, GCU_FILE_PERMS_DEFAULT,
+          nullptr));
+  Read r(path);
+  EXPECT_EQ(GCU_FILE_OK, r.result);
+  EXPECT_EQ(replacement, r.str());
+  gcu_file_temp_abort(&temp);
+}
+
 TEST_F(Scratch, TempCreateOpensAFileOnlyItsOwnerCanRead) {
 #ifndef _WIN32
   GCU_File_Temp temp;

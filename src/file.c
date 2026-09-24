@@ -294,10 +294,15 @@ GCU_File_Result gcu_file_temp_create(GCU_File_Temp * temp, const char * dir,
   memcpy(path + stem, GCU_FILE_TEMPLATE, sizeof GCU_FILE_TEMPLATE);
 
 #ifdef _WIN32
-  /* TODO(windows): never compiled or run on Windows.
-   * _mktemp_s only chooses the name; _O_CREAT | _O_EXCL is what makes taking
-   * it a single step that fails rather than following something already
-   * there. */
+  /* _mktemp_s only chooses the name; CREATE_NEW is what makes taking it a
+   * single step that fails rather than following something already there.
+   *
+   * CreateFileW rather than _wopen for the sharing mode.  _wopen shares read
+   * and write but not delete, so while the temporary was open nothing could
+   * rename over it or remove it - which POSIX allows of any open file, and
+   * which a caller does when it writes the final file atomically to a path
+   * it is still holding (cjelly's capture test did exactly that, and
+   * MoveFileEx failed with a sharing violation). */
   wchar_t * wide = gcu_path_internal_to_wide(allocator, path);
   if (!wide) {
     gcu_allocator_free(allocator, path);
@@ -309,9 +314,16 @@ GCU_File_Result gcu_file_temp_create(GCU_File_Temp * temp, const char * dir,
     gcu_allocator_free(allocator, path);
     return GCU_FILE_ERR_IO;
   }
-  int fd = _wopen(wide, _O_CREAT | _O_EXCL | _O_BINARY | _O_RDWR,
-      _S_IREAD | _S_IWRITE);
+  HANDLE created = CreateFileW(wide, GENERIC_READ | GENERIC_WRITE,
+      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
+      CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+  int fd = created == INVALID_HANDLE_VALUE ? -1
+      : _open_osfhandle((intptr_t)created, _O_BINARY | _O_RDWR);
   if (fd < 0) {
+    if (created != INVALID_HANDLE_VALUE) {
+      CloseHandle(created);
+      DeleteFileW(wide);
+    }
     gcu_allocator_free(allocator, wide);
     gcu_allocator_free(allocator, path);
     return GCU_FILE_ERR_IO;
@@ -518,13 +530,67 @@ static bool file_apply_perms(FILE * stream, const char * temp_path,
 #endif
 }
 
+#ifdef _WIN32
+/**
+ * Rename @p source over @p dest with POSIX semantics: the destination may be
+ * open, as it may be for rename(2).
+ *
+ * MoveFileEx refuses to replace a file that anything holds open, even with
+ * delete access shared, where POSIX replaces the name and leaves the holder
+ * its now-anonymous file.  Windows 10 1709 and later do the POSIX thing when
+ * asked through FileRenameInfoEx.  The structure is declared here because
+ * mingw-w64 declares its Flags member only for a Windows 10 build target,
+ * and its layout is fixed by the kernel: a 4-byte flags word where the older
+ * form has a BOOLEAN, then the same three fields.
+ */
+typedef struct {
+  DWORD Flags;
+  HANDLE RootDirectory;
+  DWORD FileNameLength;
+  WCHAR FileName[1];
+} GCU_File_Rename_Info;
+
+#define GCU_FILE_RENAME_INFO_EX ((FILE_INFO_BY_HANDLE_CLASS)22)
+#define GCU_FILE_RENAME_REPLACE_IF_EXISTS 0x1u
+#define GCU_FILE_RENAME_POSIX_SEMANTICS 0x2u
+
+static bool file_replace_posix(const wchar_t * source, const wchar_t * dest,
+    const GCU_Allocator * allocator) {
+  size_t name_bytes = wcslen(dest) * sizeof(wchar_t);
+  size_t size = sizeof(GCU_File_Rename_Info) + name_bytes;
+  GCU_File_Rename_Info * info =
+      (GCU_File_Rename_Info *)gcu_allocator_malloc(allocator, size);
+  if (!info) {
+    return false;
+  }
+  memset(info, 0, size);
+  info->Flags = GCU_FILE_RENAME_REPLACE_IF_EXISTS
+      | GCU_FILE_RENAME_POSIX_SEMANTICS;
+  info->FileNameLength = (DWORD)name_bytes;
+  memcpy(info->FileName, dest, name_bytes);
+
+  HANDLE handle = CreateFileW(source, DELETE | SYNCHRONIZE,
+      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
+      OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  bool moved = false;
+  if (handle != INVALID_HANDLE_VALUE) {
+    moved = SetFileInformationByHandle(handle, GCU_FILE_RENAME_INFO_EX, info,
+        (DWORD)size) != 0;
+    CloseHandle(handle);
+  }
+  gcu_allocator_free(allocator, info);
+  return moved;
+}
+#endif
+
 /** Move @p source over @p dest, replacing it. */
 static bool file_replace(const char * source, const char * dest,
     GCU_File_Sync sync, const GCU_Allocator * allocator) {
 #ifdef _WIN32
-  /* TODO(windows): never compiled or run on Windows.
-   * rename() on Windows refuses an existing destination; MoveFileEx is the
-   * call that replaces one, and it is atomic for a same-volume move. */
+  /* rename() on Windows refuses an existing destination; MoveFileEx is the
+   * call that replaces one, and it is atomic for a same-volume move.  When
+   * the destination is open it refuses that too, and the POSIX-semantics
+   * rename is tried before giving up. */
   wchar_t * wide_source = gcu_path_internal_to_wide(allocator, source);
   wchar_t * wide_dest = gcu_path_internal_to_wide(allocator, dest);
   bool moved = false;
@@ -534,6 +600,15 @@ static bool file_replace(const char * source, const char * dest,
       flags |= MOVEFILE_WRITE_THROUGH;
     }
     moved = MoveFileExW(wide_source, wide_dest, flags) != 0;
+    if (!moved) {
+      DWORD why = GetLastError();
+      if (why == ERROR_ACCESS_DENIED || why == ERROR_SHARING_VIOLATION) {
+        moved = file_replace_posix(wide_source, wide_dest, allocator);
+        if (!moved) {
+          SetLastError(why);
+        }
+      }
+    }
   }
   gcu_allocator_free(allocator, wide_source);
   gcu_allocator_free(allocator, wide_dest);
