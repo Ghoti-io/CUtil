@@ -103,14 +103,18 @@ void gcu_file_free(const GCU_Allocator * allocator, void * data) {
 static FILE * file_open(const char * path, const char * mode,
     const GCU_Allocator * allocator) {
 #ifdef _WIN32
-  /* TODO(windows): never compiled or run on Windows. */
+  // The callers report a NULL through errno, so a conversion that failed
+  // says why: otherwise errno is whatever it last was, and a refused
+  // allocation reads as an I/O error.
   wchar_t * wide_path = gcu_path_internal_to_wide(allocator, path);
   if (!wide_path) {
+    errno = ENOMEM;
     return NULL;
   }
   wchar_t * wide_mode = gcu_path_internal_to_wide(allocator, mode);
   if (!wide_mode) {
     gcu_allocator_free(allocator, wide_path);
+    errno = ENOMEM;
     return NULL;
   }
   FILE * stream = _wfopen(wide_path, wide_mode);
