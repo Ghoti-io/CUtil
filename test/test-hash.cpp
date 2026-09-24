@@ -1285,9 +1285,10 @@ TEST(Hash64, GrowingUnderTheLockKeepsTheLock) {
   // Callers guard a table with its own mutex and may grow it while holding
   // that mutex -- the thread module does exactly this in gcu_thread_create().
   // Growth once swapped whole structs, writing a freshly initialised mutex
-  // over the held one, and anyone already queued on it was never woken.  On
-  // Windows that hung the thread tests on every run; on Linux it was a rare
-  // lost wakeup.  So: queue a waiter, grow, release, and see it get in.
+  // over the held one, and anyone already queued on it was never woken.  That
+  // hung the thread tests on Windows; it is not rarer on Linux, which was the
+  // first guess -- once a waiter is actually queued, glibc loses it every time
+  // too, measured 5/5.  So: queue a waiter, grow, release, and see it get in.
   auto t = gcu_hash64_create(0);
   ASSERT_NE(t, nullptr);
 
@@ -1317,6 +1318,42 @@ TEST(Hash64, GrowingUnderTheLockKeepsTheLock) {
     FAIL() << "a thread queued on the table's mutex was never woken";
   }
   waiter.join();
+  gcu_hash64_destroy(t);
+}
+
+TEST(Hash64, GrowingUnderTheLockDoesNotReleaseIt) {
+  // The silent half of the same defect, and the worse half.  A grow that reset
+  // the lock word needed no waiter to do damage: with nobody queued at all the
+  // lock simply came back unheld, and the next thread to ask walked into a
+  // critical section whose owner still believed it held it.  No hang and no
+  // diagnostic -- just two threads inside one table.
+  //
+  // Unlike the waiter above, nothing here sleeps or waits on a deadline: a
+  // try-lock answers at once, so this fails in milliseconds rather than ten
+  // seconds, and it cannot pass for having been too quick.
+  auto t = gcu_hash64_create(0);
+  ASSERT_NE(t, nullptr);
+
+  GCU_MUTEX_LOCK(t->mutex);
+  for (uint64_t i = 0; i < 100; ++i) {
+    ASSERT_TRUE(gcu_hash64_set(t, i, gcu_type64_ui32((uint32_t)i)));
+  }
+
+  // From another thread, because the question is whether someone *else* can
+  // get in.  These mutexes are not recursive, so asking from this one would
+  // answer a different question on Linux and deadlock on a platform whose
+  // lock was.
+  std::atomic<bool> stole{false};
+  std::thread thief([&] {
+    if (GCU_MUTEX_TRYLOCK(t->mutex) == 0) {
+      stole = true;
+      GCU_MUTEX_UNLOCK(t->mutex);
+    }
+  });
+  thief.join();
+
+  GCU_MUTEX_UNLOCK(t->mutex);
+  EXPECT_FALSE(stole) << "growing the table released a mutex that was held";
   gcu_hash64_destroy(t);
 }
 
