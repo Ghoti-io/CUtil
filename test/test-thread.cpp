@@ -2,6 +2,7 @@
 #include <ghoti.io/cutil/thread.h>
 
 #include <atomic>
+#include <chrono>
 #include <iostream>
 #include <thread>
 #include <vector>
@@ -102,9 +103,22 @@ TEST(Thread, SingleThreadLifetime) {
 
 
   // Check the thread state.
+  //
+  // `status.is_running` going false is the task's own last act; the function
+  // still has to return, and the module's record of the thread flips when it
+  // does.  Inferring one from the other is a race, and it is not a
+  // theoretical one: this line failed once in 1,500 runs of this binary
+  // during a soak.  So poll what is actually being asserted.
   EXPECT_EQ(status.is_running, false);
-  EXPECT_EQ(0, gcu_thread_is_running(thread, &result));
-  EXPECT_FALSE(result);
+  auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+  do {
+    ASSERT_EQ(0, gcu_thread_is_running(thread, &result));
+    if (!result) {
+      break;
+    }
+    gcu_thread_yield();
+  } while (std::chrono::steady_clock::now() < deadline);
+  EXPECT_FALSE(result) << "the thread never stopped being reported as running";
 
   // Join the thread.
   EXPECT_EQ(0, gcu_thread_join(thread));
