@@ -158,8 +158,24 @@ static int set_raw(const char * name, const char * value) {
     gcu_utf8_to_utf16(value, wide_value, value_units);
   }
 
+  // The C runtime keeps its own copy of the environment, taken at startup,
+  // and getenv() reads that copy - so a change made only through
+  // SetEnvironmentVariableW is invisible to getenv() in this same process,
+  // and to every library that reads its settings that way.  _wputenv_s
+  // updates the copy.
+  //
+  // It goes first because it also writes the process block, and an empty
+  // string is how it *removes* a variable: the runtime cannot hold an empty
+  // value.  SetEnvironmentVariableW then has the last word on the process
+  // block, which can.  So after gcu_env_set(name, "") gcu_env_has() says set
+  // and getenv() says unset - the runtime's limitation, and the same one
+  // _putenv_s itself has.
+  BOOL ok = _wputenv_s((const wchar_t *)wide_name,
+      wide_value ? (const wchar_t *)wide_value : L"") == 0;
   // A NULL value removes the variable, which is what gcu_env_unset() wants.
-  BOOL ok = SetEnvironmentVariableW((LPCWSTR)wide_name, (LPCWSTR)wide_value);
+  if (ok) {
+    ok = SetEnvironmentVariableW((LPCWSTR)wide_name, (LPCWSTR)wide_value);
+  }
   free(wide_name);
   free(wide_value);
   return ok ? 0 : -1;

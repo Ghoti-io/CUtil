@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <cstring>
 #include <string>
 #include <vector>
@@ -50,6 +51,19 @@ TEST_F(EnvTest, UnsetRemovesIt) {
   ASSERT_EQ(0, gcu_env_unset(kName));
   ASSERT_FALSE(gcu_env_has(kName));
   ASSERT_EQ(0u, gcu_env_get(kName, nullptr, 0));
+}
+
+TEST_F(EnvTest, GetenvInThisProcessSeesTheChange) {
+  // Libraries read their settings with getenv(), so a variable set through
+  // this module has to be visible to it.  On Windows the C runtime keeps its
+  // own copy of the environment, and setting only the process block left
+  // getenv() answering with whatever was there at startup.
+  ASSERT_EQ(0, gcu_env_set(kName, "seen"));
+  const char * value = getenv(kName);
+  ASSERT_NE(nullptr, value);
+  EXPECT_STREQ("seen", value);
+  ASSERT_EQ(0, gcu_env_unset(kName));
+  EXPECT_EQ(nullptr, getenv(kName));
 }
 
 TEST_F(EnvTest, UnsettingSomethingAbsentSucceeds) {
