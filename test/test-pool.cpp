@@ -107,6 +107,13 @@ int gate_task(void * ctx) {
   return 0;
 }
 
+/// Keeps a pool busy for long enough to park a thread in gcu_pool_wait().
+int slow_task(void * ctx) {
+  (void)ctx;
+  gcu_thread_sleep(30);
+  return 0;
+}
+
 }
 
 //
@@ -635,6 +642,87 @@ TEST(Pool, ShutdownReleasesAProducerWaitingForASlot) {
 
   producer.join();
   teardown.join();
+}
+
+//
+// Teardown owes an exit to every thread it wakes.
+//
+
+TEST(Pool, TeardownWaitsForASleeperInPoolWait) {
+  // A thread parked in gcu_pool_wait() is released either by the last worker
+  // going idle or by teardown itself, and in both cases it then re-takes the
+  // pool's mutex and reads first_error.  Teardown counted neither, so it
+  // destroyed that mutex and freed the pool while they were walking into it.
+  //
+  // Measured against the defect, ten runs of this test: 10/10 failed, every
+  // one on the first round with all sixteen threads stranded -- they had been
+  // released by the worker a moment before the free, and then blocked forever
+  // on a mutex that was no longer there.  So this reports by value and needs
+  // no sanitizer, though a ThreadSanitizer build additionally names it: the
+  // same twelve runs under TSan gave six heap-use-after-free reports and four
+  // hangs.  Rounds and sixteen sleepers because one of each catches nothing.
+  //
+  // The sibling case is a producer parked on the `slots` semaphore of a
+  // bounded queue, which shares the counter and the drain this exercises.  Its
+  // window is far narrower -- one report in 16,500 runs of the existing
+  // Pool.ShutdownReleasesAProducerWaitingForASlot -- so it is not gated here.
+  // notes/cutil/pool-teardown.md has the two-line change that makes it
+  // deterministic, for anyone who needs to see that half fail.
+  const size_t kRounds = 10;
+  const size_t kSleepers = 16;
+
+  for (size_t round = 0; round < kRounds; ++round) {
+    GCU_Pool_Config config = {};
+    config.thread_count = 1;
+
+    GCU_Pool * pool = gcu_pool_create(&config);
+    ASSERT_NE(nullptr, pool);
+
+    // Keeps the pool non-idle, so that a thread reaching gcu_pool_wait()
+    // parks instead of returning at once and testing nothing.
+    ASSERT_TRUE(gcu_pool_enqueue(pool, slow_task, NULL));
+
+    std::atomic<size_t> entered{0};
+    std::atomic<size_t> returned{0};
+    std::vector<std::thread> sleepers;
+    for (size_t i = 0; i < kSleepers; ++i) {
+      sleepers.emplace_back([&] {
+        entered.fetch_add(1);
+        gcu_pool_wait(pool);
+        returned.fetch_add(1);
+      });
+    }
+    while (entered.load() != kSleepers) {
+      gcu_thread_yield();
+    }
+    // Covers the few instructions between that count and the call itself.
+    // Destroying a pool a thread has not entered yet is the caller's mistake
+    // and not the library's, and this test is not about that one.
+    gcu_thread_sleep(20);
+
+    gcu_pool_destroy(pool);
+
+    // The defect strands sleepers as often as it corrupts them: one that
+    // registers just after teardown's release is never posted at all.  Wait
+    // on a deadline and report, rather than joining into a hang -- a gate
+    // that hangs a suite is read as infrastructure trouble, not as a bug.
+    auto deadline = chrono::steady_clock::now() + chrono::seconds(10);
+    while (returned.load() != kSleepers
+        && chrono::steady_clock::now() < deadline) {
+      this_thread::sleep_for(chrono::milliseconds(1));
+    }
+    if (returned.load() != kSleepers) {
+      for (auto & t : sleepers) {
+        t.detach();
+      }
+      FAIL() << "round " << round << ": " << (kSleepers - returned.load())
+             << " of " << kSleepers
+             << " threads released by teardown never came back";
+    }
+    for (auto & t : sleepers) {
+      t.join();
+    }
+  }
 }
 
 //

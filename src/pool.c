@@ -235,25 +235,47 @@ static void gcu_pool_shutdown(GCU_Pool * pool, bool discard_queue) {
     gcu_thread_join(pool->threads[i]);
   }
 
-  // Wait for every released producer to leave the pool's memory before the
-  // caller tears it down.  A thread woken out of gcu_pool_enqueue_wait()
-  // takes the mutex on its way out, and both the mutex and the semaphore it
-  // just woke from are about to be destroyed; without this, releasing those
-  // producers would hand them a use-after-free instead of a clean refusal.
-  // A producer decrements the count under the mutex and touches nothing
-  // afterwards, so a count of zero observed under the mutex means they are
-  // all done.
+  // Release the sleepers in gcu_pool_wait().  Unconditionally, not through
+  // gcu_pool_release_waiters_if_idle(): that one posts only if the pool looks
+  // idle, and teardown must not make releasing them conditional on anything.
+  // A queue that came out non-empty -- a producer that appended in the window
+  // before shutting_down was set, say -- would otherwise leave a sleeper
+  // unwoken, and the drain below would wait for it forever.  Trading a rare
+  // use-after-free for a rare hang is not a fix.
+  //
+  // Before the drain, necessarily: the drain waits for exactly the threads
+  // this releases.
   GCU_MUTEX_LOCK(pool->mutex);
-  while (pool->slot_waiters) {
+  for (size_t i = 0; i < pool->waiters; ++i) {
+    gcu_semaphore_signal(&pool->idle);
+  }
+  pool->waiters = 0;
+  GCU_MUTEX_UNLOCK(pool->mutex);
+
+  // Now wait for everyone teardown has released to leave the pool's memory,
+  // because the caller is about to free it.  Both kinds of released thread
+  // re-take this mutex on their way out and read the pool after doing so, and
+  // the mutex, the semaphore each just woke from and the pool itself are all
+  // about to be destroyed.
+  //
+  // `in_flight` and not `slot_waiters`, which is what this waited on before
+  // and which answers a different question.  `slot_waiters` counts threads
+  // blocked on the `slots` semaphore, so it drops to zero the moment a
+  // producer is woken -- including when a *worker* frees a slot, with no
+  // shutdown in sight.  That producer then went on to take the mutex and
+  // append to the queue while teardown, seeing nobody waiting, freed the pool
+  // beneath it.  Reproduced as a heap-use-after-free at the producer's next
+  // GCU_MUTEX_LOCK, against the free in gcu_pool_abandon().  It also counted
+  // no gcu_pool_wait() sleepers at all, and teardown releases those too.
+  //
+  // A thread decrements `in_flight` under this mutex and touches nothing
+  // afterwards, so a count of zero observed under it means they are all done.
+  GCU_MUTEX_LOCK(pool->mutex);
+  while (pool->in_flight) {
     GCU_MUTEX_UNLOCK(pool->mutex);
     gcu_thread_yield();
     GCU_MUTEX_LOCK(pool->mutex);
   }
-  GCU_MUTEX_UNLOCK(pool->mutex);
-
-  // Nothing else is running now, so the remaining teardown needs no lock.
-  GCU_MUTEX_LOCK(pool->mutex);
-  gcu_pool_release_waiters_if_idle(pool);
   GCU_MUTEX_UNLOCK(pool->mutex);
 }
 
@@ -474,6 +496,9 @@ static bool gcu_pool_enqueue_common(GCU_Pool * pool, GCU_Pool_Task task,
     .user_data = user_data,
   };
 
+  // Whether this call is one of the threads teardown counts; see the tail.
+  bool counted = false;
+
   if (pool->is_inline) {
     int status = item.task(item.ctx);
 
@@ -497,6 +522,10 @@ static bool gcu_pool_enqueue_common(GCU_Pool * pool, GCU_Pool_Task task,
         return false;
       }
       ++pool->slot_waiters;
+      // Counted from here because teardown will release this thread whether
+      // or not a slot ever frees, which makes its exit teardown's business.
+      ++pool->in_flight;
+      counted = true;
       GCU_MUTEX_UNLOCK(pool->mutex);
 
       gcu_semaphore_wait(&pool->slots);
@@ -504,6 +533,7 @@ static bool gcu_pool_enqueue_common(GCU_Pool * pool, GCU_Pool_Task task,
       GCU_MUTEX_LOCK(pool->mutex);
       --pool->slot_waiters;
       if (pool->shutting_down) {
+        --pool->in_flight;
         GCU_MUTEX_UNLOCK(pool->mutex);
         return false;
       }
@@ -515,19 +545,31 @@ static bool gcu_pool_enqueue_common(GCU_Pool * pool, GCU_Pool_Task task,
   }
 
   GCU_MUTEX_LOCK(pool->mutex);
-
-  if (pool->shutting_down || !gcu_array_append(&pool->queue, &item)) {
-    GCU_MUTEX_UNLOCK(pool->mutex);
-    if (pool->max_queued) {
-      gcu_semaphore_signal(&pool->slots);
-    }
-    return false;
-  }
-
+  const bool queued =
+    !pool->shutting_down && gcu_array_append(&pool->queue, &item);
   GCU_MUTEX_UNLOCK(pool->mutex);
 
-  gcu_semaphore_signal(&pool->work);
-  return true;
+  if (queued) {
+    gcu_semaphore_signal(&pool->work);
+  }
+  else if (pool->max_queued) {
+    // Hand the slot back; this producer is not going to use it.
+    gcu_semaphore_signal(&pool->slots);
+  }
+
+  // Last, because everything above touches the pool and teardown reads this
+  // count to decide that nothing is left inside it.  This is the whole reason
+  // the three tails above were folded into one: each of them used to return
+  // straight out, so a producer that got past the shutting_down check went on
+  // touching a pool that no longer counted it -- and teardown, seeing nobody
+  // waiting for a slot, freed the pool underneath it.
+  if (counted) {
+    GCU_MUTEX_LOCK(pool->mutex);
+    --pool->in_flight;
+    GCU_MUTEX_UNLOCK(pool->mutex);
+  }
+
+  return queued;
 }
 
 bool gcu_pool_enqueue(GCU_Pool * pool, GCU_Pool_Task task, void * ctx) {
@@ -557,20 +599,32 @@ int gcu_pool_wait(GCU_Pool * pool) {
 
   GCU_MUTEX_LOCK(pool->mutex);
 
-  if (pool->is_inline || (pool->queue_head == pool->queue.count
-      && !pool->active)) {
+  // `shutting_down` belongs in this test, and not only because there is
+  // nothing left to wait for.  Teardown releases the sleepers it finds and
+  // then waits for them to leave; a thread that registers *after* that
+  // release is never posted, so without this it would park on a semaphore
+  // nobody will signal again.  Unfixed, that was a lost wakeup and a hung
+  // caller; with the drain below it in place it would have been a hung
+  // teardown.  Registering requires this mutex and teardown sets the flag
+  // under it, so the two cannot interleave.
+  if (pool->is_inline || pool->shutting_down
+      || (pool->queue_head == pool->queue.count && !pool->active)) {
     int result = pool->first_error;
     GCU_MUTEX_UNLOCK(pool->mutex);
     return result;
   }
 
   ++pool->waiters;
+  // As in the blocking enqueue: teardown releases these sleepers on its way
+  // out, so it owns their exit and has to wait for it.
+  ++pool->in_flight;
   GCU_MUTEX_UNLOCK(pool->mutex);
 
   gcu_semaphore_wait(&pool->idle);
 
   GCU_MUTEX_LOCK(pool->mutex);
   int result = pool->first_error;
+  --pool->in_flight;
   GCU_MUTEX_UNLOCK(pool->mutex);
 
   return result;

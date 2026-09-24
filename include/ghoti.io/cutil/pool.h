@@ -85,6 +85,9 @@ struct GCU_Pool {
   bool shutting_down;              ///< Private.  No new work accepted.
   size_t waiters;                  ///< Private.  Threads in gcu_pool_wait().
   size_t slot_waiters;             ///< Private.  Threads awaiting a slot.
+  size_t in_flight;                ///< Private.  External threads that have
+                                   ///<   entered this pool and not yet left
+                                   ///<   it.  Teardown waits for zero.
 
   GCU_Semaphore work;              ///< Private.  Outstanding worker wakeups.
   GCU_Semaphore idle;              ///< Private.  Releases waiters when idle.
@@ -290,6 +293,11 @@ GCU_API bool gcu_pool_enqueue_wait_cb(GCU_Pool * pool, GCU_Pool_Task task,
  * Returning means the pool was idle at the instant the condition was
  * observed.  If other threads are still enqueueing, more work may exist by
  * the time this returns.  Stopping the producers is the caller's job.
+ *
+ * A pool that is being torn down is not waited on:  teardown releases the
+ * threads parked here and then waits for them to leave, so one that arrived
+ * after that release would park on a semaphore nobody will post again.  From
+ * the moment teardown begins, this returns at once with the recorded status.
  *
  * @param pool The pool.
  * @return The first non-zero status any task has returned since the last
