@@ -312,15 +312,23 @@ GCU_File_Result gcu_file_temp_create(GCU_File_Temp * temp, const char * dir,
     gcu_allocator_free(allocator, path);
     return GCU_FILE_ERR_OOM;
   }
-  errno_t named = _wmktemp_s(wide, wcslen(wide) + 1);
-  if (named != 0) {
-    gcu_allocator_free(allocator, wide);
-    gcu_allocator_free(allocator, path);
-    return GCU_FILE_ERR_IO;
+  // A fresh random name per attempt, retried only when the name was taken:
+  // mkstemp()'s loop, which _wmktemp_s did not provide.
+  wchar_t * tail = wide + wcslen(wide) - (sizeof GCU_FILE_TEMPLATE - 1);
+  HANDLE created = INVALID_HANDLE_VALUE;
+  for (int attempt = 0; attempt < GCU_FILE_INTERNAL_TEMP_ATTEMPTS; ++attempt) {
+    if (!gcu_file_internal_randomize_tail(tail)) {
+      break;
+    }
+    created = CreateFileW(wide, GENERIC_READ | GENERIC_WRITE,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
+        CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (created != INVALID_HANDLE_VALUE
+        || (GetLastError() != ERROR_FILE_EXISTS
+            && GetLastError() != ERROR_ALREADY_EXISTS)) {
+      break;
+    }
   }
-  HANDLE created = CreateFileW(wide, GENERIC_READ | GENERIC_WRITE,
-      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
-      CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
   int fd = created == INVALID_HANDLE_VALUE ? -1
       : _open_osfhandle((intptr_t)created, _O_BINARY | _O_RDWR);
   if (fd < 0) {

@@ -271,6 +271,29 @@ TEST_F(Scratch, TempCreateOpensAFileInTheDirectoryItWasGiven) {
   gcu_file_temp_abort(&temp);
 }
 
+TEST_F(Scratch, ManyLiveTemporariesWithOnePrefixAllGetTheirOwnName) {
+  // mkstemp() draws six random characters and retries on a clash.  The
+  // Windows arm once used _wmktemp_s, which fills the same six places with a
+  // letter and the process id: 26 names per prefix per process, predictable,
+  // and a failure after that.  Sixty at once is past that limit.
+  const int kCount = 60;
+  vector<GCU_File_Temp> temps(kCount);
+  vector<string> names;
+  for (int i = 0; i < kCount; ++i) {
+    ASSERT_EQ(GCU_FILE_OK,
+        gcu_file_temp_create(&temps[i], dir.c_str(), "many", nullptr))
+        << "temporary " << i;
+    names.push_back(gcu_file_temp_path(&temps[i]));
+  }
+  vector<string> sorted = names;
+  sort(sorted.begin(), sorted.end());
+  EXPECT_EQ(sorted.end(), adjacent_find(sorted.begin(), sorted.end()))
+      << "two live temporaries were given the same name";
+  for (auto & temp : temps) {
+    gcu_file_temp_abort(&temp);
+  }
+}
+
 TEST_F(Scratch, AnOpenTemporaryCanBeReplacedAtomically) {
   // POSIX lets a file be renamed over while something holds it open, and
   // callers rely on it: writing the final result atomically to a path they

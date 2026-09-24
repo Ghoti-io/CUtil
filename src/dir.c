@@ -234,16 +234,30 @@ GCU_File_Result gcu_dir_temp_create(const char * parent, const char * prefix,
   memcpy(path + stem, GCU_DIR_TEMPLATE, sizeof GCU_DIR_TEMPLATE);
 
 #ifdef _WIN32
-  /* TODO(windows): never compiled or run on Windows.  _wmktemp_s chooses the
-   * name; CreateDirectoryW is what makes taking it fail rather than succeed
-   * if somebody got there first. */
+  /* A random name, as mkdtemp() chooses one - see
+   * gcu_file_internal_randomize_tail() for why not _wmktemp_s - and
+   * CreateDirectoryW is what makes taking it fail rather than succeed if
+   * somebody got there first, in which case another name is tried. */
   wchar_t * wide = gcu_path_internal_to_wide(allocator, path);
   if (!wide) {
     gcu_allocator_free(allocator, path);
     return GCU_FILE_ERR_OOM;
   }
-  if (_wmktemp_s(wide, wcslen(wide) + 1) != 0
-      || !CreateDirectoryW(wide, NULL)) {
+  wchar_t * tail = wide + wcslen(wide) - (sizeof GCU_DIR_TEMPLATE - 1);
+  bool made = false;
+  for (int attempt = 0; attempt < GCU_FILE_INTERNAL_TEMP_ATTEMPTS; ++attempt) {
+    if (!gcu_file_internal_randomize_tail(tail)) {
+      break;
+    }
+    if (CreateDirectoryW(wide, NULL)) {
+      made = true;
+      break;
+    }
+    if (GetLastError() != ERROR_ALREADY_EXISTS) {
+      break;
+    }
+  }
+  if (!made) {
     gcu_allocator_free(allocator, wide);
     gcu_allocator_free(allocator, path);
     return GCU_FILE_ERR_IO;

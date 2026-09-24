@@ -33,6 +33,7 @@
 #define GHOTI_IO_GCU_FILE_INTERNAL_H
 
 #include <errno.h>
+#include <stdbool.h>
 #include <ghoti.io/cutil/file.h>
 #include <ghoti.io/cutil/macros.h>
 
@@ -104,6 +105,50 @@ static inline GCU_File_Result gcu_file_internal_from_errno(int code) {
       return GCU_FILE_ERR_IO;
   }
 }
+
+#ifdef _WIN32
+#include <windows.h>
+#include <bcrypt.h>
+#include <wchar.h>
+
+/**
+ * How many names a temporary-file or -directory creator tries before giving
+ * up.  A clash in 62^6 names only happens by design or by attack, so this is
+ * about bounding a pathological case rather than about ordinary contention.
+ */
+#define GCU_FILE_INTERNAL_TEMP_ATTEMPTS 100
+
+/**
+ * Fill the six characters at @p tail - the "XXXXXX" of a template, located by
+ * the caller once so that a retry can refill them - with random characters
+ * from [A-Za-z0-9], drawn from the system's cryptographic generator.
+ *
+ * This is what mkstemp() and mkdtemp() do on POSIX, and what the header
+ * promises.  _wmktemp_s, which this replaces, fills the six places with one
+ * letter and the process id: a name anyone can predict, and only 26 of them
+ * per prefix per process, after which it fails.  compress's test helper,
+ * holding many temporaries at once, ran out and was handed back a name it
+ * was still using.
+ *
+ * @return false if no randomness was had.
+ */
+static inline bool gcu_file_internal_randomize_tail(wchar_t * tail) {
+  static const char alphabet[] =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  unsigned char bytes[6];
+  if (!BCRYPT_SUCCESS(BCryptGenRandom(NULL, bytes, sizeof(bytes),
+          BCRYPT_USE_SYSTEM_PREFERRED_RNG))) {
+    return false;
+  }
+  for (size_t i = 0; i < 6; ++i) {
+    // 256 is not a multiple of 62, so the first 8 characters are very
+    // slightly likelier.  Irrelevant to a name that only has to be unguessed
+    // and unused.
+    tail[i] = (wchar_t)alphabet[bytes[i] % 62];
+  }
+  return true;
+}
+#endif
 
 #ifdef __cplusplus
 }
