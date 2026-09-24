@@ -377,7 +377,7 @@ TESTFLAGS := `PKG_CONFIG_PATH=$(PKG_CONFIG_LOOKUP_PATH) pkg-config --libs --cfla
 # coverage target does, because --coverage links the gcov runtime, whose
 # mangle_path check-symbols is right to reject in a shipping library and
 # wrong to reject in an instrumented one. Spelled as text's TEST_GATES is.
-TEST_GATES ?= check-symbols check-win32-parse check-clang check-rebuild check-stamps
+TEST_GATES ?= check-symbols check-win32-parse check-win32-linkage check-clang check-rebuild check-stamps
 
 # Used by check-clang. Empty when clang is not installed, which that
 # target reports rather than failing over.
@@ -1001,6 +1001,28 @@ else
 		-include test/win32-stubs/force.h -I test/win32-stubs $(INCLUDE) \
 		$(WIN32_PARSE_SOURCES)
 endif
+
+check-win32-linkage: ## Check GCU_API's three Windows states
+	@printf "\n### Checking the Windows linkage states ###\n"
+	@# Three compilations of one file, one per state, because a translation
+	@# unit can only be in one of them.  Built into the scratch area rather
+	@# than $(OBJ_DIR) so that nothing here can be linked into the library by
+	@# mistake, and with -DGHOTIIO_CUTIL_BUILD filtered out of CFLAGS so that
+	@# the state is set only by the -D each line adds.
+	@# Three preprocessings of one file, one per state, because a translation
+	@# unit can only be in one of them.  -fsyntax-only throughout: the check is
+	@# entirely in `#if`, so it emits nothing that could go stale against a
+	@# flag change -- which is also why the stamp audit does not ask this rule
+	@# for a flag stamp.  -DGHOTIIO_CUTIL_BUILD is filtered out of CFLAGS so
+	@# that the state is set only by the -D each pass adds.
+	@for state in GHOTIIO_CUTIL_BUILD GHOTIIO_CUTIL_STATIC CONSUMER_OF_THE_DLL; do \
+		printf "  %s\n" "$$state"; \
+		$(CC) -fsyntax-only \
+			$(filter-out -fvisibility=hidden -DGHOTIIO_CUTIL_BUILD,$(CFLAGS)) \
+			-D$$state -I test/win32-stubs $(INCLUDE) \
+			test/win32-stubs/api-linkage-check.c \
+		|| exit 1; \
+	done
 
 test: ## Make and run the Unit tests
 # Both the prerequisites and the run lines are derived from TEST_NAMES, so

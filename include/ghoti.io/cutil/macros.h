@@ -54,10 +54,36 @@
  * not exported at all: it cannot collide with another version of this library,
  * and it does not appear in the dynamic symbol table.  See CONVENTIONS.md
  * section 4.
+ *
+ * ## Three states on Windows, not two
+ *
+ * `GHOTIIO_CUTIL_BUILD` says "I am this library"; nothing says "I am a
+ * consumer"; and `GHOTIIO_CUTIL_STATIC` says "I am a consumer **linking the
+ * static archive**".  Only the third is new, and without it a consumer got
+ * `dllimport` whichever way it linked -- so the linker asked
+ * `libghoti.io-cutil-0.a` for `__imp_ghotiio_cutil_0_gcu_allocator_free`,
+ * which an archive does not have.  An archive has no `__imp_` thunks; only an
+ * import library does.
+ *
+ * This matters here more than in any other library in the suite, because
+ * every other library links this one.  Measured with mingw-w64 in a
+ * container: without the escape, regex's own objects failed to link against
+ * cutil's archive even though regex was building itself correctly.
+ *
+ * The name takes the prefix of the build macro it sits beside
+ * (`GHOTIIO_CUTIL_BUILD`), not the `GCU_` of the macros it defines.  Every
+ * library in the suite pairs the two that way -- ctang is the other one whose
+ * build macro is long, and it spells its escape `GHOTIIO_TANG_STATIC`.
+ *
+ * A consumer that links the archive defines it for its own translation units,
+ * the way each sibling's Makefile does for its own tests.  It is never defined
+ * by this library's build: cutil's tests link its DLL.
  */
 #if defined(_WIN32) || defined(__CYGWIN__)
 #ifdef GHOTIIO_CUTIL_BUILD
 #define GCU_API GCU_EXTERN __declspec(dllexport)
+#elif defined(GHOTIIO_CUTIL_STATIC)
+#define GCU_API GCU_EXTERN
 #else
 #define GCU_API GCU_EXTERN __declspec(dllimport)
 #endif
@@ -77,6 +103,8 @@
 #if defined(_WIN32) || defined(__CYGWIN__)
 #ifdef GHOTIIO_CUTIL_BUILD
 #define GCU_API_DATA __declspec(dllexport)
+#elif defined(GHOTIIO_CUTIL_STATIC)
+#define GCU_API_DATA
 #else
 #define GCU_API_DATA __declspec(dllimport)
 #endif
