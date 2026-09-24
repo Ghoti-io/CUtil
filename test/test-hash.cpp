@@ -1,7 +1,13 @@
 #include <atomic>
 #include <chrono>
+#include <cstdio>
 #include <sstream>
 #include <thread>
+#ifdef __linux__
+#include <sys/resource.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
 #include <gtest/gtest.h>
 #include <ghoti.io/cutil/hash.h>
 
@@ -1356,6 +1362,85 @@ TEST(Hash64, GrowingUnderTheLockDoesNotReleaseIt) {
   EXPECT_FALSE(stole) << "growing the table released a mutex that was held";
   gcu_hash64_destroy(t);
 }
+
+// RLIMIT_AS is the only way to ask this from outside the library: no part of
+// the API can make one allocation fail on request.  Linux because the child
+// reads its own address-space size from /proc to pick a limit, and not under a
+// sanitizer, whose shadow mapping makes that number meaningless.
+#if defined(__linux__) && !defined(__SANITIZE_ADDRESS__) \
+    && !defined(__SANITIZE_THREAD__)
+TEST(Hash64, GrowthThatCannotAllocateReportsFailure) {
+  // Growth used to take its new cells from gcu_hash64_create(), whose
+  // reservation is best-effort by design: a cell array it cannot allocate
+  // leaves a valid, empty table rather than a failure.  Growth passed that on
+  // as success, having lost the table's storage, and the probe immediately
+  // after computed `hash % 0`.  Measured before the fix: SIGFPE on an ordinary
+  // insert loop, every run.  So an insertion under memory pressure did not
+  // return false -- it killed the process.
+  //
+  // The child reports which of the four things happened, so that a limit too
+  // generous to provoke an allocation failure is a failure of this test rather
+  // than a quiet pass.
+  enum : int { kReportedFailure = 0, kNeverFailed = 1, kGrewToNothing = 2,
+      kSetupFailed = 3 };
+
+  pid_t pid = fork();
+  ASSERT_NE(-1, pid);
+  if (pid == 0) {
+    unsigned long pages = 0;
+    FILE * statm = fopen("/proc/self/statm", "r");
+    if (!statm || fscanf(statm, "%lu", &pages) != 1) {
+      _exit(kSetupFailed);
+    }
+    fclose(statm);
+
+    struct rlimit lim;
+    if (getrlimit(RLIMIT_AS, &lim) != 0) {
+      _exit(kSetupFailed);
+    }
+    // Whatever is mapped now, plus enough room to grow a table into a few
+    // times and not enough to keep doubling it.
+    lim.rlim_cur = (rlim_t)pages * (rlim_t)sysconf(_SC_PAGESIZE) + (8u << 20);
+    if (setrlimit(RLIMIT_AS, &lim) != 0) {
+      _exit(kSetupFailed);
+    }
+
+    GCU_Hash64 * table = gcu_hash64_create(0);
+    if (!table) {
+      _exit(kSetupFailed);
+    }
+    for (uint64_t i = 0; i < 4000000; ++i) {
+      if (!gcu_hash64_set(table, i, gcu_type64_ui64(i))) {
+        _exit(kReportedFailure);
+      }
+      if (table->capacity == 0) {
+        // Growth said it had succeeded and left nothing to probe.  Report it
+        // rather than take the division that follows.
+        _exit(kGrewToNothing);
+      }
+    }
+    _exit(kNeverFailed);
+  }
+
+  int status = 0;
+  ASSERT_EQ(pid, waitpid(pid, &status, 0));
+  ASSERT_FALSE(WIFSIGNALED(status))
+      << "an insertion that could not allocate died from signal "
+      << WTERMSIG(status);
+  ASSERT_TRUE(WIFEXITED(status));
+  switch (WEXITSTATUS(status)) {
+    case kReportedFailure:
+      break;
+    case kNeverFailed:
+      FAIL() << "the address-space limit was too generous to provoke an "
+                "allocation failure; this test proved nothing";
+    case kGrewToNothing:
+      FAIL() << "growth reported success with no cells to probe";
+    default:
+      GTEST_SKIP() << "could not impose an address-space limit";
+  }
+}
+#endif // __linux__ && no sanitizer
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);

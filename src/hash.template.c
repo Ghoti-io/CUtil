@@ -19,6 +19,7 @@
  */
 
 #define TEMPLATE_GROW_HASH         GHOTIIO_CUTIL_CONCAT2(grow_hash, BITDEPTH)
+#define TEMPLATE_PLACE_HASH        GHOTIIO_CUTIL_CONCAT2(place_hash, BITDEPTH)
 #define TEMPLATE_GCU_HASH          GHOTIIO_CUTIL_CONCAT2(GCU_Hash, BITDEPTH)
 #define TEMPLATE_GCU_HASH_ITERATOR GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Iterator)
 #define TEMPLATE_GCU_HASH_CELL     GHOTIIO_CUTIL_CONCAT3(GCU_Hash, BITDEPTH, _Cell)
@@ -165,6 +166,67 @@ TEMPLATE_GCU_HASH * TEMPLATE_GCU_HASH_CLONE(TEMPLATE_GCU_HASH * source) {
   return newTable;
 }
 
+// Place an entry in a freshly allocated cell array.
+//
+// A rehash meets neither tombstones nor a hash that is already present -- the
+// caller copies only live cells, and a table never holds two live cells for
+// one hash -- so this is a plain linear probe to the first empty cell, and not
+// TEMPLATE_GCU_HASH_SET's search for an entry to replace or a tombstone to
+// reuse.  It cannot run off the end for the same reason that one cannot:
+// `capacity` is more than twice the number of entries that will be placed.
+static void TEMPLATE_PLACE_HASH(TEMPLATE_GCU_HASH_CELL * data, size_t capacity, size_t hash, TEMPLATE_GCU_TYPE_UNION value) {
+  size_t location = hash % capacity;
+
+  while (data[location].occupied) {
+    ++location;
+    if (location == capacity) {
+      location = 0;
+    }
+  }
+
+  data[location] = (TEMPLATE_GCU_HASH_CELL) {
+    .hash = hash,
+    .data = value,
+    .occupied = true,
+    .removed = false,
+  };
+}
+
+// Replace a table's cell array with a larger one, rehashing what is live.
+//
+// Only the cells are new.  Nothing else about the table moves: it keeps its
+// mutex, its cleanup hook and its supplementary data, and a caller's pointer
+// to it stays the pointer to the same object.
+//
+// This used to build a second, complete table with TEMPLATE_GCU_HASH_CREATE()
+// and swap the two structs, and all three bugs that cost came from that one
+// decision:
+//
+//   The swap carried `cleanup` and `supplementary_data` onto the temporary, so
+//   the surviving table lost the caller's hook -- and the temporary, holding
+//   the *old* cells, ran that hook as it was destroyed, over entries whose
+//   values had just been moved into the new table rather than discarded.  The
+//   caller freed values its own table was still holding, and the next read of
+//   one was a use-after-free.
+//
+//   The swap also wrote the temporary's freshly initialised mutex over the
+//   live one, which the caller may be holding: gcu_thread_create() grows the
+//   thread table under that very lock.  A Windows SRWLOCK keeps its waiter
+//   list in the lock word, so the overwrite dropped every waiter and the
+//   process hung; a glibc futex word does the same.  Both halves were
+//   measured, on both platforms, and neither is rare: a thread queued on the
+//   lock was never woken, and -- with no waiter at all -- a second thread
+//   could take a mutex that was still held, which is the silent half.
+//
+//   And TEMPLATE_GCU_HASH_CREATE()'s reservation is best-effort by design: a
+//   cell array it cannot allocate leaves a valid, empty table rather than a
+//   failure.  Growth inherited that and returned `true` having lost the
+//   table's storage, so the probe that followed computed `hash % 0`.  Measured
+//   under RLIMIT_AS: SIGFPE, on an ordinary insert loop, every run.
+//
+// A struct copy moves fields that are not storage.  Moving the storage on its
+// own is both what was meant and the only thing that is safe, so this no
+// longer builds a table to take it from.
 static bool TEMPLATE_GROW_HASH(TEMPLATE_GCU_HASH * hashTable, size_t size) {
   // Verify that the pointer actually points to something.
   if (!hashTable) {
@@ -175,62 +237,41 @@ static bool TEMPLATE_GROW_HASH(TEMPLATE_GCU_HASH * hashTable, size_t size) {
     return false;
   }
 
-  TEMPLATE_GCU_HASH * newTable = TEMPLATE_GCU_HASH_CREATE(size);
-  if (!newTable) {
+  // The same shape the create path uses: an odd capacity, twice the request.
+  const size_t capacity = (size * 2) + 1;
+  TEMPLATE_GCU_HASH_CELL * data = gcu_calloc(capacity, sizeof(TEMPLATE_GCU_HASH_CELL));
+  if (!data) {
     return false;
   }
 
-  // Copy the existing entries across, if there are any.  A table that has
-  // never held one has no cell array, and forming `&data[capacity]` on a null
+  // Copy the live entries across, if there are any.  A table that has never
+  // held one has no cell array, and forming `&data[capacity]` on a null
   // pointer is undefined even when capacity is zero.  Worth knowing that no
   // gcc flag reports this -- not -fsanitize=undefined, not
   // -fsanitize=pointer-overflow, measured -- and clang's UBSan does, which is
   // how it was found and why the clang build is now kept working.
+  //
+  // Counting them here is also what drops the tombstones: `removed` cells are
+  // not carried over, so the new table starts with none.
+  size_t entries = 0;
   if (hashTable->data) {
-    TEMPLATE_GCU_HASH_CELL * cursor = hashTable->data;
-    TEMPLATE_GCU_HASH_CELL * end = &hashTable->data[hashTable->capacity];
+    const TEMPLATE_GCU_HASH_CELL * cursor = hashTable->data;
+    const TEMPLATE_GCU_HASH_CELL * const end = &hashTable->data[hashTable->capacity];
 
     while (cursor != end) {
       if (cursor->occupied && !cursor->removed) {
-        TEMPLATE_GCU_HASH_SET(newTable, cursor->hash, cursor->data);
+        TEMPLATE_PLACE_HASH(data, capacity, cursor->hash, cursor->data);
+        ++entries;
       }
       ++cursor;
     }
   }
 
-  // Swap the data, keeping the caller's cleanup hook and its supplementary
-  // data with the table that survives.
-  //
-  // The swap alone used to move both onto the temporary, which had two
-  // consequences. The surviving table lost its cleanup hook, so whatever the
-  // caller was relying on it to release never was. And the temporary, holding
-  // the *old* cells, ran that hook on destruction - over entries whose values
-  // had just been moved into the new table, not discarded - so the caller
-  // freed values its table was still holding, and the next read of one was a
-  // use-after-free.
-  //
-  // Only the cell storage moves; each table keeps its own mutex. A whole-struct
-  // copy also wrote the temporary's freshly initialised mutex over the live
-  // one - which the caller may be holding, with other threads queued on it,
-  // since gcu_thread_create() grows the thread table under that very lock.
-  // On Windows the SRWLOCK's waiter list lives in the lock word, so the
-  // overwrite lost every waiter and the process hung; glibc's futex word loses
-  // them the same way, only less often.
-  TEMPLATE_GCU_HASH temp = *newTable;
-
-  newTable->capacity = hashTable->capacity;
-  newTable->entries = hashTable->entries;
-  newTable->removed = hashTable->removed;
-  newTable->data = hashTable->data;
-  newTable->cleanup = 0;
-  newTable->supplementary_data = 0;
-
-  hashTable->capacity = temp.capacity;
-  hashTable->entries = temp.entries;
-  hashTable->removed = temp.removed;
-  hashTable->data = temp.data;
-
-  TEMPLATE_GCU_HASH_DESTROY(newTable);
+  gcu_free(hashTable->data);
+  hashTable->data = data;
+  hashTable->capacity = capacity;
+  hashTable->entries = entries;
+  hashTable->removed = 0;
 
   return true;
 }
@@ -481,6 +522,7 @@ TEMPLATE_GCU_HASH_ITERATOR TEMPLATE_GCU_HASH_ITERATOR_NEXT(TEMPLATE_GCU_HASH_ITE
 }
 
 #undef TEMPLATE_GROW_HASH
+#undef TEMPLATE_PLACE_HASH
 #undef TEMPLATE_GCU_HASH
 #undef TEMPLATE_GCU_HASH_ITERATOR
 #undef TEMPLATE_GCU_HASH_CELL
