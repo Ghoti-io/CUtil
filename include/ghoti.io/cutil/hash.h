@@ -172,6 +172,11 @@ typedef struct {
  * cause an unexpected delay.  Such rebuilding costs can be avoided by proper
  * setting of the `count` variable during creation of the hash table.
  *
+ * `count` is a reservation, and it is best-effort: a table whose cells could
+ * not be allocated is returned empty rather than as a failure, and allocates
+ * on its first insertion like any other.  Only a table that could not be
+ * created at all is reported, by returning null.
+ *
  * @param count The number of items anticipated to be stored in the hash table.
  * @return A struct containing the hash table information.
  */
@@ -182,8 +187,10 @@ GCU_API GCU_Hash64 * gcu_hash64_create(size_t count);
  * space.
  *
  * @param hash The hash table structure to be initialized.
- * @param count The number of items anticipated to be stored in the hash table.
- * @return `true` on success, `false` on failure.
+ * @param count The number of items anticipated to be stored in the hash table,
+ *   reserved best-effort as in gcu_hash64_create().
+ * @return `true` on success, `false` on failure.  A reservation that could not
+ *   be met is not a failure; only a table that could not be initialised is.
  */
 GCU_API bool gcu_hash64_create_in_place(GCU_Hash64 * hash, size_t count);
 
@@ -384,6 +391,11 @@ typedef struct {
  * cause an unexpected delay.  Such rebuilding costs can be avoided by proper
  * setting of the `count` variable during creation of the hash table.
  *
+ * `count` is a reservation, and it is best-effort: a table whose cells could
+ * not be allocated is returned empty rather than as a failure, and allocates
+ * on its first insertion like any other.  Only a table that could not be
+ * created at all is reported, by returning null.
+ *
  * @param count The number of items anticipated to be stored in the hash table.
  * @return A struct containing the hash table information.
  */
@@ -394,8 +406,10 @@ GCU_API GCU_Hash32 * gcu_hash32_create(size_t count);
  * space.
  *
  * @param hash The hash table structure to be initialized.
- * @param count The number of items anticipated to be stored in the hash table.
- * @return `true` on success, `false` on failure.
+ * @param count The number of items anticipated to be stored in the hash table,
+ *   reserved best-effort as in gcu_hash32_create().
+ * @return `true` on success, `false` on failure.  A reservation that could not
+ *   be met is not a failure; only a table that could not be initialised is.
  */
 GCU_API bool gcu_hash32_create_in_place(GCU_Hash32 * hash, size_t count);
 
@@ -596,6 +610,11 @@ typedef struct {
  * cause an unexpected delay.  Such rebuilding costs can be avoided by proper
  * setting of the `count` variable during creation of the hash table.
  *
+ * `count` is a reservation, and it is best-effort: a table whose cells could
+ * not be allocated is returned empty rather than as a failure, and allocates
+ * on its first insertion like any other.  Only a table that could not be
+ * created at all is reported, by returning null.
+ *
  * @param count The number of items anticipated to be stored in the hash table.
  * @return A struct containing the hash table information.
  */
@@ -605,8 +624,10 @@ GCU_API GCU_Hash16 * gcu_hash16_create(size_t count);
  * Create a hash table structure in a pre-allocated memory space.
  *
  * @param hash The hash table structure to be initialized.
- * @param count The number of items anticipated to be stored in the hash table.
- * @return `true` on success, `false` on failure.
+ * @param count The number of items anticipated to be stored in the hash table,
+ *   reserved best-effort as in gcu_hash16_create().
+ * @return `true` on success, `false` on failure.  A reservation that could not
+ *   be met is not a failure; only a table that could not be initialised is.
  */
 GCU_API bool gcu_hash16_create_in_place(GCU_Hash16 * hash, size_t count);
 
@@ -806,6 +827,11 @@ typedef struct {
  * cause an unexpected delay.  Such rebuilding costs can be avoided by proper
  * setting of the `count` variable during creation of the hash table.
  *
+ * `count` is a reservation, and it is best-effort: a table whose cells could
+ * not be allocated is returned empty rather than as a failure, and allocates
+ * on its first insertion like any other.  Only a table that could not be
+ * created at all is reported, by returning null.
+ *
  * @param count The number of items anticipated to be stored in the hash table.
  * @return A struct containing the hash table information.
  */
@@ -815,8 +841,10 @@ GCU_API GCU_Hash8 * gcu_hash8_create(size_t count);
  * Create a hash table structure in a pre-allocated memory space.
  *
  * @param hash The hash table structure to be initialized.
- * @param count The number of items anticipated to be stored in the hash table.
- * @return `true` on success, `false` on failure.
+ * @param count The number of items anticipated to be stored in the hash table,
+ *   reserved best-effort as in gcu_hash8_create().
+ * @return `true` on success, `false` on failure.  A reservation that could not
+ *   be met is not a failure; only a table that could not be initialised is.
  */
 GCU_API bool gcu_hash8_create_in_place(GCU_Hash8 * hash, size_t count);
 
