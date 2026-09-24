@@ -1212,7 +1212,25 @@ GCU_Path_Result gcu_path_canonicalize(const char * path,
     gcu_allocator_free(allocator, resolved);
     return GCU_PATH_ERR_IO;
   }
-  char * utf8 = gcu_path_internal_from_wide(allocator, resolved);
+
+  // GetFinalPathNameByHandleW always answers in the extended form, \\?\C:\...
+  // or \\?\UNC\server\share\...  Under that prefix Windows performs no
+  // normalisation at all, so a caller who joins "models/cube.obj" onto the
+  // result gets a path that does not resolve: forward slashes are not
+  // separators there.  The prefix is dropped when the plain form means the
+  // same file, which is whenever it fits in MAX_PATH; a longer path keeps it,
+  // because without it most APIs could not open the path at all.
+  wchar_t * shown = resolved;
+  if (wcsncmp(resolved, L"\\\\?\\UNC\\", 8) == 0 && written - 6 < MAX_PATH) {
+    // \\?\UNC\server\share -> \\server\share: keep two backslashes.
+    shown = resolved + 6;
+    shown[0] = L'\\';
+  }
+  else if (wcsncmp(resolved, L"\\\\?\\", 4) == 0 && written - 4 < MAX_PATH
+      && resolved[5] == L':') {
+    shown = resolved + 4;
+  }
+  char * utf8 = gcu_path_internal_from_wide(allocator, shown);
   gcu_allocator_free(allocator, resolved);
   if (!utf8) {
     return GCU_PATH_ERR_OOM;

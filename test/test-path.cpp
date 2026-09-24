@@ -727,6 +727,24 @@ TEST(Canonicalize, RequiresThePathToExistAndResolvesIt) {
   EXPECT_EQ(nullptr, nothing) << "nothing may be allocated on failure";
 }
 
+TEST(Canonicalize, TheResultCanBeJoinedOntoAndStillResolve) {
+  // A canonical directory is a base for other paths.  On Windows the system
+  // answers in the extended \\?\ form, under which "/" is not a separator, so
+  // joining "test/test-path.cpp" onto it named nothing at all - which is how
+  // cjelly's tests lost their fixtures.
+  Owned base;
+  ASSERT_EQ(GCU_PATH_OK, gcu_path_canonicalize(".", nullptr, &base.value));
+  EXPECT_NE(0, strncmp(base.value, "\\\\?\\", 4))
+      << "a short path came back in the extended form: " << base.str();
+
+  char joined[4096];
+  ASSERT_EQ(GCU_PATH_OK, gcu_path_join(GCU_PATH_NATIVE, base.value,
+      "test/test-path.cpp", joined, sizeof(joined), nullptr));
+  Owned again;
+  EXPECT_EQ(GCU_PATH_OK, gcu_path_canonicalize(joined, nullptr, &again.value))
+      << "joined onto " << base.str() << ": " << joined;
+}
+
 TEST(Free, AcceptsNullSoCleanupPathsNeedNoGuard) {
   gcu_path_free(nullptr, nullptr);
   gcu_path_free(gcu_allocator_default(), nullptr);
