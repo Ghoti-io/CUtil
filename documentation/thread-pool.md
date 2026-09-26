@@ -1,4 +1,4 @@
-# Thread Pool
+# Thread pool
 
 **Status:** Implemented. `include/ghoti.io/cutil/pool.h`, `src/pool.c` and
 `test/test-pool.cpp` ship what this describes. The four questions left open in

@@ -1,206 +1,137 @@
 # Ghoti.io CUtil
-This is a collection of Cross-Platform libraries written in C.  It is a work in progress.
 
-## Libraries
-
-### Fixed-size Float
-
-Provides 2 types: `GCU_float64_t` and `GCU_float32_t` which are generated during the build process to be correct for the system on which it is being compiled.
-
-### Type Unions
-
-Provides type unions based on bit size for use in other parts of this library.  Names are `GCU_Type64_Union`, `GCU_Type32_Union`, `GCU_Type16_Union`, and `GCU_Type8_Union`.  Union contains all basic types that will fit into that bit size.  Pointers, for example, only exist in the `64`-bit union.  The programmer is responsible for the memory management of the pointed-to data.
-
-### Allocator
-
-Provides `GCU_Allocator`, a small vtable (a user-defined `ctx` pointer plus `malloc_fn`, `calloc_fn`, `realloc_fn`, and `free_fn`) that lets a caller supply its own allocation strategy -- an arena, a pool, or a tracking allocator -- to any part of this library that accepts one.
-
-`gcu_allocator_default()` returns the standard allocator, which forwards to the Memory Library described below.  The `gcu_allocator_malloc()`, `gcu_allocator_calloc()`, `gcu_allocator_realloc()`, and `gcu_allocator_free()` helpers dispatch through a given allocator so that calling code does not need to touch the function pointers directly.
-
-### Memory Library
-
-Provides functions `gcu_malloc()`, `gcu_calloc()`, `gcu_realloc()`, and `gcu_free()` which are used by all other parts of the library.  Compiling with `-DGHOTIIO_CUTIL_ENABLE_MEMORY_DEBUG` causes all calls to the afore-mentioned memory functions to be logged to `stderr`, including the calling location and the memory locations involved, making memory errors easy to track down; `gcu_mem_stop()` and `gcu_mem_start()` bracket a region whose trace is not wanted.
-
-The same functions keep running totals, readable with `gcu_get_alloc_count()` and `gcu_get_free_count()`, so that a program can assert it released everything it took.  The totals count *blocks rather than calls* -- reallocating from `NULL` is an allocation, freeing `NULL` is not a free -- and they are kept whether or not the logging is enabled.  Compare differences rather than the two absolute totals: the library allocates in a constructor before `main()` and releases in a destructor after it returns, so the counts do not start level.
-
-The design and the reasoning behind each decision are in `documentation/memory.md`.
-
-### String
-
-Provides several functions which will calculate a hash on a set of bytes using the **Murmur3** algorithm.
-
-### Array
-
-Provides `GCU_Array`, a generalized growable array.  Unlike the Vector (below), it is byte-oriented: the element size is fixed when the array is created, so an array may hold arbitrary structures rather than only values that fit into a fixed-width union.
-
-The array takes a `GCU_Allocator` (see above), and may be created either on the heap (`gcu_array_create()` / `gcu_array_destroy()`) or in memory the caller already owns (`gcu_array_create_in_place()` / `gcu_array_destroy_in_place()`).
-
-Capacity is managed with `gcu_array_reserve()`, `gcu_array_resize()`, and `gcu_array_shrink_to_fit()`.  Elements may be added by copy with `gcu_array_append()` and `gcu_array_append_n()`, or constructed in place by taking a writable slot from `gcu_array_emplace()` and `gcu_array_emplace_n()`, which avoids a copy.  `gcu_array_extend_n()` claims a run of elements without zeroing it, for the caller that is about to write every byte itself; the emplace functions zero, and remain the right default for anything that fills in only some fields.  Elements are read with `gcu_array_at()` and `gcu_array_back()`, and removed with `gcu_array_pop()`, `gcu_array_remove_at()` (order-preserving), and `gcu_array_swap_remove()` (constant-time, does not preserve order).  `gcu_array_steal()` hands the backing buffer to the caller and leaves the array empty.
-
-The programmer may provide a `cleanup` function which will be called when the array is destroyed, and a `supplementary_data` pointer for the cleanup function's use.
-
-Note that, unlike the Hash Table and Vector, the array does *not* carry a mutex.  Callers needing one should use the Mutex library directly.
-
-### Hash Table
-
-Provides hash tables that hold `8`, `16`, `32`, and `64`-bit values.
-
-The programmer must supply a hash value which will uniquely identify the object to be stored/retrieved, but the `string.h` library provides a good and fast helper algorithm, **Murmur3**, to make this easy.
-
-The hash table will also have a mutex, but it is the programmer's responsibility to use it when appropriate.
-
-The programmer may provide a `cleanup` function which will be called when the hash table is destroyed.
-
-### Vector
-
-Provides a generalized vector structure that, similar to the hash tables, will hold `8`, `16`, `32`, and `64`-bit values.
-
-The vector will also have a mutex, but it is the programmer's responsibility to use it when appropriate.
-
-The programmer may provide a `cleanup` function which will be called when the vector is destroyed.
-
-For elements that do not fit into one of those fixed-width unions -- arbitrary structures, for example -- see the Array library above, which is byte-oriented and takes a caller-supplied allocator.
-
-### Safe Math
-
-Provides header-only, overflow-checked integer arithmetic.  Each function returns `true` on success and writes through its `result` pointer, or returns `false` if the operation would overflow, leaving `result` untouched.
-
-Available for `size_t` are `gcu_safe_add_size()`, `gcu_safe_sub_size()`, `gcu_safe_mul_size()`, `gcu_safe_add3_size()`, and `gcu_safe_mul_add_size()` -- the last of which covers the common allocation-sizing idiom of `(count * element_size) + header`.  `gcu_safe_add_u64()`, `gcu_safe_mul_u64()`, `gcu_safe_add_u32()`, and `gcu_safe_mul_u32()` provide the same for fixed-width unsigned types.
-
-Where the compiler provides them, these use the `__builtin_*_overflow()` intrinsics and `GCU_HAS_BUILTIN_OVERFLOW` is defined; otherwise a portable fallback using division and subtraction checks is compiled instead.  Both paths are tested.
-
-### Random
-
-Provides the Mersenne Twister pseudo-random number generator in both 32-bit (`gcu_random_mt32_init()` / `gcu_random_mt32_next()`) and 64-bit (`gcu_random_mt64_init()` / `gcu_random_mt64_next()`) forms.
-
-The generator state is held in a caller-owned `GCU_Random_MT32_State` or `GCU_Random_MT64_State` structure rather than in a global, so that separate streams do not interfere with one another and a seeded sequence is reproducible.
-
-### Thread Pool
-
-Provides `GCU_Pool`, a fixed set of worker threads drawing tasks from a shared FIFO queue.  Built on the Thread, Mutex and Semaphore libraries below; it needs no condition variable, because a counting semaphore expresses a task queue directly.
-
-A task is a function returning `0` for success or any non-zero status for failure.  `gcu_pool_enqueue()` hands one to the pool, `gcu_pool_enqueue_cb()` attaches a completion callback, and `gcu_pool_wait()` blocks until the pool is idle and reports the first non-zero status any task returned.  Reading that status does not consume it, so several threads may wait and all see the same answer.
-
-`gcu_pool_destroy()` **drains**: it runs everything already queued before stopping the workers, so nothing successfully enqueued is silently lost.  `gcu_pool_abandon()` discards the queue instead.  Draining is the default because forgetting it loses completed work and reports no error, while forgetting to abandon only costs some waiting.
-
-A `thread_count` of `0` selects inline mode, in which tasks run on the calling thread and no threads are created -- useful for deterministic tests.  `GCU_POOL_THREADS_AUTO` selects one worker per logical processor.  A count of `1` means one worker thread, not inline.
-
-The queue is unbounded by default.  Setting `max_queued` makes `gcu_pool_enqueue()` fail once the queue is full and `gcu_pool_enqueue_wait()` block until a slot frees.
-
-Workers are named `<prefix>-<index>` from a caller-supplied `name_prefix`, which shows up in a debugger when several pools are running at once.
-
-The design and the reasoning behind each decision are in `documentation/thread-pool.md`.
-
-### File
-
-Provides what a program needs from a filesystem:  whole-file reading, atomic whole-file replacement, metadata, the ordinary file operations, and an open handle for the cases whole-file reading cannot serve.  Built on the Path library below; it adds nothing of its own about path syntax.
-
-`gcu_file_read()` reads a file into an allocator-owned buffer.  It reads in **chunks rather than sizing the file first**, so it works on inputs that report no size at all -- pipes, character devices, and everything under `/proc`, where a seek-and-tell implementation silently returns an empty buffer.  The buffer carries a NUL one byte past `out_len` that is not counted in it, so a text caller can use the result as a C string without copying and a binary caller can ignore it.  `max_bytes` is a promise:  a file over the limit gives `GCU_FILE_ERR_LIMIT` and nothing is allocated, never a truncation.
-
-`GCU_File_Temp` is a temporary file, created and opened in one step that fails rather than following a symbolic link somebody else put there, and readable only by its owner.  It is disposed of by exactly one of `gcu_file_temp_commit()` (move it into place) or `gcu_file_temp_abort()` (delete it).  Both leave the handle zeroed and `abort` accepts a zeroed handle, so `abort` may sit on an unconditional cleanup path without tracking whether `commit` already ran.
-
-`gcu_file_write_atomic()` is the whole sequence for content already in memory.  The temporary goes in the **destination's own directory**, because a rename across filesystems is a copy and a copy is not atomic.
-
-`GCU_FILE_SYNC_FULL` is the zero value, so a caller who does not think about it gets durability:  the content is committed before the rename, and a failure there is reported.  The directory entry is committed afterwards on a best-effort basis, because several filesystems refuse the request and failing an otherwise complete replacement over it would be worse.  `GCU_FILE_SYNC_NONE` keeps the atomicity and gives up only the durability.
-
-`GCU_File_Perms` says what permissions the finished file carries, because the destination used to inherit the temporary file's owner-only mode and nothing said so.  `GCU_FILE_PERMS_PRIVATE` is the zero value and keeps the file to its owner; `GCU_FILE_PERMS_DEFAULT` gives it what an ordinary `fopen()` here would have produced, asked of the operating system rather than computed, because a default ACL on the directory overrides the umask; `GCU_FILE_PERMS_PRESERVE` keeps whatever the destination already had, so rewriting a file somebody deliberately narrowed does not widen it.  Three values and not a `mode_t`:  ownership, ACLs and the rest of an access model cannot be described honestly on both POSIX and Windows, and remain the caller's business.  The temporary stays owner-only until the moment it is renamed, whichever is chosen.
-
-`gcu_file_stat()` reports what is at a path -- type, size, and a modification time as nanoseconds since the Unix epoch (a plain integer rather than a `chron` type, because `chron` is built on this library).  `gcu_file_stat_link()` does not follow a symbolic link at the end, which is what a tree walk needs.  `gcu_file_exists()` and `gcu_file_is_directory()` are the convenient forms, and say plainly what they cannot tell you.  `gcu_file_remove()`, `gcu_file_rename()` and `gcu_file_copy()` are the rest.  Two refusals are deliberate:  remove will not delete a directory even though POSIX `remove()` would, and rename reports the cross-filesystem case rather than quietly becoming a copy.
-
-`GCU_File_Result` distinguishes `NOT_FOUND`, `EXISTS`, `ACCESS` and `NOT_EMPTY` from a general `ERR_IO`, because a caller can act on those and cannot usefully act on the difference between `ELOOP` and `ENAMETOOLONG`.
-
-`gcu_file_open()` and the calls around it -- read, write, seek, tell, flush, sync, close -- are for a file too large to hold in memory or one whose interesting part is in the middle.  Deliberately thin over stdio, fixing only the three things stdio gets wrong across platforms:  UTF-8 paths on Windows, offsets past 2 GB where `ftell` returns a 32-bit `long`, and text-mode line-ending rewriting.  A short read is the end of the file; a short write is a failure; and `close` returns a result, because that is where buffered bytes reach the operating system and therefore where a full disk is reported.
-
-The design and the reasoning behind each decision are in `documentation/file.md`.
-
-### Directory
-
-Provides directory creation, removal and walking, in `ghoti.io/cutil/dir.h`.  Results are `GCU_File_Result` rather than a vocabulary of its own:  a directory that is not there and a file that is not there are the same failure to a caller.
-
-`gcu_dir_create()` makes one level and `gcu_dir_create_all()` builds a path, succeeding when the directory already exists -- but not when the name is taken by something that is not a directory, which is a collision rather than success.  `gcu_dir_remove()` takes an empty directory.  `gcu_dir_temp_create()` makes a uniquely named working directory, created rather than merely named, and owner-only.
-
-Walking is an iterator (`gcu_dir_open()`, `gcu_dir_read()`, `gcu_dir_close()`) because a directory can hold more entries than a caller can afford to hold at once.  `"."` and `".."` are never reported.  Entry types come back without following links, so a walk cannot be led out of its tree, and where the platform answers `DT_UNKNOWN` the entry is asked about directly rather than reported as typeless.
-
-There is deliberately **no recursive delete**:  it is the operation most likely to follow a symbolic link out of the tree it was given, and it wants a design conversation rather than a convenience function.
-
-### Path
-
-Provides path manipulation, split into a lexical half that never touches the filesystem and an environment half that asks the operating system.
-
-The lexical half -- `gcu_path_join()`, `gcu_path_normalize()`, `gcu_path_dirname()`, `gcu_path_basename()`, `gcu_path_extension()`, `gcu_path_is_absolute()`, `gcu_path_root_length()`, `gcu_path_relative_to()`, `gcu_path_to_native()`, `gcu_path_to_posix()` -- takes a `GCU_Path_Flavor` rather than reading `#ifdef _WIN32`.  That is what makes the Windows rules testable:  drive letters, UNC shares and the difference between *rooted* and *absolute* are ordinary functions, and every Windows case in `test/test-path.cpp` runs on Linux.
-
-`C:\x` is absolute; `C:x` and `\x` are **not**, though all three have a root.  `gcu_path_root_length()` and `gcu_path_is_absolute()` are separate questions with different answers, and `..` may climb above `C:` but not above `C:\`.
-
-The environment half -- `gcu_path_cwd()`, `gcu_path_home()`, `gcu_path_config_dir()`, `gcu_path_data_dir()`, `gcu_path_cache_dir()`, `gcu_path_temp_dir()`, `gcu_path_absolute()`, `gcu_path_canonicalize()` -- allocates, because the length of an answer from the operating system is not knowable before asking.  Prefer the purpose-specific directories to `gcu_path_home()`:  code that appends `/.myapp` to a home directory is correct on Linux and wrong on Windows and macOS.
-
-`gcu_path_absolute()` resolves a path lexically and `gcu_path_canonicalize()` resolves it through the filesystem, following symbolic links.  They disagree whenever a link is involved, and a containment check written on the lexical one is not a containment check.
-
-Lexical calls write into a caller-supplied buffer and never truncate:  a shortened path is still a valid path, and it names a different file.  Passing `NULL` with size `0` measures.
-
-There is deliberately no `chdir`.  A process has one working directory shared by every thread, and a library that changes it alters the meaning of every relative path in its host application.  Pass a base directory and join onto it.
-
-`gcu_path_match()` matches a name against a shell pattern -- `?`, `*`, `**`, `[abc]`, `[a-z]`, `[!abc]` and a backslash escape -- with no regular-expression engine, which is what keeps this library free of that dependency.  A single `*` does not cross a separator and `**` does, so a pattern describes one component unless it says otherwise; a character set never matches a separator either.  Matching is bounded by pattern length times path length, because patterns come from configuration files and sometimes from users.
-
-The design and the reasoning behind each decision are in `documentation/path.md`.
-
-### Sequencer
-
-Provides `GCU_Sequencer`, a reorder buffer:  items go in, are finished in any order at all, and come back out in the order they went in.
-
-`gcu_sequencer_submit()` stores a `void *` payload and returns a **ticket**.  The work happens wherever the caller likes -- typically on a `GCU_Pool` -- and whoever finishes an item calls `gcu_sequencer_complete()` with its ticket and a status.  `gcu_sequencer_next()` then hands items back strictly in submission order, blocking while the oldest uncollected one is still outstanding.
-
-It pairs with the Thread Pool and does not overlap it:  the pool decides *when* work runs, the sequencer decides *what order results are seen in*.  Parallel block compression is the shape it was drawn from -- compress every block at once, write them out in file order -- but nothing about it is specific to compression.  The sequencer never dereferences a payload and never interprets a status.
-
-`capacity` bounds how many items may be outstanding, which is how a producer is kept from running arbitrarily far ahead of a consumer.  `gcu_sequencer_submit()` reports `GCU_SEQUENCER_FULL` rather than waiting, and is the call to reach for:  space is freed only by `gcu_sequencer_next()`, so a caller that collects its own results and blocks in `gcu_sequencer_submit_wait()` would be waiting for space that only it could free.  The blocking form is correct when a *different* thread collects.
-
-An empty sequencer returns `GCU_SEQUENCER_EMPTY` rather than blocking, since with nothing in flight no completion could ever arrive.  That makes EMPTY a usable end-of-stream signal for a caller that does not count its own items, at the price that a collector which can outrun its producer must treat it as "not yet".
-
-The design and the reasoning behind each decision are in `documentation/sequencer.md`.
-
-### Thread
-
-Provides a thread abstraction layer to better manage threads and information about the threads.
-
-### Mutex
-
-Provides a mutex abstraction for use as a low-level synchronization tool.
-
-### Semaphore
-
-Provides a counting semaphore implementation with a user-configurable limit.  A counting semaphore with a limit of 1 will be, in effect, a binary semaphore.
-
-### Portability Macros
-
-Provides the macros used to keep the rest of the library portable across compilers and platforms.  `GCU_API` and `GCU_API_DATA` expand to the correct export or import decoration (`__declspec(dllexport)`, `__declspec(dllimport)`, or `__attribute__((visibility("default")))`) for the current target, and `GCU_EXTERN` handles `extern "C"` when compiling as C++.
-
-Also provided are `GCU_MAYBE_UNUSED()` and `GCU_DEPRECATED` attribute wrappers, the `GCU_WCHAR_WIDTH` and `GCU_WCHAR_SIGNED` detection macros, and `GCU_INIT_FUNCTION()` / `GCU_CLEANUP_FUNCTION()` for declaring functions that run before `main()` and after it returns.
-
-### Symbol Namespacing and Versioning
-
-Every public symbol in this library is mapped through the `GHOTIIO_CUTIL()` macro, which prefixes it with a build-specific token.  That token is derived from the Makefile's `BRANCH`, and it is the same token that names the shared library, the `.pc` file, and the install directory.  The result is that two projects may embed two different versions of this library in the same program without their symbols colliding.  Building with `make BRANCH=-dev` produces a build with its own identity throughout.
-
-`libver.h` exposes `GCU_VERSION_MAJOR`, `GCU_VERSION_MINOR`, `GCU_VERSION_PATCH`, and `GCU_VERSION_STRING`.  For compile-time comparisons, `GCU_VERSION_NUMBER` packs the current version into a single integer which may be tested against `GCU_MAKE_VERSION(major, minor, patch)`.
-
-## Tests
-
-All libraries contain a corresponding test written in C++ (demonstrating that the library can be used in C++ as well as C) using the Google Test (`gtest`) framework.
+The foundation the rest of the suite is built on: an allocator, containers,
+checked arithmetic, threads, and the filesystem. It is C, and the headers
+are usable from C++. The test suite is the proof of that.
+
+## Before you call it
+
+- `NULL` for an allocator argument is the default. `gcu_file_read()` and the other allocating calls say which function frees the result.
+- `gcu_file_read()` reads in chunks, so a pipe works. The buffer has a NUL one byte past `length`, which is not counted in it. A file over the limit is `GCU_FILE_ERR_LIMIT` and nothing is allocated.
+- `dir.h` creates, removes and walks directories. There is no recursive delete.
+- `vector.h` and `hash.h` each carry a mutex the caller locks.
+- `safemath.h` leaves the result untouched on overflow.
+
+## Examples
+
+```c
+#include <ghoti.io/cutil/file.h>
+#include <stdio.h>
+
+int main(void) {
+  void * data = NULL;
+  size_t length = 0;
+
+  if (gcu_file_read("notes.txt", 1u << 20, NULL, &data, &length)
+      != GCU_FILE_OK) {
+    return 1;
+  }
+  fwrite(data, 1, length, stdout);
+  gcu_file_free(NULL, data);
+  return 0;
+}
+```
+
+The program writes the bytes of `notes.txt`.
+
+## Compile and link
+
+Once the library is installed, pkg-config carries the include path and the
+library:
+
+```bash
+cc -o show show.c $(pkg-config --cflags --libs ghoti.io-cutil-0)
+```
+
+The module name ends in the major version, `-0` for this release, so two
+majors can be installed side by side. A build made with `make BRANCH=-dev`
+installs `ghoti.io-cutil-dev` instead. See
+[Symbol versions](#symbol-versions).
+
+## Building the library
+
+CUtil has no library dependencies beyond libc. Google Test builds the tests.
+
+```bash
+make
+make test
+sudo make install
+```
+
+`make test` is the suite. `make help` lists the rest.
+
+| Target | What it does |
+| --- | --- |
+| `make test-asan` | Rebuild with ASan and UBSan and run the suite |
+| `make test-tsan` | The concurrency tests under ThreadSanitizer |
+| `make docs` | The Doxygen manual, into `./docs` |
+
+## The API
+
+Everything is prefixed `gcu_` / `GCU_`, under `<ghoti.io/cutil/...>`.
+
+**Memory.** `allocator.h` is a vtable (`malloc`, `calloc`, `realloc`,
+`free`) that the rest of the suite accepts under its own name, so one
+allocator serves every library. `memory.h` is the default behind it, with
+optional allocation tracing. `safemath.h` is overflow-checked addition and
+multiplication for `size_t`, `uint32_t` and `uint64_t`.
+
+**Containers.** `array.h` is a growable array of caller-sized elements, the
+one to use for structs. `vector.h` and `hash.h` hold 8, 16, 32 and 64-bit
+values in a `GCU_TypeN_Union`. `string.h` is MurmurHash3 over a byte range,
+which is what the hash tables expect as a key hash.
+
+**Threads.** `thread.h`, `mutex.h`, `rwlock.h`, `semaphore.h`, `cond.h`,
+`barrier.h`, `once.h`, `tls.h` and `atomic.h` are the primitives. `pool.h`
+is a fixed set of worker threads. `sequencer.h` is a reorder buffer: work
+finishes in any order and comes back out in the order it was submitted. The
+pool decides when work runs; the sequencer decides the order results are
+seen in.
+
+**Files.** `file.h` reads a whole file, replaces one atomically, and offers a
+thin handle for files too large to hold. `dir.h` creates, removes and walks
+directories. `path.h` is lexical path
+manipulation that takes an explicit Windows or POSIX flavour, so the Windows
+rules are testable on Linux, plus the questions that have to ask the
+operating system (current directory, home, temp). `mmap.h` maps a file
+instead of copying it. `filelock.h` locks a whole file between processes.
+`env.h` reads and writes environment variables as UTF-8 on both platforms.
+
+**The rest.** `utf.h` converts between UTF-8 and UTF-16. `error.h` is the
+last operating-system error, without caring which operating system.
+`subprocess.h` runs a program and collects its output. `library.h` loads a
+shared library at run time. `random.h` is a caller-owned Mersenne Twister.
+`type.h` is the sized unions and the fixed-width floats.
 
 ## Documentation
 
-All prototypes, typedefs, and defines are documented using Doxygen.  Documentation should be available under the `/docs` folder.
+The long arguments live next to the modules they belong to:
 
-## Compiling
+| Page | What it settles |
+| --- | --- |
+| [documentation/memory.md](documentation/memory.md) | The allocator and the traced heap |
+| [documentation/file.md](documentation/file.md) | Whole-file read and atomic replace |
+| [documentation/path.md](documentation/path.md) | Lexical paths and the environment |
+| [documentation/thread-pool.md](documentation/thread-pool.md) | The worker pool |
+| [documentation/sequencer.md](documentation/sequencer.md) | The reorder buffer |
 
-### Linux
+`make docs` builds the manual from the headers.
 
-```
-make
-make install
-```
+## Symbol versions
 
-### Windows
+Every public symbol is wrapped in `GHOTIIO_CUTIL()`, which prefixes a token
+taken from the Makefile's `BRANCH`. The same token names the shared library,
+the `.pc` file and the install directory, so two copies of this library can
+sit in one process. `make BRANCH=-dev` is a build with its own identity
+throughout.
 
-Still working on this, but will probably focus on the Mingw toolchain.
+`libver.h` exposes `GCU_VERSION_MAJOR`, `_MINOR`, `_PATCH`, and
+`GCU_VERSION_NUMBER` for a compile-time comparison.
+
+## Status
+
+The Windows build is the MinGW toolchain; it is not what the
+day-to-day suite runs.
 
 ## License
 

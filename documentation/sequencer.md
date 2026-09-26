@@ -1,4 +1,4 @@
-# The sequencer (reorder buffer)
+# Sequencer
 
 **Status:** Implemented.  `include/ghoti.io/cutil/sequencer.h`, `src/sequencer.c`.
 
