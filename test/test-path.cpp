@@ -6,8 +6,7 @@
  * The Windows cases run here, on Linux.  That is the reason
  * ::GCU_Path_Flavor is a parameter instead of a compile-time branch: without
  * it the Windows half of this module would be code that nobody could execute
- * until somebody found a Windows machine, which is how the rest of the suite
- * ends up with a WINDOWS-TODO.md entry.  Only the environment tests at the
+ * until somebody found a Windows machine.  Only the environment tests at the
  * bottom are host-specific.
  *
  * Copyright 2026 by Corey Pennycuff

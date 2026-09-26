@@ -666,8 +666,6 @@ TEST(Pool, TeardownWaitsForASleeperInPoolWait) {
   // bounded queue, which shares the counter and the drain this exercises.  Its
   // window is far narrower -- one report in 16,500 runs of the existing
   // Pool.ShutdownReleasesAProducerWaitingForASlot -- so it is not gated here.
-  // notes/cutil/pool-teardown.md has the two-line change that makes it
-  // deterministic, for anyone who needs to see that half fail.
   const size_t kRounds = 10;
   const size_t kSleepers = 16;
 

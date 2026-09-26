@@ -114,8 +114,7 @@ uint64_t gcu_string_hash_64(char const * str, size_t len) {
 // `size_t` and `int64_t`.  `size_t` is 32 bits on a 32-bit target, and
 // string.h promises uint64_t, so this did not merely truncate the hash to
 // half its width -- it did not compile at all.  Every 32-bit build of this
-// library failed on this one function, and no build had ever been attempted:
-// see notes/cutil/murmur3-correctness.md.
+// library failed on this one function, and no build had ever been attempted.
 uint64_t gcu_string_hash_64(char const * str, size_t len) {
   uint8_t buf[16];
   gcu_string_murmur3_x86_128(str, len, 0, buf);
